@@ -1,6 +1,6 @@
 
 **Collection Users:**
-```javascript
+
 {
   userId: string,      // ID định danh duy nhất cho mỗi người dùng
   displayName: string, // Tên hiển thị của người dùng
@@ -13,10 +13,10 @@
     language: string       // Ngôn ngữ ứng dụng
   }
 }
-```
+
 
 **Collection Tasks:**
-```javascript
+
 {
   taskId: string,      // ID định danh duy nhất cho mỗi task
   userId: string,      // ID của người dùng sở hữu task
@@ -39,10 +39,10 @@
   createdAt: timestamp,// Thời điểm tạo task
   updatedAt: timestamp // Thời điểm cập nhật task gần nhất
 }
-```
+
 
 **Collection Projects:**
-```javascript
+
 {
   projectId: string,   // ID định danh duy nhất cho mỗi project
   userId: string,      // ID của người dùng sở hữu project
@@ -52,17 +52,17 @@
   tasksCount: number,  // Số lượng task trong project
   createdAt: timestamp // Thời điểm tạo project
 }
-```
+
 
 **Collection Labels:**
-```javascript
+
 {
   labelId: string,     // ID định danh duy nhất cho mỗi nhãn
   userId: string,      // ID của người dùng sở hữu nhãn
   name: string,        // Tên nhãn
   color: string        // Màu sắc của nhãn
 }
-```
+
 
 Một số lưu ý quan trọng:
 - Các trường có `userId` dùng để phân quyền và lọc dữ liệu theo người dùng
