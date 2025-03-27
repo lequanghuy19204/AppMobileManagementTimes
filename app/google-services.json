@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "920400821174",
+    "project_id": "appmobilemanagementtimes",
+    "storage_bucket": "appmobilemanagementtimes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920400821174:android:4b713c568ce62ba9ac9f17",
+        "android_client_info": {
+          "package_name": "com.example.appmobilemanagementtimes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACa6_FLNtL49WcyXxNW-j9qXzBXRcldAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

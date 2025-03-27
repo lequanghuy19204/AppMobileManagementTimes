@@ -1,0 +1,73 @@
+
+**Collection Users:**
+```javascript
+{
+  userId: string,      // ID định danh duy nhất cho mỗi người dùng
+  displayName: string, // Tên hiển thị của người dùng
+  email: string,       // Email đăng ký tài khoản
+  avatar: string,      // URL ảnh đại diện
+  createdAt: timestamp,// Thời điểm tạo tài khoản
+  settings: {          // Cài đặt cá nhân của người dùng
+    notifications: boolean, // Bật/tắt thông báo
+    theme: string,         // Chế độ giao diện (light/dark)
+    language: string       // Ngôn ngữ ứng dụng
+  }
+}
+```
+
+**Collection Tasks:**
+```javascript
+{
+  taskId: string,      // ID định danh duy nhất cho mỗi task
+  userId: string,      // ID của người dùng sở hữu task
+  title: string,       // Tiêu đề công việc
+  description: string, // Mô tả chi tiết công việc
+  date: timestamp,     // Ngày thực hiện công việc
+  time: timestamp,     // Thời gian thực hiện
+  completed: boolean,  // Trạng thái hoàn thành (true/false)
+  projectId: string,   // ID của project chứa task này
+  priority: number,    // Mức độ ưu tiên của task
+  labels: array<string>, // Mảng chứa các nhãn của task
+  reminders: [{        // Mảng các nhắc nhở
+    time: timestamp,   // Thời gian nhắc nhở
+    type: string      // Loại nhắc nhở (trước 15 phút, tùy chỉnh...)
+  }],
+  attachments: [{      // Mảng các tệp đính kèm
+    type: string,     // Loại đính kèm (URL, địa điểm...)
+    value: string     // Giá trị của đính kèm
+  }],
+  createdAt: timestamp,// Thời điểm tạo task
+  updatedAt: timestamp // Thời điểm cập nhật task gần nhất
+}
+```
+
+**Collection Projects:**
+```javascript
+{
+  projectId: string,   // ID định danh duy nhất cho mỗi project
+  userId: string,      // ID của người dùng sở hữu project
+  name: string,        // Tên project
+  icon: string,        // Icon của project
+  color: string,       // Màu sắc project
+  tasksCount: number,  // Số lượng task trong project
+  createdAt: timestamp // Thời điểm tạo project
+}
+```
+
+**Collection Labels:**
+```javascript
+{
+  labelId: string,     // ID định danh duy nhất cho mỗi nhãn
+  userId: string,      // ID của người dùng sở hữu nhãn
+  name: string,        // Tên nhãn
+  color: string        // Màu sắc của nhãn
+}
+```
+
+Một số lưu ý quan trọng:
+- Các trường có `userId` dùng để phân quyền và lọc dữ liệu theo người dùng
+- Các trường timestamp (`createdAt`, `updatedAt`) dùng để theo dõi lịch sử và sắp xếp
+- `projectId` trong tasks dùng để liên kết task với project
+- `tasksCount` trong projects giúp hiển thị nhanh số lượng task mà không cần truy vấn
+- `labels` trong tasks là mảng chứa các ID của nhãn, giúp dễ dàng lọc task theo nhãn
+
