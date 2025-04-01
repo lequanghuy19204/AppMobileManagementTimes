@@ -46,4 +46,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
 
     implementation ("androidx.cardview:cardview:1.0.0")
+    
+    // Thay thế thư viện Material CalendarView bằng CalendarView của Android
+    implementation ("androidx.recyclerview:recyclerview:1.3.2")
 }
