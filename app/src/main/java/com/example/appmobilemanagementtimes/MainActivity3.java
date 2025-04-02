@@ -17,9 +17,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity3 extends AppCompatActivity {
     private RecyclerView recyclerToday, recyclerDone;
-    private Taskadapter2 todayAdapter;
+    private Taskadapter4 todayAdapter;
     private Taskadapter3 doneAdapter;
     private List<Task2> todayTasks, doneTasks;
     private TextView tvDate;
@@ -29,25 +29,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.today);
+        setContentView(R.layout.passdate);
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
-                    int itemId = item.getItemId();
-                    if (itemId == R.id.navigation_home) {
-                        // Xử lý khi chọn Home
-                        return true;
-                    } else if (itemId == R.id.navigation_upcoming) {
-                        // Xử lý khi chọn Upcoming
-                        return true;
-                    } else if (itemId == R.id.navigation_pomo) {
-                        // Xử lý khi chọn Pomo
-                        return true;
-                    } else if (itemId == R.id.navigation_statistic) {
-                        // Xử lý khi chọn Statistic
-                        return true;
-                    }
-                    return false;
-                });
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                // Xử lý khi chọn Home
+                return true;
+            } else if (itemId == R.id.navigation_upcoming) {
+                // Xử lý khi chọn Upcoming
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                // Xử lý khi chọn Pomo
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
+                // Xử lý khi chọn Statistic
+                return true;
+            }
+            return false;
+        });
 
         recyclerToday = findViewById(R.id.recycler_todo);
         recyclerDone = findViewById(R.id.recyclerView);
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         doneTasks.add(new Task2("Đọc sách", "09:00 PM"));
 
         // Cấu hình Adapter
-        todayAdapter = new Taskadapter2(todayTasks);
+        todayAdapter = new Taskadapter4(todayTasks);
         doneAdapter = new Taskadapter3(doneTasks);
         recyclerToday.setAdapter(todayAdapter);
         recyclerDone.setAdapter(doneAdapter);
@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
             updateDate();
         });
     }
-
 
     private void updateDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
