@@ -16,13 +16,13 @@
             android:name=".MainActivity4"
             android:exported="true" />
         <activity
-            android:name=".MainActivity2"
+            android:name=".create_items"
             android:exported="true" />
         <activity
-            android:name=".MainActivity3"
+            android:name=".pass_date"
             android:exported="true" />
         <activity
-            android:name=".MainActivity"
+            android:name=".Today"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

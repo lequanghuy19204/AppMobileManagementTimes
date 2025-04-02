@@ -1,5 +1,6 @@
 package com.example.appmobilemanagementtimes;
 
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
@@ -17,7 +18,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity3 extends AppCompatActivity {
+public class pass_date extends AppCompatActivity {
     private RecyclerView recyclerToday, recyclerDone;
     private Taskadapter4 todayAdapter;
     private Taskadapter3 doneAdapter;
@@ -30,6 +31,14 @@ public class MainActivity3 extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.passdate);
+        ImageButton imageButton = findViewById(R.id.btn_next_day);
+
+        // Xử lý sự kiện khi bấm vào ImageButton
+        imageButton.setOnClickListener(v -> {
+            // Tạo Intent để chuyển sang Activity khác
+            Intent intent = new Intent(pass_date.this, Today.class);
+            startActivity(intent); // Chuyển sang SecondActivity
+        });
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -78,9 +87,10 @@ public class MainActivity3 extends AppCompatActivity {
         recyclerToday.setAdapter(todayAdapter);
         recyclerDone.setAdapter(doneAdapter);
 
-        // Hiển thị ngày hiện tại
         calendar = Calendar.getInstance();
-        updateDate();
+        calendar.add(Calendar.DAY_OF_MONTH, -1);  // Trừ đi 1 ngày
+        updateDate();  // Cập nhật ngày sau khi trừ
+
 
         // Xử lý chuyển ngày
         btnPrevDay.setOnClickListener(v -> {
@@ -88,10 +98,10 @@ public class MainActivity3 extends AppCompatActivity {
             updateDate();
         });
 
-        btnNextDay.setOnClickListener(v -> {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            updateDate();
-        });
+//        btnNextDay.setOnClickListener(v -> {
+//            calendar.add(Calendar.DAY_OF_MONTH, 1);
+//            updateDate();
+//        });
     }
 
     private void updateDate() {

@@ -3,6 +3,7 @@ package com.example.appmobilemanagementtimes;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
@@ -45,15 +45,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             task.setCompleted(isChecked);
         });
 
-        // Xử lý khi bấm nút sửa Task
-        holder.editTask.setOnClickListener(v -> {
-            showEditTaskDialog(position);
-        });
+        // Xử lý khi bấm nút sửa Task - Chuyển sang MainActivity2
+
 
         // Xử lý khi bấm nút xóa Task
         holder.deleteTask.setOnClickListener(v -> {
             taskList.remove(position);
             notifyItemRemoved(position);
+            notifyItemRangeChanged(position, taskList.size());
         });
     }
 
@@ -77,7 +76,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-    // Hiển thị dialog sửa Task
+    // Hiển thị dialog sửa Task (nếu vẫn muốn giữ)
     private void showEditTaskDialog(int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Edit Task");

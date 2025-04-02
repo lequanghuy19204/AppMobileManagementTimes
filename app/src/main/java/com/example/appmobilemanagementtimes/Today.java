@@ -1,5 +1,6 @@
 package com.example.appmobilemanagementtimes;
 
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
@@ -17,7 +18,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class Today extends AppCompatActivity {
     private RecyclerView recyclerToday, recyclerDone;
     private Taskadapter2 todayAdapter;
     private Taskadapter3 doneAdapter;
@@ -30,6 +31,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.today);
+
+        ImageButton imageButton = findViewById(R.id.btn_add);
+
+        // Xử lý sự kiện khi bấm vào ImageButton
+        imageButton.setOnClickListener(v -> {
+            // Tạo Intent để chuyển sang Activity khác
+            Intent intent = new Intent(Today.this, create_items.class);
+            startActivity(intent); // Chuyển sang SecondActivity
+        });
+        ImageButton imageB = findViewById(R.id.btn_prev_day);
+
+        // Xử lý sự kiện khi bấm vào ImageButton
+        imageB.setOnClickListener(v -> {
+            // Tạo Intent để chuyển sang Activity khác
+            Intent intent = new Intent(Today.this, pass_date.class);
+            startActivity(intent); // Chuyển sang SecondActivity
+        });
+
+
+        // Xử lý sự kiện bấm
+
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
                     int itemId = item.getItemId();
@@ -52,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerToday = findViewById(R.id.recycler_todo);
         recyclerDone = findViewById(R.id.recyclerView);
         tvDate = findViewById(R.id.tv_date);
-        btnPrevDay = findViewById(R.id.btn_prev_day);
+
         btnNextDay = findViewById(R.id.btn_next_day);
 
         // Cấu hình RecyclerView
@@ -83,10 +105,7 @@ public class MainActivity extends AppCompatActivity {
         updateDate();
 
         // Xử lý chuyển ngày
-        btnPrevDay.setOnClickListener(v -> {
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-            updateDate();
-        });
+
 
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
