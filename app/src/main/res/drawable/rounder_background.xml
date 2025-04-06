@@ -1,0 +1,13 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Màu nền của LinearLayout (Có thể bỏ nếu không cần màu nền) -->
+    <solid
+        android:color="@android:color/white" />
+
+    <!-- Viền (Border) xung quanh -->
+    <stroke
+        android:color="#D3D3D3"
+        android:width="2dp"/> <!-- Độ dày viền -->
+
+    <!-- Bo góc cho LinearLayout -->
+    <corners android:radius="16dp" /> <!-- Bo góc với bán kính 16dp -->
+</shape>

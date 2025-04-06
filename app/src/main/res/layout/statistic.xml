@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="20dp"
+    android:padding="10dp"
+    >
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Today"
+        android:layout_gravity="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FF0000"
+        android:paddingTop="30dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="09 Feb 2-25"
+        android:layout_gravity="center"
+        android:paddingBottom="15dp"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="202dp"
+        android:orientation="horizontal"
+        android:background="@drawable/rounder_background"
+        android:layout_marginBottom="15dp"
+        android:padding="15dp"
+        >
+
+        <LinearLayout
+            android:layout_width="158dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="3/4 tasks done"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/progressBar1"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="155dp"
+                android:layout_height="155dp"
+                android:layout_gravity="center"
+                android:background="@drawable/circle_shape"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/circular_progress_bar"
+                android:padding="15dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="3/4 Promo done"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="155dp"
+                android:layout_height="155dp"
+                android:layout_gravity="center"
+                android:background="@drawable/circle_shape"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/circular_progress_bar"
+                android:padding="15dp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounder_background"
+        android:padding="10dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Static"
+            android:textStyle="bold"
+            android:textSize="20dp"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="vertical">
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/barchart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+<!--    <include-->
+<!--        layout="m"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_weight="1"/>-->
+</LinearLayout>

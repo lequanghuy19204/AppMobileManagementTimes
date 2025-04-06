@@ -16,8 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") } // 👈 để dùng MPAndroidChart
     }
 }
+
 
 rootProject.name = "AppMobileManagementTimes"
 include(":app")
