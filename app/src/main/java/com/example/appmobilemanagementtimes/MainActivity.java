@@ -1,5 +1,6 @@
 package com.example.appmobilemanagementtimes;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 // Xử lý khi chọn Statistic
+                Intent intent = new Intent(MainActivity.this, StatisticActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;
