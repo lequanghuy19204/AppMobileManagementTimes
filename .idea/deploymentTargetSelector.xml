@@ -11,6 +11,9 @@
       <SelectionState runConfigName="Today">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="pass_date">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
       <SelectionState runConfigName="Today (1)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>

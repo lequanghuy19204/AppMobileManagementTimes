@@ -3,26 +3,23 @@ package com.example.appmobilemanagementtimes;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -43,7 +40,7 @@ public class pass_date extends AppCompatActivity {
     private ImageButton btnPrevDay, btnNextDay;
     private Calendar calendar;
     private FirebaseFirestore db;
-    private ActivityResultLauncher<Intent> updateTaskLauncher; // Thêm launcher cho chỉnh sửa
+    private ActivityResultLauncher<Intent> updateTaskLauncher;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -53,7 +50,6 @@ public class pass_date extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // Khởi tạo ActivityResultLauncher để nhận dữ liệu từ update_items
         updateTaskLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -64,17 +60,26 @@ public class pass_date extends AppCompatActivity {
                         String originalTaskId = result.getData().getStringExtra("originalTaskId");
 
                         if (taskName != null && startTime != null && endTime != null && originalTaskId != null) {
-                            // Xóa task cũ và thêm task mới với dữ liệu đã chỉnh sửa
-                            db.collection("tasks").document(originalTaskId).delete();
-                            Task2 updatedTask = new Task2(taskName, startTime, endTime);
-                            Map<String, Object> taskData = new HashMap<>();
-                            taskData.put("name", updatedTask.getName());
-                            taskData.put("startTime", updatedTask.getStartTime());
-                            taskData.put("endTime", updatedTask.getEndTime());
-                            taskData.put("status", "overdue");
-                            db.collection("tasks")
-                                    .document(taskName + "_" + startTime)
-                                    .set(taskData);
+                            db.collection("tasks").document(originalTaskId)
+                                    .delete()
+                                    .addOnSuccessListener(aVoid -> {
+                                        Task2 updatedTask = new Task2(taskName, startTime, endTime);
+                                        Map<String, Object> taskData = new HashMap<>();
+                                        taskData.put("name", updatedTask.getName());
+                                        taskData.put("startTime", updatedTask.getStartTime());
+                                        taskData.put("endTime", updatedTask.getEndTime());
+                                        taskData.put("status", "overdue");
+
+                                        String newTaskId = taskName + "_" + startTime;
+                                        db.collection("tasks")
+                                                .document(newTaskId)
+                                                .set(taskData)
+                                                .addOnSuccessListener(aVoid1 -> {
+                                                    checkAndTransferToToday(startTime);
+                                                })
+                                                .addOnFailureListener(e -> Log.e("pass_date", "Error adding updated task", e));
+                                    })
+                                    .addOnFailureListener(e -> Log.e("pass_date", "Error deleting old task", e));
                         }
                     }
                 });
@@ -93,8 +98,7 @@ public class pass_date extends AppCompatActivity {
         recyclerDone.setHasFixedSize(true);
 
         overdueAdapter = new Taskadapter4(overdueTasks, task -> {
-            db.collection("tasks").document(task.getName() + "_" + task.getStartTime())
-                    .delete();
+            db.collection("tasks").document(task.getName() + "_" + task.getStartTime()).delete();
             addTaskToFirestore(new Task(task.getName(), task.getStartTime()), "done");
         });
         doneAdapter = new Taskadapter3(doneTasks);
@@ -121,27 +125,37 @@ public class pass_date extends AppCompatActivity {
             return false;
         });
 
-        Calendar today = Calendar.getInstance();
         calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH, -1);
+        if (getIntent().hasExtra("selectedDate")) {
+            calendar.setTimeInMillis(getIntent().getLongExtra("selectedDate", calendar.getTimeInMillis()));
+        } else {
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+        }
         updateDate();
         listenToFirestoreChanges();
 
         btnPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             updateDate();
-            filterTasksByDate();
+            listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
         });
 
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-            if (!calendar.getTime().before(today.getTime())) {
+            Calendar today = Calendar.getInstance();
+            today.set(Calendar.HOUR_OF_DAY, 0);
+            today.set(Calendar.MINUTE, 0);
+            today.set(Calendar.SECOND, 0);
+            today.set(Calendar.MILLISECOND, 0);
+
+            if (!calendar.before(today)) {
                 Intent intent = new Intent(pass_date.this, Today.class);
+                intent.putExtra("selectedDate", calendar.getTimeInMillis());
                 startActivity(intent);
                 finish();
             } else {
                 updateDate();
-                filterTasksByDate();
+                listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
             }
         });
 
@@ -169,37 +183,73 @@ public class pass_date extends AppCompatActivity {
         }
     }
 
-    private void addTaskToFirestore(Task task, String status) {
+    private void addTaskToFirestore(Object task, String status) {
         Map<String, Object> taskData = new HashMap<>();
-        taskData.put("name", task.getName());
-        taskData.put("time", task.getTime());
+        if (task instanceof Task2) {
+            Task2 t = (Task2) task;
+            taskData.put("name", t.getName());
+            taskData.put("startTime", t.getStartTime());
+            taskData.put("endTime", t.getEndTime());
+        } else if (task instanceof Task) {
+            Task t = (Task) task;
+            taskData.put("name", t.getName());
+            taskData.put("time", t.getTime());
+        }
         taskData.put("status", status);
 
+        String documentId = taskData.get("name") + "_" + (taskData.get("startTime") != null ? taskData.get("startTime") : taskData.get("time"));
+        Log.d("pass_date", "Adding task to Firestore: " + taskData.toString());
         db.collection("tasks")
-                .document(task.getName() + "_" + task.getTime())
-                .set(taskData);
+                .document(documentId)
+                .set(taskData)
+                .addOnSuccessListener(aVoid -> Log.d("pass_date", "Task added successfully: " + documentId))
+                .addOnFailureListener(e -> Log.e("pass_date", "Error adding task", e));
     }
 
     private void listenToFirestoreChanges() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDate = sdf.format(calendar.getTime());
+        Log.d("pass_date", "Listening for tasks on date: " + currentDate);
+
         db.collection("tasks")
                 .addSnapshotListener((snapshots, e) -> {
-                    if (e != null) return;
+                    if (e != null) {
+                        Log.e("pass_date", "Firestore listen failed", e);
+                        return;
+                    }
 
                     overdueTasks.clear();
                     doneTasks.clear();
-                    for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                        String status = doc.getString("status");
-                        String name = doc.getString("name");
-                        if ("overdue".equals(status)) {
+
+                    if (snapshots == null || snapshots.isEmpty()) {
+                        Log.d("pass_date", "No tasks found in Firestore");
+                    } else {
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            Log.d("pass_date", "Found task: " + doc.getData().toString());
+                            String status = doc.getString("status");
+                            String name = doc.getString("name");
                             String startTime = doc.getString("startTime");
                             String endTime = doc.getString("endTime");
-                            overdueTasks.add(new Task2(name, startTime, endTime));
-                        } else if ("done".equals(status)) {
                             String time = doc.getString("time");
-                            doneTasks.add(new Task(name, time));
+
+                            if ("overdue".equals(status) && startTime != null && endTime != null) {
+                                String taskDate = startTime.substring(0, 10);
+                                if (taskDate.equals(currentDate)) {
+                                    overdueTasks.add(new Task2(name, startTime, endTime));
+                                    Log.d("pass_date", "Added overdue task: " + name + " for " + taskDate);
+                                }
+                            } else if ("done".equals(status) && time != null) {
+                                String taskDate = time.substring(0, 10);
+                                if (taskDate.equals(currentDate)) {
+                                    doneTasks.add(new Task(name, time));
+                                    Log.d("pass_date", "Added done task: " + name + " for " + taskDate);
+                                }
+                            }
                         }
                     }
-                    filterTasksByDate();
+
+                    overdueAdapter.notifyDataSetChanged();
+                    doneAdapter.notifyDataSetChanged();
                 });
     }
 
@@ -208,29 +258,23 @@ public class pass_date extends AppCompatActivity {
         tvDate.setText(sdf.format(calendar.getTime()));
     }
 
-    private void filterTasksByDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String currentDate = sdf.format(calendar.getTime());
-        Calendar today = Calendar.getInstance();
-        String todayDate = sdf.format(today.getTime());
+    private void checkAndTransferToToday(String startTime) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Calendar taskCalendar = Calendar.getInstance();
+            taskCalendar.setTime(sdf.parse(startTime.substring(0, 10)));
+            Calendar todayCal = Calendar.getInstance();
+            String todayDate = sdf.format(todayCal.getTime());
 
-        List<Task2> filteredOverdueTasks = new ArrayList<>();
-        for (Task2 task : overdueTasks) {
-            String taskDate = task.getStartTime().substring(0, 10);
-            if (taskDate.equals(currentDate) && taskDate.compareTo(todayDate) < 0) {
-                filteredOverdueTasks.add(task);
+            if (startTime.substring(0, 10).equals(todayDate)) {
+                Intent intent = new Intent(pass_date.this, Today.class);
+                intent.putExtra("selectedDate", todayCal.getTimeInMillis());
+                startActivity(intent);
+                finish();
             }
+        } catch (Exception e) {
+            Log.e("pass_date", "Error checking startTime", e);
         }
-        overdueAdapter.updateTasks(filteredOverdueTasks);
-
-        List<Task> filteredDoneTasks = new ArrayList<>();
-        for (Task task : doneTasks) {
-            String taskDate = task.getTime().substring(0, 10);
-            if (taskDate.equals(currentDate) && taskDate.compareTo(todayDate) < 0) {
-                filteredDoneTasks.add(task);
-            }
-        }
-        doneAdapter.updateTasks(filteredDoneTasks);
     }
 
     private class SwipeToActionCallback extends ItemTouchHelper.SimpleCallback {
@@ -255,16 +299,15 @@ public class pass_date extends AppCompatActivity {
         public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                                 float dX, float dY, int actionState, boolean isCurrentlyActive) {
             View itemView = viewHolder.itemView;
-            ImageView label = itemView.findViewById(R.id.label);
             ImageButton btnEdit = itemView.findViewById(R.id.btnEditTask);
             ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
+            ImageView label = itemView.findViewById(R.id.label);
 
-            if (dX < 0) { // Vuốt sang trái
+            if (dX < 0) {
                 btnEdit.setVisibility(View.VISIBLE);
                 btnDelete.setVisibility(View.VISIBLE);
                 label.setVisibility(View.GONE);
 
-                // Thêm sự kiện bấm nút chỉnh sửa
                 btnEdit.setOnClickListener(v -> {
                     int position = viewHolder.getAdapterPosition();
                     Task2 task = overdueTasks.get(position);
@@ -277,7 +320,7 @@ public class pass_date extends AppCompatActivity {
                 });
 
                 itemView.setTranslationX(0);
-            } else { // Vuốt sang phải hoặc trở về trạng thái ban đầu
+            } else {
                 btnEdit.setVisibility(View.GONE);
                 btnDelete.setVisibility(View.GONE);
                 label.setVisibility(View.VISIBLE);
@@ -285,19 +328,6 @@ public class pass_date extends AppCompatActivity {
             itemView.setTranslationX(0);
 
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-        }
-    }
-
-    public static class SpaceItemDecoration extends RecyclerView.ItemDecoration {
-        private final int space;
-
-        public SpaceItemDecoration(int space) {
-            this.space = space;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-            outRect.bottom = space;
         }
     }
 }

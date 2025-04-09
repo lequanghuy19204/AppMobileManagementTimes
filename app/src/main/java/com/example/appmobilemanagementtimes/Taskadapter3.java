@@ -6,10 +6,8 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.List;
 
 public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHolder> {
@@ -30,25 +28,20 @@ public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHold
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = taskList.get(position);
         holder.taskName.setText(task.getName());
-        String time = task.getTime().substring(11); // Chỉ lấy phần giờ "HH:mm"
+        String time = task.getTime().substring(11);
         holder.taskTime.setText(time);
 
-        // Đặt checkbox luôn có dấu tích và không thể chỉnh sửa
         holder.checkbox.setChecked(true);
-        holder.checkbox.setEnabled(false); // Đảm bảo không thể tương tác
+        holder.checkbox.setEnabled(false);
 
         holder.btnDelete.setOnClickListener(v -> {
-
             int pos = holder.getAdapterPosition();
             if (pos != RecyclerView.NO_POSITION) {
                 taskList.remove(pos);
                 notifyItemRemoved(pos);
             }
         });
-
-
     }
-
 
     @Override
     public int getItemCount() {

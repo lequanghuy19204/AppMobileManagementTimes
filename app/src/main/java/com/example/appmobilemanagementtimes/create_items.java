@@ -3,18 +3,16 @@ package com.example.appmobilemanagementtimes;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -43,7 +41,13 @@ public class create_items extends AppCompatActivity {
 
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd 'thg' M, yyyy", new Locale("vi", "VN"));
+        SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         String displayDate = dateFormat.format(calendar.getTime());
+
+        // Gán giá trị mặc định cho selectedStartTime và selectedEndTime
+        selectedStartTime = storageFormat.format(calendar.getTime());
+        selectedEndTime = storageFormat.format(calendar.getTime());
+
         editStartTime.setText(displayDate.replace("Thu", "T5"));
         editEndTime.setText(displayDate.replace("Thu", "T5"));
 
@@ -61,6 +65,7 @@ public class create_items extends AppCompatActivity {
             String taskName = editTextTaskName.getText().toString().trim();
 
             if (!taskName.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
+                Log.d("create_items", "Creating task - Name: " + taskName + ", StartTime: " + selectedStartTime + ", EndTime: " + selectedEndTime);
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("taskName", taskName);
                 resultIntent.putExtra("startTime", selectedStartTime);

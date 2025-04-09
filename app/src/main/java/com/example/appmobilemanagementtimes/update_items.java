@@ -3,18 +3,16 @@ package com.example.appmobilemanagementtimes;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -27,7 +25,7 @@ public class update_items extends AppCompatActivity {
     private EditText editTextTaskName;
     private ImageView rightButton;
     private LinearLayout linearLayoutStartTime, linearLayoutEndTime;
-    private String originalTaskId; // Lưu ID task gốc để trả về
+    private String originalTaskId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,14 +41,12 @@ public class update_items extends AppCompatActivity {
         editTextTaskName = findViewById(R.id.editTextTaskName);
         rightButton = findViewById(R.id.rightButton);
 
-        // Nhận dữ liệu từ Intent và hiển thị sẵn
         Intent intent = getIntent();
         String taskName = intent.getStringExtra("taskName");
         String startTime = intent.getStringExtra("startTime");
         String endTime = intent.getStringExtra("endTime");
         originalTaskId = intent.getStringExtra("originalTaskId");
 
-        // Hiển thị thông tin task hiện tại
         if (taskName != null) {
             editTextTaskName.setText(taskName);
         }
@@ -77,14 +73,12 @@ public class update_items extends AppCompatActivity {
             String taskNameUpdated = editTextTaskName.getText().toString().trim();
 
             if (!taskNameUpdated.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
+                Log.d("update_items", "Updating task - Name: " + taskNameUpdated + ", StartTime: " + selectedStartTime + ", EndTime: " + selectedEndTime + ", OriginalTaskId: " + originalTaskId);
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("taskName", taskNameUpdated);
                 resultIntent.putExtra("startTime", selectedStartTime);
                 resultIntent.putExtra("endTime", selectedEndTime);
                 resultIntent.putExtra("originalTaskId", originalTaskId);
-                // Nếu cần trả về repeatMode và reminderTime từ Today, thêm vào đây
-                resultIntent.putExtra("repeatMode", intent.getStringExtra("repeatMode"));
-                resultIntent.putExtra("reminderTime", intent.getStringExtra("reminderTime"));
                 setResult(RESULT_OK, resultIntent);
                 finish();
             } else {
@@ -118,18 +112,15 @@ public class update_items extends AppCompatActivity {
                 Calendar selectedCalendar = Calendar.getInstance();
                 selectedCalendar.set(year1, month1, dayOfMonth, hour, minute);
 
-                // Format hiển thị
                 SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd 'thg' M, yyyy", new Locale("vi", "VN"));
                 SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
                 String displayDate = dateFormat.format(selectedCalendar.getTime());
                 String displayTime = timeFormat.format(selectedCalendar.getTime())
                         .replace("AM", "SA").replace("PM", "CH");
 
-                // Format lưu trữ
                 SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
                 String storageTime = storageFormat.format(selectedCalendar.getTime());
 
-                // Cập nhật UI
                 if (isStartTime) {
                     selectedStartTime = storageTime;
                     editStartTime.setText(displayDate.replace("Thu", "T5"));
@@ -146,7 +137,6 @@ public class update_items extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    // Phương thức để hiển thị thời gian từ chuỗi nhận được
     private void displayTime(String time, boolean isStartTime) {
         try {
             SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
