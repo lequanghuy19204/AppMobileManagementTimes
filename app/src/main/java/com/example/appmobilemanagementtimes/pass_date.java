@@ -14,10 +14,13 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
@@ -40,6 +43,7 @@ public class pass_date extends AppCompatActivity {
     private ImageButton btnPrevDay, btnNextDay;
     private Calendar calendar;
     private FirebaseFirestore db;
+    private DrawerLayout drawerLayout;
     private ActivityResultLauncher<Intent> updateTaskLauncher;
 
     @SuppressLint("ClickableViewAccessibility")
@@ -47,6 +51,37 @@ public class pass_date extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.passdate);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            navigationView.getMenu().setGroupCheckable(0, true, true);
+            item.setChecked(true);
+
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_logout) {
+//                Intent intent = new Intent(Today.this, LoginActivity.class);
+//                startActivity(intent);
+//                finish();
+            } else if (itemId == R.id.nav_language) {
+                // Xử lý thay đổi ngôn ngữ
+            } else if (itemId == R.id.nav_dark_mode) {
+                // Xử lý chuyển đổi Dark Mode
+            } else if (itemId == R.id.nav_setting) {
+//                Intent intent = new Intent(Today.this, SettingsActivity.class);
+//                startActivity(intent);
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+        ImageView imgAvatar = findViewById(R.id.img_avatar);
+        imgAvatar.setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
 
         db = FirebaseFirestore.getInstance();
 
@@ -257,6 +292,7 @@ public class pass_date extends AppCompatActivity {
         tvDate.setText(sdf.format(calendar.getTime()));
     }
 
+
     private void checkAndTransferToToday(String startTime) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -295,6 +331,7 @@ public class pass_date extends AppCompatActivity {
             viewHolder.itemView.setTranslationX(0);
             mAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
         }
+
 
         @Override
         public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,

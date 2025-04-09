@@ -7,14 +7,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
@@ -26,6 +32,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class Today extends AppCompatActivity {
+    private LinearLayout rootLayout;  // Thêm biến cho root_layout
+    private ScrollView taskScrollView;  // Thêm biến cho ScrollView
     private ActivityResultLauncher<Intent> createTaskLauncher;
     private ActivityResultLauncher<Intent> updateTaskLauncher;
     private RecyclerView recyclerToday, recyclerDone;
@@ -37,6 +45,7 @@ public class Today extends AppCompatActivity {
     private ImageButton btnPrevDay, btnNextDay;
     private Calendar calendar;
     private FirebaseFirestore db;
+    private DrawerLayout drawerLayout;
     private static final String TAG = "Today";
 
     @SuppressLint("ClickableViewAccessibility")
@@ -44,8 +53,43 @@ public class Today extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.today);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            navigationView.getMenu().setGroupCheckable(0, true, true);
+            item.setChecked(true);
+
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_logout) {
+//                Intent intent = new Intent(Today.this, LoginActivity.class);
+//                startActivity(intent);
+//                finish();
+            } else if (itemId == R.id.nav_language) {
+                // Xử lý thay đổi ngôn ngữ
+            } else if (itemId == R.id.nav_dark_mode) {
+                // Xử lý chuyển đổi Dark Mode
+            } else if (itemId == R.id.nav_setting) {
+//                Intent intent = new Intent(Today.this, SettingsActivity.class);
+//                startActivity(intent);
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+        ImageView imgAvatar = findViewById(R.id.img_avatar);
+        imgAvatar.setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+        rootLayout = findViewById(R.id.root_layout);  // Khởi tạo root_layout
+        taskScrollView = findViewById(R.id.task);     // Khởi tạo ScrollView
+
 
         db = FirebaseFirestore.getInstance();
+
 
         createTaskLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -152,6 +196,25 @@ public class Today extends AppCompatActivity {
             else if (itemId == R.id.navigation_statistic) return true;
             return false;
         });
+        rootLayout.setOnTouchListener((v, event) -> {
+            hideSwipeActions();
+            return false;
+        });
+
+        taskScrollView.setOnTouchListener((v, event) -> {
+            hideSwipeActions();
+            return false;
+        });
+
+        recyclerToday.setOnTouchListener((v, event) -> {
+            hideSwipeActions();
+            return false;
+        });
+
+        recyclerDone.setOnTouchListener((v, event) -> {
+            hideSwipeActions();
+            return false;
+        });
     }
 
     private void addTaskToFirestore(Object task, String status) {
@@ -176,7 +239,17 @@ public class Today extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Task added successfully: " + documentId))
                 .addOnFailureListener(e -> Log.e(TAG, "Error adding task", e));
     }
-
+    private void hideSwipeActions() {
+        for (int i = 0; i < recyclerToday.getChildCount(); i++) {
+            View itemView = recyclerToday.getChildAt(i);
+            ImageView label = itemView.findViewById(R.id.label);
+            ImageButton btnEdit = itemView.findViewById(R.id.btnEditTask);
+            ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
+            btnEdit.setVisibility(View.GONE);
+            btnDelete.setVisibility(View.GONE);
+            label.setVisibility(View.VISIBLE);
+        }
+    }
     private void listenToFirestoreChanges() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String currentDate = sdf.format(calendar.getTime());
@@ -251,10 +324,12 @@ public class Today extends AppCompatActivity {
         public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                                 float dX, float dY, int actionState, boolean isCurrentlyActive) {
             View itemView = viewHolder.itemView;
+            ImageView label = itemView.findViewById(R.id.label);
             ImageButton btnEdit = itemView.findViewById(R.id.btnEditTask);
             ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
 
             if (dX < 0) {
+                label.setVisibility(View.GONE);
                 btnEdit.setVisibility(View.VISIBLE);
                 btnDelete.setVisibility(View.VISIBLE);
 
@@ -288,6 +363,7 @@ public class Today extends AppCompatActivity {
                     }
                 });
             } else {
+                label.setVisibility(View.VISIBLE);
                 btnEdit.setVisibility(View.GONE);
                 btnDelete.setVisibility(View.GONE);
             }
