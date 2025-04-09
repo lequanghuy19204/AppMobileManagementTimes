@@ -98,8 +98,10 @@ public class pass_date extends AppCompatActivity {
         recyclerDone.setHasFixedSize(true);
 
         overdueAdapter = new Taskadapter4(overdueTasks, task -> {
-            db.collection("tasks").document(task.getName() + "_" + task.getStartTime()).delete();
-            addTaskToFirestore(new Task(task.getName(), task.getStartTime()), "done");
+            String taskId = task.getName() + "_" + task.getStartTime();
+            db.collection("tasks").document(taskId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> addTaskToFirestore(new Task(task.getName(), task.getStartTime()), "done"));
         });
         doneAdapter = new Taskadapter3(doneTasks);
         recyclerOverdue.setAdapter(overdueAdapter);
@@ -137,7 +139,7 @@ public class pass_date extends AppCompatActivity {
         btnPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             updateDate();
-            listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
+            listenToFirestoreChanges();
         });
 
         btnNextDay.setOnClickListener(v -> {
@@ -155,7 +157,7 @@ public class pass_date extends AppCompatActivity {
                 finish();
             } else {
                 updateDate();
-                listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
+                listenToFirestoreChanges();
             }
         });
 
@@ -173,13 +175,15 @@ public class pass_date extends AppCompatActivity {
     private void hideEditDeleteButtons() {
         for (int i = 0; i < recyclerOverdue.getChildCount(); i++) {
             View itemView = recyclerOverdue.getChildAt(i);
-            ImageButton btnEdit = itemView.findViewById(R.id.btnEditTask);
-            ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
-            ImageView label = itemView.findViewById(R.id.label);
+            if (itemView != null) {
+                ImageButton btnEdit = itemView.findViewById(R.id.btnEditTask);
+                ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
+                ImageView label = itemView.findViewById(R.id.label);
 
-            btnEdit.setVisibility(View.GONE);
-            btnDelete.setVisibility(View.GONE);
-            label.setVisibility(View.VISIBLE);
+                if (btnEdit != null) btnEdit.setVisibility(View.GONE);
+                if (btnDelete != null) btnDelete.setVisibility(View.GONE);
+                if (label != null) label.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -198,7 +202,6 @@ public class pass_date extends AppCompatActivity {
         taskData.put("status", status);
 
         String documentId = taskData.get("name") + "_" + (taskData.get("startTime") != null ? taskData.get("startTime") : taskData.get("time"));
-        Log.d("pass_date", "Adding task to Firestore: " + taskData.toString());
         db.collection("tasks")
                 .document(documentId)
                 .set(taskData)
@@ -209,7 +212,6 @@ public class pass_date extends AppCompatActivity {
     private void listenToFirestoreChanges() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String currentDate = sdf.format(calendar.getTime());
-        Log.d("pass_date", "Listening for tasks on date: " + currentDate);
 
         db.collection("tasks")
                 .addSnapshotListener((snapshots, e) -> {
@@ -221,11 +223,8 @@ public class pass_date extends AppCompatActivity {
                     overdueTasks.clear();
                     doneTasks.clear();
 
-                    if (snapshots == null || snapshots.isEmpty()) {
-                        Log.d("pass_date", "No tasks found in Firestore");
-                    } else {
+                    if (snapshots != null && !snapshots.isEmpty()) {
                         for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                            Log.d("pass_date", "Found task: " + doc.getData().toString());
                             String status = doc.getString("status");
                             String name = doc.getString("name");
                             String startTime = doc.getString("startTime");
@@ -236,20 +235,20 @@ public class pass_date extends AppCompatActivity {
                                 String taskDate = startTime.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
                                     overdueTasks.add(new Task2(name, startTime, endTime));
-                                    Log.d("pass_date", "Added overdue task: " + name + " for " + taskDate);
                                 }
                             } else if ("done".equals(status) && time != null) {
                                 String taskDate = time.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
                                     doneTasks.add(new Task(name, time));
-                                    Log.d("pass_date", "Added done task: " + name + " for " + taskDate);
                                 }
                             }
                         }
                     }
 
-                    overdueAdapter.notifyDataSetChanged();
-                    doneAdapter.notifyDataSetChanged();
+                    runOnUiThread(() -> {
+                        overdueAdapter.notifyDataSetChanged();
+                        doneAdapter.notifyDataSetChanged();
+                    });
                 });
     }
 
@@ -292,6 +291,8 @@ public class pass_date extends AppCompatActivity {
 
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            // Reset the view position
+            viewHolder.itemView.setTranslationX(0);
             mAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
         }
 
@@ -303,29 +304,61 @@ public class pass_date extends AppCompatActivity {
             ImageButton btnDelete = itemView.findViewById(R.id.btnDeleteTask);
             ImageView label = itemView.findViewById(R.id.label);
 
-            if (dX < 0) {
-                btnEdit.setVisibility(View.VISIBLE);
-                btnDelete.setVisibility(View.VISIBLE);
-                label.setVisibility(View.GONE);
+            if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                if (dX < 0) { // Swipe left
+                    btnEdit.setVisibility(View.VISIBLE);
+                    btnDelete.setVisibility(View.VISIBLE);
+                    label.setVisibility(View.GONE);
 
-                btnEdit.setOnClickListener(v -> {
-                    int position = viewHolder.getAdapterPosition();
-                    Task2 task = overdueTasks.get(position);
-                    Intent intent = new Intent(pass_date.this, update_items.class);
-                    intent.putExtra("taskName", task.getName());
-                    intent.putExtra("startTime", task.getStartTime());
-                    intent.putExtra("endTime", task.getEndTime());
-                    intent.putExtra("originalTaskId", task.getName() + "_" + task.getStartTime());
-                    updateTaskLauncher.launch(intent);
-                });
+                    btnEdit.setOnClickListener(v -> {
+                        int position = viewHolder.getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            Task2 task = overdueTasks.get(position);
+                            Intent intent = new Intent(pass_date.this, update_items.class);
+                            intent.putExtra("taskName", task.getName());
+                            intent.putExtra("startTime", task.getStartTime());
+                            intent.putExtra("endTime", task.getEndTime());
+                            intent.putExtra("originalTaskId", task.getName() + "_" + task.getStartTime());
+                            updateTaskLauncher.launch(intent);
+                            hideEditDeleteButtons();
+                            recyclerOverdue.getAdapter().notifyItemChanged(position);
+                        }
+                    });
 
-                itemView.setTranslationX(0);
-            } else {
-                btnEdit.setVisibility(View.GONE);
-                btnDelete.setVisibility(View.GONE);
-                label.setVisibility(View.VISIBLE);
+                    btnDelete.setOnClickListener(v -> {
+                        int position = viewHolder.getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION && position < overdueTasks.size()) {
+                            Task2 task = overdueTasks.get(position);
+                            String taskId = task.getName() + "_" + task.getStartTime();
+
+                            db.collection("tasks")
+                                    .document(taskId)
+                                    .delete()
+                                    .addOnSuccessListener(aVoid -> {
+                                        runOnUiThread(() -> {
+                                            if (position < overdueTasks.size()) {
+                                                overdueTasks.remove(position);
+                                                mAdapter.notifyItemRemoved(position);
+                                                mAdapter.notifyItemRangeChanged(position, overdueTasks.size());
+                                            }
+                                            hideEditDeleteButtons();
+                                        });
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("pass_date", "Error deleting task", e);
+                                        runOnUiThread(() -> {
+                                            mAdapter.notifyItemChanged(position);
+                                            hideEditDeleteButtons();
+                                        });
+                                    });
+                        }
+                    });
+                } else { // Swipe right or no swipe
+                    btnEdit.setVisibility(View.GONE);
+                    btnDelete.setVisibility(View.GONE);
+                    label.setVisibility(View.VISIBLE);
+                }
             }
-            itemView.setTranslationX(0);
 
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
         }

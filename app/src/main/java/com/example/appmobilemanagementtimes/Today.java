@@ -120,8 +120,9 @@ public class Today extends AppCompatActivity {
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             updateDate();
-            listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
+            listenToFirestoreChanges();
         });
+
 
         btnPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
@@ -138,7 +139,7 @@ public class Today extends AppCompatActivity {
                 finish();
             } else {
                 updateDate();
-                listenToFirestoreChanges(); // Gọi lại để lọc dữ liệu cho ngày mới
+                listenToFirestoreChanges();
             }
         });
 
@@ -267,6 +268,23 @@ public class Today extends AppCompatActivity {
                         intent.putExtra("endTime", task.getEndTime());
                         intent.putExtra("originalTaskId", task.getName() + "_" + task.getStartTime());
                         updateTaskLauncher.launch(intent);
+                    }
+                });
+
+                btnDelete.setOnClickListener(v -> {
+                    int position = viewHolder.getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        Task2 task = todayTasks.get(position);
+                        String taskId = task.getName() + "_" + task.getStartTime();
+                        db.collection("tasks")
+                                .document(taskId)
+                                .delete()
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d(TAG, "Task deleted from Firestore: " + taskId);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Error deleting task from Firestore: " + taskId, e);
+                                });
                     }
                 });
             } else {

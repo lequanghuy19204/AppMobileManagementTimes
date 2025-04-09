@@ -57,17 +57,7 @@ public class Taskadapter4 extends RecyclerView.Adapter<Taskadapter4.TaskViewHold
             }
         });
 
-        // Xử lý nút xóa
-        holder.btnDelete.setOnClickListener(v -> {
-            int pos = holder.getAdapterPosition();
-            if (pos != RecyclerView.NO_POSITION) {
-                taskList.remove(pos);
-                notifyItemRemoved(pos);
-            }
-        });
-
-        // Hiển thị label (pause3)
-
+        // Không đặt OnClickListener cho btnDelete ở đây, để SwipeToActionCallback xử lý
     }
 
     @Override
