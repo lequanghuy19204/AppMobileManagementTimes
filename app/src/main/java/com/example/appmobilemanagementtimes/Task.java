@@ -2,32 +2,24 @@ package com.example.appmobilemanagementtimes;
 
 public class Task {
     private String name;
-    private String date;
-    private boolean isCompleted;
+    private String time;
+    private boolean isCompleted; // Thêm thuộc tính này nếu cần
 
-    public Task(String name, String date, boolean isCompleted) {
+    public Task(String name, String time) {
         this.name = name;
-        this.date = date;
-        this.isCompleted = isCompleted;
+        this.time = time;
+        this.isCompleted = true; // Mặc định là true khi chuyển sang Done
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDate() {
-        return date;
+    public String getTime() {
+        return time;
     }
 
     public boolean isCompleted() {
         return isCompleted;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setCompleted(boolean completed) {
-        isCompleted = completed;
     }
 }

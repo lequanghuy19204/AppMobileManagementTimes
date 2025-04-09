@@ -15,22 +15,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class create_items extends AppCompatActivity {
+public class update_items extends AppCompatActivity {
     private String selectedStartTime;
     private String selectedEndTime;
     private TextView editStartTime, editEndTime, editStartTimeHours, editEndTimeHours;
     private EditText editTextTaskName;
     private ImageView rightButton;
     private LinearLayout linearLayoutStartTime, linearLayoutEndTime;
+    private String originalTaskId; // Lưu ID task gốc để trả về
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.create_items);
+        setContentView(R.layout.update_items);
 
         editStartTime = findViewById(R.id.editStartTime);
         editEndTime = findViewById(R.id.editEndTime);
@@ -41,30 +43,48 @@ public class create_items extends AppCompatActivity {
         editTextTaskName = findViewById(R.id.editTextTaskName);
         rightButton = findViewById(R.id.rightButton);
 
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd 'thg' M, yyyy", new Locale("vi", "VN"));
-        String displayDate = dateFormat.format(calendar.getTime());
-        editStartTime.setText(displayDate.replace("Thu", "T5"));
-        editEndTime.setText(displayDate.replace("Thu", "T5"));
+        // Nhận dữ liệu từ Intent và hiển thị sẵn
+        Intent intent = getIntent();
+        String taskName = intent.getStringExtra("taskName");
+        String startTime = intent.getStringExtra("startTime");
+        String endTime = intent.getStringExtra("endTime");
+        originalTaskId = intent.getStringExtra("originalTaskId");
+
+        // Hiển thị thông tin task hiện tại
+        if (taskName != null) {
+            editTextTaskName.setText(taskName);
+        }
+        if (startTime != null) {
+            selectedStartTime = startTime;
+            displayTime(startTime, true);
+        }
+        if (endTime != null) {
+            selectedEndTime = endTime;
+            displayTime(endTime, false);
+        }
 
         linearLayoutStartTime.setOnClickListener(view -> showDateTimePicker(true));
         linearLayoutEndTime.setOnClickListener(view -> showDateTimePicker(false));
 
         ImageButton imageButton = findViewById(R.id.leftButton);
         imageButton.setOnClickListener(v -> {
-            Intent returnIntent = new Intent(create_items.this, Today.class);
+            Intent returnIntent = new Intent(update_items.this, Today.class);
             startActivity(returnIntent);
             finish();
         });
 
         rightButton.setOnClickListener(v -> {
-            String taskName = editTextTaskName.getText().toString().trim();
+            String taskNameUpdated = editTextTaskName.getText().toString().trim();
 
-            if (!taskName.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
+            if (!taskNameUpdated.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("taskName", taskName);
+                resultIntent.putExtra("taskName", taskNameUpdated);
                 resultIntent.putExtra("startTime", selectedStartTime);
                 resultIntent.putExtra("endTime", selectedEndTime);
+                resultIntent.putExtra("originalTaskId", originalTaskId);
+                // Nếu cần trả về repeatMode và reminderTime từ Today, thêm vào đây
+                resultIntent.putExtra("repeatMode", intent.getStringExtra("repeatMode"));
+                resultIntent.putExtra("reminderTime", intent.getStringExtra("reminderTime"));
                 setResult(RESULT_OK, resultIntent);
                 finish();
             } else {
@@ -98,15 +118,18 @@ public class create_items extends AppCompatActivity {
                 Calendar selectedCalendar = Calendar.getInstance();
                 selectedCalendar.set(year1, month1, dayOfMonth, hour, minute);
 
+                // Format hiển thị
                 SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd 'thg' M, yyyy", new Locale("vi", "VN"));
                 SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
                 String displayDate = dateFormat.format(selectedCalendar.getTime());
                 String displayTime = timeFormat.format(selectedCalendar.getTime())
                         .replace("AM", "SA").replace("PM", "CH");
 
+                // Format lưu trữ
                 SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
                 String storageTime = storageFormat.format(selectedCalendar.getTime());
 
+                // Cập nhật UI
                 if (isStartTime) {
                     selectedStartTime = storageTime;
                     editStartTime.setText(displayDate.replace("Thu", "T5"));
@@ -121,5 +144,31 @@ public class create_items extends AppCompatActivity {
         }, year, month, day);
 
         datePickerDialog.show();
+    }
+
+    // Phương thức để hiển thị thời gian từ chuỗi nhận được
+    private void displayTime(String time, boolean isStartTime) {
+        try {
+            SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(storageFormat.parse(time));
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd 'thg' M, yyyy", new Locale("vi", "VN"));
+            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
+            String displayDate = dateFormat.format(calendar.getTime());
+            String displayTime = timeFormat.format(calendar.getTime())
+                    .replace("AM", "SA").replace("PM", "CH");
+
+            if (isStartTime) {
+                editStartTime.setText(displayDate.replace("Thu", "T5"));
+                editStartTimeHours.setText(displayTime);
+            } else {
+                editEndTime.setText(displayDate.replace("Thu", "T5"));
+                editEndTimeHours.setText(displayTime);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Lỗi hiển thị thời gian", Toast.LENGTH_SHORT).show();
+        }
     }
 }

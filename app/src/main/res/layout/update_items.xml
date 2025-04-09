@@ -15,14 +15,17 @@
         android:gravity="center_horizontal"
         android:paddingTop="40dp">
 
+
         <!-- Title -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingBottom="50dp">
+            android:paddingBottom="50dp"
+            >
 
+            <!-- Nút trái -->
             <ImageButton
                 android:id="@+id/leftButton"
                 android:layout_width="40dp"
@@ -36,29 +39,33 @@
                 android:clickable="true"
                 android:focusable="true" />
 
+
+            <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Create new item"
+                android:text="Update item"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#FF6600"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp" />
 
+            <!-- Nút phải -->
             <ImageView
                 android:id="@+id/rightButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/check"
-                app:tint="#FF379AE6"
+                android:src="@drawable/check" app:tint="#FF379AE6"
                 android:contentDescription="Right Button"
                 android:padding="8dp"
                 android:layout_marginStart="50dp"
                 android:clickable="true"
                 android:focusable="true"
                 tools:ignore="UseAppTint" />
+
         </LinearLayout>
+
 
         <!-- Input Name -->
         <EditText
@@ -85,8 +92,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_calendar"
-                app:tint="#FF379AE6" />
+                android:src="@drawable/ic_calendar" app:tint="#FF379AE6"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -127,6 +133,7 @@
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
 
+
             <TextView
                 android:id="@+id/editStartTimeHours"
                 android:layout_width="wrap_content"
@@ -161,7 +168,6 @@
                 android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
-
             <TextView
                 android:id="@+id/editEndTimeHours"
                 android:layout_width="wrap_content"
@@ -174,54 +180,52 @@
 
         <!-- Reminder -->
         <LinearLayout
-            android:id="@+id/reminderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="12dp"
             android:background="@drawable/rounded_bg"
-            android:layout_marginBottom="8dp"
-            android:clickable="true"
-            android:focusable="true">
+            android:layout_marginBottom="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_calendar"
-                app:tint="#FF379AE6" />
+                android:src="@drawable/ic_calendar" app:tint="#FF379AE6" />
 
             <TextView
-                android:id="@+id/reminderText"
-                android:layout_width="0dp"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Không nhắc nhở"
+                android:text="Reminder"
                 android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
+
+            <Switch
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" />
         </LinearLayout>
 
-        <!-- Repeat -->
+
+        <!-- Không bao giờ -->
         <LinearLayout
-            android:id="@+id/repeatLayout"
+            android:id="@+id/linearLayoutRepeatMode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/rounded_bg"
             android:layout_marginBottom="8dp"
-            android:padding="12dp"
-            android:clickable="true"
-            android:focusable="true">
+            android:padding="12dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/repeat"
-                app:tint="#FF379AE6" />
+                android:src="@drawable/repeat" app:tint="#FF379AE6" />
 
             <TextView
-                android:id="@+id/repeatText"
+                android:id="@+id/tvRepeatMode"
+
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -229,10 +233,13 @@
                 android:textSize="16sp"
                 android:textColor="@color/black"
                 android:paddingStart="12dp" />
+
+
         </LinearLayout>
 
         <!-- Ghim -->
         <LinearLayout
+            android:id="@+id/linearLayoutReminderTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -244,10 +251,10 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/pin"
-                app:tint="#FF379AE6" />
+                android:src="@drawable/pin" app:tint="#FF379AE6"/>
 
             <TextView
+                android:id="@+id/tvReminderTime"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -262,6 +269,7 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+
         <!-- Custom Settings -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -274,8 +282,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/custom"
-                app:tint="#FF379AE6"
+                android:src="@drawable/custom" app:tint="#FF379AE6"
                 tools:ignore="UseAppTint" />
 
             <TextView
@@ -284,15 +291,14 @@
                 android:text="Custom"
                 android:textSize="16sp"
                 android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="#333333"/>
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/right_fit"
-                android:layout_marginStart="230dp" />
+                android:layout_marginStart="230dp"/>
         </LinearLayout>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -350,5 +356,7 @@
                 android:contentDescription="Icon 6"
                 android:padding="8dp" />
         </LinearLayout>
+
+
     </LinearLayout>
 </ScrollView>

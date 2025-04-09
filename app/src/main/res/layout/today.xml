@@ -1,170 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".Today">
 
-    <!-- Thanh trên cùng: Avatar + Thông báo -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Nội dung chính của màn hình -->
+    <LinearLayout
+        android:paddingTop="15dp"
+        android:id="@+id/root_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- Nút Thông Báo Bên Trái -->
-        <ImageView
-            android:id="@+id/img_avatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_avatar"
-            android:contentDescription="Notification"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <!-- Ảnh Đại Diện (Avatar) Bên Phải -->
-        <ImageButton
-            android:id="@+id/btn_notification"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_notification"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Notification"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <!-- Nút mũi tên trái -->
-        <ImageButton
-            android:id="@+id/btn_prev_day"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/left"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Previous Day"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginStart="-10dp"/> <!-- Đẩy nút ra ngoài rìa màn hình -->
-
-        <!-- Tiêu đề ngày tháng -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            app:layout_constraintStart_toEndOf="@id/btn_prev_day"
-            app:layout_constraintEnd_toStartOf="@id/btn_next_day"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <TextView
-                android:id="@+id/tv_today"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Today"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#FFEA916E"
-                android:gravity="center"/>
-
-            <TextView
-                android:id="@+id/tv_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                android:gravity="center"/>
-        </LinearLayout>
-
-        <!-- Nút mũi tên phải -->
-        <ImageButton
-            android:id="@+id/btn_next_day"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/right"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Next Day"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="-10dp"/> <!-- Đẩy nút ra ngoài rìa màn hình -->
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
-    <!-- Danh sách công việc -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
+        <!-- Thanh trên cùng: Avatar + Thông báo -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="3dp">
+            android:padding="16dp">
 
-            <TextView
-                android:text="To Do"
-                android:textSize="20sp"
-                android:textStyle="bold"
+            <!-- Nút Avatar Bên Trái -->
+            <ImageView
+                android:id="@+id/img_avatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_avatar"
+                android:contentDescription="Avatar"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <!-- Nút Thông Báo Bên Phải -->
+            <ImageButton
+                android:id="@+id/btn_notification"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_notification"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Notification"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Nút mũi tên trái -->
+            <ImageButton
+                android:id="@+id/btn_prev_day"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/left"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Previous Day"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="-10dp"/>
+
+            <!-- Tiêu đề ngày tháng -->
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_width="match_parent"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                app:layout_constraintStart_toEndOf="@id/btn_prev_day"
+                app:layout_constraintEnd_toStartOf="@id/btn_next_day"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_todo"
+                <TextView
+                    android:id="@+id/tv_today"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFEA916E"
+                    android:gravity="center"/>
+
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
+            </LinearLayout>
+
+            <!-- Nút mũi tên phải -->
+            <ImageButton
+                android:id="@+id/btn_next_day"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/right"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Next Day"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginEnd="-10dp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Danh sách công việc -->
+        <ScrollView
+            android:id="@+id/task"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-             />
+                android:orientation="vertical"
+                android:padding="3dp">
 
+                <TextView
+                    android:text="To Do"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"/>
 
-            <TextView
-                android:text="Done"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginTop="20dp"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_todo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                <TextView
+                    android:text="Done"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"/>
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </ScrollView>
 
-        </LinearLayout>
-    </ScrollView>
+        <!-- Nút Thêm -->
+        <ImageButton
+            android:id="@+id/btn_add"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_add"
+            android:background="@null"
+            android:layout_gravity="right"
+            android:contentDescription="Add Task" />
 
-    <!-- Nút Thêm -->
-    <ImageButton
-        android:id="@+id/btn_add"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:src="@drawable/ic_add"
-        android:background="@null"
-        android:layout_gravity="right"
-        android:contentDescription="Add Task" />
+        <!-- Menu Điều Hướng -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:itemIconTint="@color/bottom_nav_color"
+            app:itemTextColor="@color/bottom_nav_color"
+            app:menu="@menu/bottom_nav_menu"/>
+    </LinearLayout>
 
-    <!-- Menu Điều Hướng -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:itemIconTint="@color/bottom_nav_color"
-        app:itemTextColor="@color/bottom_nav_color"
-        app:menu="@menu/bottom_nav_menu"/>
-</LinearLayout>
+    <!-- Navigation Drawer -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu"
+        app:itemTextColor="@color/nav_item_color"
+        app:itemIconTint="@color/nav_item_color" />
+
+</androidx.drawerlayout.widget.DrawerLayout>

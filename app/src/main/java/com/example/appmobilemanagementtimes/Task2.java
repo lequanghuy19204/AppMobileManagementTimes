@@ -2,24 +2,24 @@ package com.example.appmobilemanagementtimes;
 
 public class Task2 {
     private String name;
-    private String time;
-    private boolean isDone;
+    private String startTime;
+    private String endTime;
 
-    public Task2(String name, String time) {
+    public Task2(String name, String startTime, String endTime) {
         this.name = name;
-        this.time = time;
-        this.isDone= isDone;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getTime() {
-        return time;
-    }
-    public boolean isDone() {
-        return isDone;
+    public String getStartTime() {
+        return startTime;
     }
 
+    public String getEndTime() {
+        return endTime;
+    }
 }

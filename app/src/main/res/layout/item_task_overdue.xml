@@ -41,7 +41,14 @@
             android:text="20:15 - 22:15"
             android:textSize="14sp"
             android:textColor="@color/black"/>
+
     </LinearLayout>
+    <ImageView
+        android:id="@+id/label"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:padding="2dp"
+        android:src="@drawable/pause3"/>
 
     <!-- Nút sửa -->
     <ImageButton
@@ -59,6 +66,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:visibility="gone"
+        android:background="?android:attr/selectableItemBackground"
         android:src="@drawable/ic_delete"/>
 
 </LinearLayout>

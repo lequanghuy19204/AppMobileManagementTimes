@@ -42,21 +42,20 @@
             android:text="20:15 - 22:15"
             android:textSize="14sp"
             android:textColor="@color/black"/>
+
+
     </LinearLayout>
     <ImageView
         android:id="@+id/label"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:padding="2dp"
-        android:src="@drawable/pause1"/>
+        android:layout_gravity="end|center_vertical"
 
-<LinearLayout
-    android:id="@+id/swipeActions"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="end"
-    android:orientation="horizontal"
-    android:visibility="gone">
+        android:src="@drawable/pause1" />
+
+
+
+
     <!-- Nút sửa -->
     <ImageButton
         android:id="@+id/btnEditTask"
@@ -76,6 +75,6 @@
         android:background="?android:attr/selectableItemBackground"
         android:src="@drawable/ic_delete"/>
 </LinearLayout>
-</LinearLayout>
+
 
 
