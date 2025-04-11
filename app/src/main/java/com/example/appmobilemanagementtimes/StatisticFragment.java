@@ -13,7 +13,7 @@ import com.github.mikephil.charting.components.XAxis;
 
 import java.util.ArrayList;
 
-public class StatisticActivity extends AppCompatActivity {
+public class StatisticFragment extends AppCompatActivity {
     private BarChart barChart;
 
     @Override
