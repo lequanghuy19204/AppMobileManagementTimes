@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">AppMobileManagementTimes</string>
+    <string-array name="weekday_names">
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+        <item>Sun</item>
+    </string-array>
 </resources>

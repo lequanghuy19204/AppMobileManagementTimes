@@ -1,0 +1,19 @@
+<resources>
+    <style name="CalendarTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">#4CAF50</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:weekDayTextAppearance">@style/CalendarWeekText</item>
+    </style>
+
+    <style name="CalendarDateText" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="CalendarWeekText" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#757575</item>
+        <item name="android:firstDayOfWeek">2</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+</resources> 

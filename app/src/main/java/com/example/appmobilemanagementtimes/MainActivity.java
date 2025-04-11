@@ -1,6 +1,5 @@
 package com.example.appmobilemanagementtimes;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -28,13 +27,13 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
-                // Xử lý khi chọn Home
                 return true;
             } else if (itemId == R.id.navigation_upcoming) {
-                // Xử lý khi chọn Upcoming
+                startActivity(new Intent(MainActivity.this, UpcomingActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // Xử lý khi chọn Pomo
+                // Chuyển đến PomoActivity
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 // Xử lý khi chọn Statistic
