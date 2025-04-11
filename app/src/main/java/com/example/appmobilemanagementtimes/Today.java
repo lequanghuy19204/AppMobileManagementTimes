@@ -191,13 +191,14 @@ public class Today extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
-                return true; // Đã ở Today screen
+                return true; // Đang ở Today screen
             } else if (itemId == R.id.navigation_upcoming) {
                 startActivity(new Intent(Today.this, UpcomingActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // TODO: Implement Pomo screen
+                startActivity(new Intent(Today.this, PomodoroActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 startActivity(new Intent(Today.this, StatisticActivity.class));

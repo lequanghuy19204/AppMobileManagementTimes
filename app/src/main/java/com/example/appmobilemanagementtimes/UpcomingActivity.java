@@ -81,7 +81,8 @@ public class UpcomingActivity extends AppCompatActivity {
             } else if (itemId == R.id.navigation_upcoming) {
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // TODO: Implement Pomo screen
+                startActivity(new Intent(UpcomingActivity.this, PomodoroActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 startActivity(new Intent(UpcomingActivity.this, StatisticActivity.class));

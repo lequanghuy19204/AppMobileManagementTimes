@@ -208,7 +208,8 @@ public class pass_date extends AppCompatActivity {
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // TODO: Implement Pomo screen
+                startActivity(new Intent(pass_date.this, PomodoroActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 startActivity(new Intent(pass_date.this, StatisticActivity.class));

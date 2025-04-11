@@ -1,6 +1,7 @@
 package com.example.appmobilemanagementtimes;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -21,6 +22,7 @@ import android.widget.ToggleButton;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Locale;
 
@@ -73,6 +75,7 @@ public class PomodoroActivity extends AppCompatActivity {
         initializeViews();
         setupListeners();
         setPomodoroCycle("25/5");
+        setupBottomNavigation();
 
         pauseButton.setVisibility(View.GONE);
         stopButton.setVisibility(View.GONE);
@@ -512,5 +515,30 @@ public class PomodoroActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error in onDestroy", e);
         }
+    }
+
+    private void setupBottomNavigation() {
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav.setSelectedItemId(R.id.navigation_pomo);
+
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                startActivity(new Intent(PomodoroActivity.this, Today.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_upcoming) {
+                startActivity(new Intent(PomodoroActivity.this, UpcomingActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
+                startActivity(new Intent(PomodoroActivity.this, StatisticActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 }

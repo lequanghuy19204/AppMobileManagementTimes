@@ -54,6 +54,11 @@
             android:name=".StatisticActivity"
             android:exported="true">
         </activity>
+
+        <activity
+            android:name=".PomodoroActivity"
+            android:exported="true">
+        </activity>
     </application>
 
 </manifest>

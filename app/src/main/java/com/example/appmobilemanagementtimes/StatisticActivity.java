@@ -72,7 +72,8 @@ public class StatisticActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // Chuyển đến PomoActivity
+                startActivity(new Intent(StatisticActivity.this, PomodoroActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 return true;
