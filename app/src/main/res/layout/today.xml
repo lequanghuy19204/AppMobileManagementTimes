@@ -151,23 +151,26 @@
         </ScrollView>
 
         <!-- Nút Thêm -->
-        <ImageButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_add"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="4dp"
+            android:backgroundTint="#F4A67C"
             android:src="@drawable/ic_add"
-            android:background="@null"
-            android:layout_gravity="right"
-            android:contentDescription="Add Task" />
+            app:tint="@color/white" />
 
-        <!-- Menu Điều Hướng -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/white"
             app:itemIconTint="@color/bottom_nav_color"
             app:itemTextColor="@color/bottom_nav_color"
-            app:menu="@menu/bottom_nav_menu"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:menu="@menu/bottom_nav_menu" />
     </LinearLayout>
 
     <!-- Navigation Drawer -->
