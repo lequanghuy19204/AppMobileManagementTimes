@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:orientation="horizontal"
+    android:padding="2dp"
+    android:background="@drawable/rounded_overdue"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp">
+
+    <!-- Checkbox -->
+    <CheckBox
+        android:id="@+id/checkbox_task"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:button="@drawable/custom_checkbox"
+        android:textSize="16sp"
+        android:layout_marginRight="5dp"/>
+
+
+    <!-- Nội dung Task -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/task_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Task Name"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/task_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="20:15 - 22:15"
+            android:textSize="14sp"
+            android:textColor="@color/black"/>
+
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/label"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:padding="2dp"
+        android:src="@drawable/pause3"/>
+
+    <!-- Nút sửa -->
+    <ImageButton
+        android:id="@+id/btnEditTask"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_edit"
+        android:visibility="gone"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Nút xoá -->
+    <ImageButton
+        android:id="@+id/btnDeleteTask"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:visibility="gone"
+        android:background="?android:attr/selectableItemBackground"
+        android:src="@drawable/ic_delete"/>
+
+</LinearLayout>

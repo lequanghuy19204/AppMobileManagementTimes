@@ -6,4 +6,14 @@
     </style>
 
     <style name="Theme.AppMobileManagementTimes" parent="Base.Theme.AppMobileManagementTimes" />
+    <style name="Theme.App" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Gán mã màu trực tiếp -->
+        <item name="colorPrimary">#7C4DFF</item>        <!-- Tím nhạt -->
+        <item name="colorOnPrimary">#FFFFFF</item>      <!-- Trắng -->
+        <item name="colorSecondary">#651FFF</item>      <!-- Tím đậm -->
+        <item name="colorOnSecondary">#FFFFFF</item>    <!-- Trắng -->
+        <item name="colorSurface">#F5F5FF</item>        <!-- Nền tím nhạt -->
+        <item name="colorOnSurface">#000000</item>      <!-- Chữ đen -->
+        <item name="android:statusBarColor" tools:targetApi="l">#7C4DFF</item>
+    </style>
 </resources>
