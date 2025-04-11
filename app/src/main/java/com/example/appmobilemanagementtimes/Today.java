@@ -32,21 +32,22 @@ import java.util.Locale;
 import java.util.Map;
 
 public class Today extends AppCompatActivity {
-    private LinearLayout rootLayout;  // Thêm biến cho root_layout
-    private ScrollView taskScrollView;  // Thêm biến cho ScrollView
+    private LinearLayout rootLayout;
+    private ScrollView taskScrollView;
     private ActivityResultLauncher<Intent> createTaskLauncher;
     private ActivityResultLauncher<Intent> updateTaskLauncher;
     private RecyclerView recyclerToday, recyclerDone;
     private Taskadapter2 todayAdapter;
     private Taskadapter3 doneAdapter;
     private List<Task2> todayTasks = new ArrayList<>();
-    private List<Task> doneTasks = new ArrayList<>();
-    private TextView tvDate;
-    private ImageButton btnPrevDay, btnNextDay;
+    private List<Task2> doneTasks = new ArrayList<>();
+    private TextView tvToday, tvDate, tvTodoLabel;
+    private ImageButton btnPrevDay, btnNextDay, btnAdd;
     private Calendar calendar;
     private FirebaseFirestore db;
     private DrawerLayout drawerLayout;
     private static final String TAG = "Today";
+    private boolean isOverdue = false;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -59,23 +60,23 @@ public class Today extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             navigationView.getMenu().setGroupCheckable(0, true, true);
             item.setChecked(true);
-
             int itemId = item.getItemId();
             if (itemId == R.id.nav_logout) {
-//                Intent intent = new Intent(Today.this, LoginActivity.class);
-//                startActivity(intent);
-//                finish();
+                Intent intent = new Intent(Today.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+                // Handle logout
             } else if (itemId == R.id.nav_language) {
-                // Xử lý thay đổi ngôn ngữ
+                // Handle language change
             } else if (itemId == R.id.nav_dark_mode) {
-                // Xử lý chuyển đổi Dark Mode
+                // Handle dark mode
             } else if (itemId == R.id.nav_setting) {
-//                Intent intent = new Intent(Today.this, SettingsActivity.class);
-//                startActivity(intent);
+                // Handle settings
             }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
+
         ImageView imgAvatar = findViewById(R.id.img_avatar);
         imgAvatar.setOnClickListener(v -> {
             if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -84,12 +85,10 @@ public class Today extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
-        rootLayout = findViewById(R.id.root_layout);  // Khởi tạo root_layout
-        taskScrollView = findViewById(R.id.task);     // Khởi tạo ScrollView
 
-
+        rootLayout = findViewById(R.id.root_layout);
+        taskScrollView = findViewById(R.id.task);
         db = FirebaseFirestore.getInstance();
-
 
         createTaskLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -114,26 +113,50 @@ public class Today extends AppCompatActivity {
                         String endTime = result.getData().getStringExtra("endTime");
                         String originalTaskId = result.getData().getStringExtra("originalTaskId");
                         if (taskName != null && startTime != null && endTime != null && originalTaskId != null) {
+                            // Xóa task cũ khỏi Firestore
                             db.collection("tasks").document(originalTaskId).delete();
+
+                            // Tạo task mới
                             Task2 updatedTask = new Task2(taskName, startTime, endTime);
                             addTaskToFirestore(updatedTask, "overdue");
+
+                            // Kiểm tra xem task mới có thuộc ngày hiện tại không
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            String currentDate = sdf.format(calendar.getTime());
+                            String taskDate = startTime.substring(0, 10);
+
+                            // Nếu task không thuộc ngày hiện tại, xóa khỏi todayTasks
+                            if (!taskDate.equals(currentDate)) {
+                                for (int i = 0; i < todayTasks.size(); i++) {
+                                    Task2 task = todayTasks.get(i);
+                                    if ((task.getName() + "_" + task.getStartTime()).equals(originalTaskId)) {
+                                        todayTasks.remove(i);
+                                        todayAdapter.notifyItemRemoved(i);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 });
 
         recyclerToday = findViewById(R.id.recycler_todo);
         recyclerDone = findViewById(R.id.recyclerView);
+        tvToday = findViewById(R.id.tv_today);
         tvDate = findViewById(R.id.tv_date);
+        tvTodoLabel = findViewById(R.id.tv_todo_label);
         btnPrevDay = findViewById(R.id.btn_prev_day);
         btnNextDay = findViewById(R.id.btn_next_day);
+        btnAdd = findViewById(R.id.btn_add);
 
         recyclerToday.setLayoutManager(new LinearLayoutManager(this));
         recyclerDone.setLayoutManager(new LinearLayoutManager(this));
 
-        todayAdapter = new Taskadapter2(todayTasks,
+        todayAdapter = new Taskadapter2(todayTasks, isOverdue,
                 task -> {
                     db.collection("tasks").document(task.getName() + "_" + task.getStartTime()).delete();
-                    addTaskToFirestore(new Task(task.getName(), task.getStartTime(), true), "done");
+                    Task2 doneTask = new Task2(task.getName(), task.getStartTime(), null);
+                    addTaskToFirestore(doneTask, "done");
                 },
                 task -> {
                     db.collection("tasks").document(task.getName() + "_" + task.getStartTime())
@@ -148,8 +171,7 @@ public class Today extends AppCompatActivity {
         ItemTouchHelper todayTouchHelper = new ItemTouchHelper(new SwipeToActionCallback(todayAdapter));
         todayTouchHelper.attachToRecyclerView(recyclerToday);
 
-        ImageButton imageButton = findViewById(R.id.btn_add);
-        imageButton.setOnClickListener(v -> {
+        btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(Today.this, create_items.class);
             createTaskLauncher.launch(intent);
         });
@@ -158,55 +180,28 @@ public class Today extends AppCompatActivity {
         if (getIntent().hasExtra("selectedDate")) {
             calendar.setTimeInMillis(getIntent().getLongExtra("selectedDate", calendar.getTimeInMillis()));
         }
-        updateDate();
-        listenToFirestoreChanges();
+        updateDateAndUI();
 
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-            updateDate();
-            listenToFirestoreChanges();
+            updateDateAndUI();
         });
-
 
         btnPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
-            Calendar todayCal = Calendar.getInstance();
-            todayCal.set(Calendar.HOUR_OF_DAY, 0);
-            todayCal.set(Calendar.MINUTE, 0);
-            todayCal.set(Calendar.SECOND, 0);
-            todayCal.set(Calendar.MILLISECOND, 0);
-
-            if (calendar.before(todayCal)) {
-                Intent intent = new Intent(Today.this, pass_date.class);
-                intent.putExtra("selectedDate", calendar.getTimeInMillis());
-                startActivity(intent);
-                finish();
-            } else {
-                updateDate();
-                listenToFirestoreChanges();
-            }
+            updateDateAndUI();
         });
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                return true; // Đang ở Today screen
-            } else if (itemId == R.id.navigation_upcoming) {
-                startActivity(new Intent(Today.this, UpcomingActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_pomo) {
-                startActivity(new Intent(Today.this, PomodoroActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_statistic) {
-                startActivity(new Intent(Today.this, StatisticActivity.class));
-                finish();
-                return true;
-            }
+            if (itemId == R.id.navigation_home) return true;
+            else if (itemId == R.id.navigation_upcoming) return true;
+            else if (itemId == R.id.navigation_pomo) return true;
+            else if (itemId == R.id.navigation_statistic) return true;
             return false;
         });
+
         rootLayout.setOnTouchListener((v, event) -> {
             hideSwipeActions();
             return false;
@@ -228,21 +223,14 @@ public class Today extends AppCompatActivity {
         });
     }
 
-    private void addTaskToFirestore(Object task, String status) {
+    private void addTaskToFirestore(Task2 task, String status) {
         Map<String, Object> taskData = new HashMap<>();
-        if (task instanceof Task2) {
-            Task2 t = (Task2) task;
-            taskData.put("name", t.getName());
-            taskData.put("startTime", t.getStartTime());
-            taskData.put("endTime", t.getEndTime());
-        } else if (task instanceof Task) {
-            Task t = (Task) task;
-            taskData.put("name", t.getName());
-            taskData.put("time", t.getTime());
-        }
+        taskData.put("name", task.getName());
+        taskData.put("startTime", task.getStartTime());
+        taskData.put("endTime", task.getEndTime());
         taskData.put("status", status);
 
-        String documentId = taskData.get("name") + "_" + (taskData.get("startTime") != null ? taskData.get("startTime") : taskData.get("time"));
+        String documentId = task.getName() + "_" + task.getStartTime();
         Log.d(TAG, "Adding task to Firestore: " + taskData.toString());
         db.collection("tasks")
                 .document(documentId)
@@ -250,6 +238,7 @@ public class Today extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Task added successfully: " + documentId))
                 .addOnFailureListener(e -> Log.e(TAG, "Error adding task", e));
     }
+
     private void hideSwipeActions() {
         for (int i = 0; i < recyclerToday.getChildCount(); i++) {
             View itemView = recyclerToday.getChildAt(i);
@@ -261,6 +250,7 @@ public class Today extends AppCompatActivity {
             label.setVisibility(View.VISIBLE);
         }
     }
+
     private void listenToFirestoreChanges() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String currentDate = sdf.format(calendar.getTime());
@@ -285,32 +275,63 @@ public class Today extends AppCompatActivity {
                             String name = doc.getString("name");
                             String startTime = doc.getString("startTime");
                             String endTime = doc.getString("endTime");
-                            String time = doc.getString("time");
 
-                            if ("overdue".equals(status) && startTime != null && endTime != null) {
+                            if ("overdue".equals(status) && startTime != null) {
                                 String taskDate = startTime.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
                                     todayTasks.add(new Task2(name, startTime, endTime));
-                                    Log.d(TAG, "Added overdue task: " + name + " for " + taskDate);
+                                    Log.d(TAG, "Added task: " + name + " for " + taskDate);
                                 }
-                            } else if ("done".equals(status) && time != null) {
-                                String taskDate = time.substring(0, 10);
+                            } else if ("done".equals(status) && startTime != null) {
+                                String taskDate = startTime.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
-                                    doneTasks.add(new Task(name, time, true));
+                                    doneTasks.add(new Task2(name, startTime, null));
                                     Log.d(TAG, "Added done task: " + name + " for " + taskDate);
                                 }
                             }
                         }
                     }
 
+                    todayAdapter.setOverdue(isOverdue);
                     todayAdapter.notifyDataSetChanged();
                     doneAdapter.notifyDataSetChanged();
                 });
     }
 
-    private void updateDate() {
+    private void updateDateAndUI() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
         tvDate.setText(sdf.format(calendar.getTime()));
+
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        todayCal.set(Calendar.MINUTE, 0);
+        todayCal.set(Calendar.SECOND, 0);
+        todayCal.set(Calendar.MILLISECOND, 0);
+
+        Calendar selectedCal = (Calendar) calendar.clone();
+        selectedCal.set(Calendar.HOUR_OF_DAY, 0);
+        selectedCal.set(Calendar.MINUTE, 0);
+        selectedCal.set(Calendar.SECOND, 0);
+        selectedCal.set(Calendar.MILLISECOND, 0);
+
+        if (selectedCal.before(todayCal)) {
+            tvTodoLabel.setText("Overdue");
+            tvToday.setText("Past Date");
+            btnAdd.setVisibility(View.GONE);
+            isOverdue = true;
+        } else if (selectedCal.equals(todayCal)) {
+            tvTodoLabel.setText("To Do");
+            tvToday.setText("Today");
+            btnAdd.setVisibility(View.VISIBLE);
+            isOverdue = false;
+        } else {
+            tvTodoLabel.setText("To Do");
+            tvToday.setText("Future Date");
+            btnAdd.setVisibility(View.VISIBLE);
+            isOverdue = false;
+        }
+
+        listenToFirestoreChanges();
     }
 
     private class SwipeToActionCallback extends ItemTouchHelper.SimpleCallback {

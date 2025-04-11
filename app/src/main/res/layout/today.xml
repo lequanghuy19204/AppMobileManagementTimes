@@ -10,11 +10,11 @@
 
     <!-- Nội dung chính của màn hình -->
     <LinearLayout
-        android:paddingTop="15dp"
         android:id="@+id/root_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="15dp">
 
         <!-- Thanh trên cùng: Avatar + Thông báo -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -124,11 +124,12 @@
                 android:padding="3dp">
 
                 <TextView
+                    android:id="@+id/tv_todo_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="To Do"
                     android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+                    android:textStyle="bold"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_todo"
@@ -136,12 +137,12 @@
                     android:layout_height="wrap_content" />
 
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="Done"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="20dp"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+                    android:layout_marginTop="20dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView"
@@ -162,15 +163,14 @@
             android:src="@drawable/ic_add"
             app:tint="@color/white" />
 
+        <!-- Menu Điều Hướng -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
             app:itemIconTint="@color/bottom_nav_color"
             app:itemTextColor="@color/bottom_nav_color"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:menu="@menu/bottom_nav_menu" />
+            app:menu="@menu/bottom_nav_menu"/>
     </LinearLayout>
 
     <!-- Navigation Drawer -->
@@ -185,3 +185,4 @@
         app:itemIconTint="@color/nav_item_color" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
+

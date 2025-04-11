@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHolder> {
-    private List<Task> taskList;
+    private List<Task2> taskList;
 
-    public Taskadapter3(List<Task> taskList) {
+    public Taskadapter3(List<Task2> taskList) {
         this.taskList = taskList;
     }
 
@@ -26,9 +26,9 @@ public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHold
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
-        Task task = taskList.get(position);
+        Task2 task = taskList.get(position);
         holder.taskName.setText(task.getName());
-        String time = task.getTime().substring(11);
+        String time = task.getStartTime().substring(11);
         holder.taskTime.setText(time);
 
         holder.checkbox.setChecked(true);
@@ -48,7 +48,7 @@ public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHold
         return taskList.size();
     }
 
-    public void updateTasks(List<Task> newTasks) {
+    public void updateTasks(List<Task2> newTasks) {
         this.taskList = newTasks;
         notifyDataSetChanged();
     }

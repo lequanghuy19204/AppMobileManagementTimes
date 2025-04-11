@@ -16,19 +16,36 @@ import java.util.function.Consumer;
 
 public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHolder> {
     private List<Task2> taskList;
+    private boolean isOverdue;
     private Consumer<Task2> onTaskCompleted;
     private Consumer<Task2> onTaskDeleted;
 
-    public Taskadapter2(List<Task2> taskList, Consumer<Task2> onTaskCompleted, Consumer<Task2> onTaskDeleted) {
+    private static final int VIEW_TYPE_TODO = 0;
+    private static final int VIEW_TYPE_OVERDUE = 1;
+
+    public Taskadapter2(List<Task2> taskList, boolean isOverdue, Consumer<Task2> onTaskCompleted, Consumer<Task2> onTaskDeleted) {
         this.taskList = taskList;
+        this.isOverdue = isOverdue;
         this.onTaskCompleted = onTaskCompleted;
         this.onTaskDeleted = onTaskDeleted;
+    }
+
+    public void setOverdue(boolean isOverdue) {
+        this.isOverdue = isOverdue;
+        notifyDataSetChanged(); // Làm mới toàn bộ giao diện khi trạng thái thay đổi
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        // Trả về loại view dựa trên trạng thái isOverdue
+        return isOverdue ? VIEW_TYPE_OVERDUE : VIEW_TYPE_TODO;
     }
 
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_task, parent, false);
+        int layoutRes = (viewType == VIEW_TYPE_OVERDUE) ? R.layout.item_task_overdue : R.layout.item_task;
+        View view = LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
         return new TaskViewHolder(view);
     }
 
@@ -37,8 +54,8 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
         Task2 task = taskList.get(position);
         holder.taskName.setText(task.getName());
         String startTime = task.getStartTime().substring(11);
-        String endTime = task.getEndTime().substring(11);
-        holder.taskTime.setText(startTime + " - " + endTime);
+        String endTime = task.getEndTime() != null ? task.getEndTime().substring(11) : "";
+        holder.taskTime.setText(startTime + (endTime.isEmpty() ? "" : " - " + endTime));
 
         holder.checkbox.setOnCheckedChangeListener(null);
         holder.checkbox.setChecked(false);
