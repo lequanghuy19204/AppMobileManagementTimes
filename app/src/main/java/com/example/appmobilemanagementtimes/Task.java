@@ -11,8 +11,8 @@ public class Task {
         this.name = name;
         this.time = time;
         this.isCompleted = isDone;
-        this.title = name;      // nếu title và name cùng mục đích
-        this.timeRange = time;  // nếu timeRange và time cùng mục đích
+        this.title = name;
+        this.timeRange = time;
     }
 
     public String getName() {
