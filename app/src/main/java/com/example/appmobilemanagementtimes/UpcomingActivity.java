@@ -75,7 +75,7 @@ public class UpcomingActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(this, MainActivity.class));
+                startActivity(new Intent(UpcomingActivity.this, MainActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_upcoming) {
@@ -84,7 +84,8 @@ public class UpcomingActivity extends AppCompatActivity {
                 // Chuyển đến PomoActivity
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
-                // Chuyển đến StatisticActivity
+                startActivity(new Intent(UpcomingActivity.this, StatisticActivity.class));
+                finish();
                 return true;
             }
             return false;
