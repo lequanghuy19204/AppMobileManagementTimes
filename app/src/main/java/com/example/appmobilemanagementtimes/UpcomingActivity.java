@@ -45,9 +45,9 @@ public class UpcomingActivity extends AppCompatActivity {
 
         // Tạo dữ liệu mẫu cho tasks
         List<Task> taskList = new ArrayList<>();
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15"));
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15"));
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15"));
+        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
+        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
+        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
 
         // Thiết lập adapter cho tasks
         taskAdapter = new TaskAdapter(taskList);
@@ -75,13 +75,13 @@ public class UpcomingActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(UpcomingActivity.this, MainActivity.class));
+                startActivity(new Intent(UpcomingActivity.this, Today.class));
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_upcoming) {
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // Chuyển đến PomoActivity
+                // TODO: Implement Pomo screen
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
                 startActivity(new Intent(UpcomingActivity.this, StatisticActivity.class));

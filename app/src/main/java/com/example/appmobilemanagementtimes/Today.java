@@ -133,7 +133,7 @@ public class Today extends AppCompatActivity {
         todayAdapter = new Taskadapter2(todayTasks,
                 task -> {
                     db.collection("tasks").document(task.getName() + "_" + task.getStartTime()).delete();
-                    addTaskToFirestore(new Task(task.getName(), task.getStartTime()), "done");
+                    addTaskToFirestore(new Task(task.getName(), task.getStartTime(), true), "done");
                 },
                 task -> {
                     db.collection("tasks").document(task.getName() + "_" + task.getStartTime())
@@ -190,10 +190,20 @@ public class Today extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) return true;
-            else if (itemId == R.id.navigation_upcoming) return true;
-            else if (itemId == R.id.navigation_pomo) return true;
-            else if (itemId == R.id.navigation_statistic) return true;
+            if (itemId == R.id.navigation_home) {
+                return true; // Đã ở Today screen
+            } else if (itemId == R.id.navigation_upcoming) {
+                startActivity(new Intent(Today.this, UpcomingActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                // TODO: Implement Pomo screen
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
+                startActivity(new Intent(Today.this, StatisticActivity.class));
+                finish();
+                return true;
+            }
             return false;
         });
         rootLayout.setOnTouchListener((v, event) -> {
@@ -285,7 +295,7 @@ public class Today extends AppCompatActivity {
                             } else if ("done".equals(status) && time != null) {
                                 String taskDate = time.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
-                                    doneTasks.add(new Task(name, time));
+                                    doneTasks.add(new Task(name, time, true));
                                     Log.d(TAG, "Added done task: " + name + " for " + taskDate);
                                 }
                             }

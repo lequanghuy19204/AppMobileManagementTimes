@@ -136,7 +136,7 @@ public class pass_date extends AppCompatActivity {
             String taskId = task.getName() + "_" + task.getStartTime();
             db.collection("tasks").document(taskId)
                     .delete()
-                    .addOnSuccessListener(aVoid -> addTaskToFirestore(new Task(task.getName(), task.getStartTime()), "done"));
+                    .addOnSuccessListener(aVoid -> addTaskToFirestore(new Task(task.getName(), task.getStartTime(), true), "done"));
         });
         doneAdapter = new Taskadapter3(doneTasks);
         recyclerOverdue.setAdapter(overdueAdapter);
@@ -199,10 +199,22 @@ public class pass_date extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) return true;
-            else if (itemId == R.id.navigation_upcoming) return true;
-            else if (itemId == R.id.navigation_pomo) return true;
-            else if (itemId == R.id.navigation_statistic) return true;
+            if (itemId == R.id.navigation_home) {
+                startActivity(new Intent(pass_date.this, Today.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_upcoming) {
+                startActivity(new Intent(pass_date.this, UpcomingActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                // TODO: Implement Pomo screen
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
+                startActivity(new Intent(pass_date.this, StatisticActivity.class));
+                finish();
+                return true;
+            }
             return false;
         });
     }
@@ -274,7 +286,7 @@ public class pass_date extends AppCompatActivity {
                             } else if ("done".equals(status) && time != null) {
                                 String taskDate = time.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
-                                    doneTasks.add(new Task(name, time));
+                                    doneTasks.add(new Task(name, time, true));
                                 }
                             }
                         }

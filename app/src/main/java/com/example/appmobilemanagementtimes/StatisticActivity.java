@@ -46,7 +46,7 @@ public class StatisticActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(StatisticActivity.this, MainActivity.class));
+                startActivity(new Intent(StatisticActivity.this, Today.class));
                 finish();
                 return true;
             } else if (itemId == R.id.navigation_upcoming) {

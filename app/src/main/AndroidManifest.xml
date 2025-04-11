@@ -38,11 +38,11 @@
 
         <activity
             android:name=".UpcomingActivity"
-            android:exported="false">
+            android:exported="true">
         </activity>
         <activity
             android:name=".StatisticActivity"
-            android:exported="false">
+            android:exported="true">
         </activity>
     </application>
 
