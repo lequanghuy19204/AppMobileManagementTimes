@@ -12,6 +12,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 
+
 public class StatisticActivity extends AppCompatActivity {
     private BarChart barChart;
 
@@ -42,7 +43,7 @@ public class StatisticActivity extends AppCompatActivity {
         // Thêm code xử lý bottom navigation
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setSelectedItemId(R.id.navigation_statistic); // Đánh dấu tab hiện tại
-        
+
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
