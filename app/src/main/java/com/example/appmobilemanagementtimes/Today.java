@@ -298,10 +298,25 @@ public class Today extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) return true;
-            else if (itemId == R.id.navigation_upcoming) return true;
-            else if (itemId == R.id.navigation_pomo) return true;
-            else if (itemId == R.id.navigation_statistic) return true;
+            if (itemId == R.id.navigation_home) {
+                return true;
+            }
+            else if (itemId == R.id.navigation_upcoming)
+            {
+                startActivity(new Intent(Today.this, UpcomingActivity.class));
+                finish();
+                return true;
+            }
+            else if (itemId == R.id.navigation_pomo) {
+                startActivity(new Intent(Today.this, PomodoroActivity.class));
+                finish();
+                return true;
+            }
+            else if (itemId == R.id.navigation_statistic) {
+                startActivity(new Intent(Today.this, StatisticActivity.class));
+                finish();
+                return true;
+            }
             return false;
         });
 

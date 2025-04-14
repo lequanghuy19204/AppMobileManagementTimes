@@ -16,4 +16,6 @@
         <item>30/5</item>
         <item>Custom</item>
     </string-array>
+
+    <string name="default_web_client_id" translatable="false">920400821174-dkje80h6u35knvd042jnu26thn4uh5j6.apps.googleusercontent.com</string>
 </resources>

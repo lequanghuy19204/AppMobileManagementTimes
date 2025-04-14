@@ -3,7 +3,8 @@
   userId: string,      // ID định danh duy nhất cho mỗi người dùng
   displayName: string, // Tên hiển thị của người dùng
   email: string,       // Email đăng ký tài khoản
-  avatar: string,      // URL ảnh đại diện
+  password: string     // Mật khẩu đăng ký tài khoản
+  avatar: string,      // URL ảnh đại diện (chưa cần thiết)
   createdAt: timestamp,// Thời điểm tạo tài khoản
   settings: {          // Cài đặt cá nhân của người dùng
     notifications: boolean, // Bật/tắt thông báo
@@ -52,6 +53,7 @@
   tasksCount: number,  // Số lượng task trong project
   createdAt: timestamp // Thời điểm tạo project
 }
+(bỏ)
 
 
 **Collection Labels:**
