@@ -277,16 +277,7 @@ public class Today extends AppCompatActivity {
             createTaskLauncher.launch(addIntent);
         });
 
-        btnNotification.setOnClickListener(v -> {
-            new AlertDialog.Builder(Today.this)
-                    .setTitle("Xóa tất cả công việc")
-                    .setMessage("Bạn có chắc chắn muốn xóa tất cả công việc không? Hành động này không thể hoàn tác.")
-                    .setPositiveButton("Xóa", (dialog, which) -> {
-                        deleteAllTasks();
-                    })
-                    .setNegativeButton("Hủy", null)
-                    .show();
-        });
+
 
         calendar = Calendar.getInstance();
         if (intent.hasExtra("selectedDate")) {

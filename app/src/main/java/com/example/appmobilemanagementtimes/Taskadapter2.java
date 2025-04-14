@@ -12,7 +12,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHolder> {
@@ -54,18 +57,29 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task2 task = taskList.get(position);
         holder.taskName.setText(task.getName());
-        String startTime = task.getStartTime().substring(11);
-        String endTime = task.getEndTime() != null ? task.getEndTime().substring(11) : "";
-        StringBuilder timeText = new StringBuilder(startTime + (endTime.isEmpty() ? "" : " - " + endTime));
 
-        String repeatDisplay = getRepeatDisplay(task.getRepeatMode());
-        if (!repeatDisplay.isEmpty()) {
-            timeText.append(" (").append(repeatDisplay).append(")");
-        }
+        // Định dạng thời gian
+        SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
+        StringBuilder timeText = new StringBuilder();
 
-        String reminderDisplay = getReminderDisplay(task.getReminder());
-        if (!reminderDisplay.isEmpty()) {
-            timeText.append(" - Nhắc nhở: ").append(reminderDisplay);
+        try {
+            // Định dạng startTime
+            if (task.getStartTime() != null) {
+                String startTime = timeFormat.format(storageFormat.parse(task.getStartTime()))
+                        .replace("AM", "SA").replace("PM", "CH");
+                timeText.append(startTime);
+            }
+
+            // Định dạng endTime nếu có
+            if (task.getEndTime() != null && !task.getEndTime().isEmpty()) {
+                String endTime = timeFormat.format(storageFormat.parse(task.getEndTime()))
+                        .replace("AM", "SA").replace("PM", "CH");
+                timeText.append(" - ").append(endTime);
+            }
+        } catch (ParseException e) {
+            Log.e(TAG, "Error parsing time for task: " + task.getName(), e);
+            timeText = new StringBuilder(""); // Đặt rỗng nếu lỗi
         }
 
         holder.taskTime.setText(timeText.toString());

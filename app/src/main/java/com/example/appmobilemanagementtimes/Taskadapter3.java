@@ -1,5 +1,6 @@
 package com.example.appmobilemanagementtimes;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,10 +9,14 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHolder> {
     private List<Task2> taskList;
+    private static final String TAG = "Taskadapter3";
 
     public Taskadapter3(List<Task2> taskList) {
         this.taskList = taskList;
@@ -28,8 +33,23 @@ public class Taskadapter3 extends RecyclerView.Adapter<Taskadapter3.TaskViewHold
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task2 task = taskList.get(position);
         holder.taskName.setText(task.getName());
-        String time = task.getStartTime().substring(11);
-        holder.taskTime.setText(time);
+
+        // Định dạng thời gian
+        SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
+        String timeText = "";
+
+        try {
+            if (task.getStartTime() != null) {
+                timeText = timeFormat.format(storageFormat.parse(task.getStartTime()))
+                        .replace("AM", "SA").replace("PM", "CH");
+            }
+        } catch (ParseException e) {
+            Log.e(TAG, "Error parsing time for task: " + task.getName(), e);
+            timeText = "";
+        }
+
+        holder.taskTime.setText(timeText);
 
         holder.checkbox.setChecked(true);
         holder.checkbox.setEnabled(false);

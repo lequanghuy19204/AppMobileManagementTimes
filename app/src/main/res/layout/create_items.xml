@@ -94,9 +94,11 @@
                 android:textColor="#333333" />
 
             <Switch
+                android:id="@+id/switch_pin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="182dp"
+                android:visibility="visible" />
         </LinearLayout>
 
         <LinearLayout
