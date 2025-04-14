@@ -59,12 +59,31 @@ public class Today extends AppCompatActivity {
     private static final String TAG = "Today";
     private boolean isOverdue = false;
     private String pendingTaskName, pendingStartTime, pendingReminder, pendingGroupId;
+    private String userId; // Thêm biến userId
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.today);
+
+        // Lấy userId từ Intent hoặc SharedPreferences
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+            if (userId == null) {
+                Log.e(TAG, "Không tìm thấy userId, chuyển hướng về đăng nhập");
+                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
+        Log.d(TAG, "UserId: " + userId);
+
         drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
 
@@ -73,7 +92,12 @@ public class Today extends AppCompatActivity {
             item.setChecked(true);
             int itemId = item.getItemId();
             if (itemId == R.id.nav_logout) {
-                // Handle logout
+                // Xử lý đăng xuất
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                prefs.edit().remove("userId").apply();
+                Intent loginIntent = new Intent(Today.this, LoginActivity.class); // Sử dụng tên khác để tránh xung đột
+                startActivity(loginIntent);
+                finish();
             } else if (itemId == R.id.nav_language) {
                 // Handle language
             } else if (itemId == R.id.nav_dark_mode) {
@@ -125,11 +149,12 @@ public class Today extends AppCompatActivity {
                         String repeatMode = result.getData().getStringExtra("repeatMode");
                         String reminder = result.getData().getStringExtra("reminder");
                         String groupId = result.getData().getStringExtra("groupId");
-                        String label = result.getData().getStringExtra("label"); // Get label
+                        String label = result.getData().getStringExtra("label");
                         if (taskName != null && startTime != null && endTime != null) {
                             Log.d(TAG, "Task created: " + taskName + ", groupId: " + groupId + ", reminder: " + reminder + ", label: " + label);
-                            Task2 task = new Task2(taskName, startTime, endTime, repeatMode, groupId, reminder, label);
+                            Task2 task = new Task2(taskName, startTime, endTime, repeatMode, groupId, reminder, label, userId);
                             addTaskToFirestore(task, "overdue");
+                            scheduleReminder(taskName, startTime, reminder, groupId);
                             if (groupId != null && !repeatMode.equals("never")) {
                                 createRecurringTasks(taskName, startTime, endTime, repeatMode, reminder, groupId, label);
                             }
@@ -149,7 +174,7 @@ public class Today extends AppCompatActivity {
                         String groupId = result.getData().getStringExtra("groupId");
                         String newGroupId = result.getData().getStringExtra("newGroupId");
                         String originalTaskId = result.getData().getStringExtra("originalTaskId");
-                        String label = result.getData().getStringExtra("label"); // Lấy nhãn
+                        String label = result.getData().getStringExtra("label");
                         if (taskName != null && startTime != null && endTime != null && originalTaskId != null) {
                             Log.d(TAG, "Cập nhật nhiệm vụ - Tên: " + taskName + ", Thời gian bắt đầu: " + startTime +
                                     ", Thời gian kết thúc: " + endTime + ", Chế độ lặp: " + repeatMode +
@@ -157,7 +182,6 @@ public class Today extends AppCompatActivity {
                                     ", NewGroupId: " + newGroupId + ", OriginalTaskId: " + originalTaskId +
                                     ", Nhãn: " + label);
 
-                            // Kiểm tra và tính khoảng cách thời gian
                             long timeDiffInMinutes = calculateTimeDifferenceInMinutes(startTime, endTime);
                             if (timeDiffInMinutes <= 0) {
                                 Toast.makeText(Today.this, "Thời gian kết thúc phải sau thời gian bắt đầu!", Toast.LENGTH_SHORT).show();
@@ -166,31 +190,25 @@ public class Today extends AppCompatActivity {
                             }
                             Log.d(TAG, "Khoảng cách thời gian: " + timeDiffInMinutes + " phút");
 
-                            // Bước 1: Xóa nhiệm vụ gốc
                             db.collection("tasks").document(originalTaskId)
                                     .delete()
                                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Đã xóa nhiệm vụ gốc: " + originalTaskId))
                                     .addOnFailureListener(e -> Log.e(TAG, "Lỗi khi xóa nhiệm vụ gốc: " + originalTaskId, e));
                             cancelReminder(originalTaskId);
 
-                            // Bước 2: Xóa tất cả nhiệm vụ lặp lại liên quan đến groupId cũ (nếu có)
                             if (groupId != null && !groupId.isEmpty()) {
                                 deleteTasksByGroupId(groupId);
                             }
 
-                            // Bước 3: Thêm nhiệm vụ đã cập nhật
-                            Task2 updatedTask = new Task2(taskName, startTime, endTime, repeatMode, newGroupId, reminder, label);
+                            Task2 updatedTask = new Task2(taskName, startTime, endTime, repeatMode, newGroupId, reminder, label, userId);
                             addTaskToFirestore(updatedTask, "overdue");
 
-                            // Bước 4: Lập lịch nhắc nhở cho nhiệm vụ gốc
                             scheduleReminder(taskName, startTime, reminder, newGroupId);
 
-                            // Bước 5: Tạo các nhiệm vụ lặp lại mới nếu repeatMode không phải "never"
                             if (newGroupId != null && !repeatMode.equals("never")) {
                                 createRecurringTasks(taskName, startTime, endTime, repeatMode, reminder, newGroupId, label);
                             }
 
-                            // Bước 6: Cập nhật giao diện bằng cách xóa nhiệm vụ cũ khỏi todayTasks nếu nó không còn thuộc ngày hiện tại
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                             String currentDate = sdf.format(calendar.getTime());
                             String taskDate = startTime.substring(0, 10);
@@ -230,7 +248,7 @@ public class Today extends AppCompatActivity {
                     Log.d(TAG, "Marking task as done: " + taskId);
                     db.collection("tasks").document(taskId).delete();
                     cancelReminder(taskId);
-                    Task2 doneTask = new Task2(task.getName(), task.getStartTime(), null, task.getRepeatMode(), task.getGroupId(), task.getReminder(), task.getLabel());
+                    Task2 doneTask = new Task2(task.getName(), task.getStartTime(), null, task.getRepeatMode(), task.getGroupId(), task.getReminder(), task.getLabel(), userId);
                     addTaskToFirestore(doneTask, "done");
                 },
                 task -> {
@@ -255,8 +273,8 @@ public class Today extends AppCompatActivity {
         todayTouchHelper.attachToRecyclerView(recyclerToday);
 
         btnAdd.setOnClickListener(v -> {
-            Intent intent = new Intent(Today.this, create_items.class);
-            createTaskLauncher.launch(intent);
+            Intent addIntent = new Intent(Today.this, create_items.class);
+            createTaskLauncher.launch(addIntent);
         });
 
         btnNotification.setOnClickListener(v -> {
@@ -271,8 +289,8 @@ public class Today extends AppCompatActivity {
         });
 
         calendar = Calendar.getInstance();
-        if (getIntent().hasExtra("selectedDate")) {
-            calendar.setTimeInMillis(getIntent().getLongExtra("selectedDate", calendar.getTimeInMillis()));
+        if (intent.hasExtra("selectedDate")) {
+            calendar.setTimeInMillis(intent.getLongExtra("selectedDate", calendar.getTimeInMillis()));
         }
         updateDateAndUI();
 
@@ -326,7 +344,8 @@ public class Today extends AppCompatActivity {
         taskData.put("repeatMode", task.getRepeatMode());
         taskData.put("groupId", task.getGroupId());
         taskData.put("reminder", task.getReminder());
-        taskData.put("label", task.getLabel()); // Add label to Firestore
+        taskData.put("label", task.getLabel());
+        taskData.put("userId", task.getUserId());
 
         String documentId = task.getName() + "_" + task.getStartTime();
         Log.d(TAG, "Adding task to Firestore: " + taskData.toString());
@@ -346,6 +365,7 @@ public class Today extends AppCompatActivity {
         Log.d(TAG, "Attempting to delete tasks with groupId: " + groupId);
         db.collection("tasks")
                 .whereEqualTo("groupId", groupId)
+                .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     Log.d(TAG, "Found " + querySnapshot.size() + " tasks with groupId: " + groupId);
@@ -365,8 +385,9 @@ public class Today extends AppCompatActivity {
     }
 
     private void deleteAllTasks() {
-        Log.d(TAG, "Attempting to delete all tasks");
+        Log.d(TAG, "Attempting to delete all tasks for user: " + userId);
         db.collection("tasks")
+                .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     Log.d(TAG, "Found " + querySnapshot.size() + " tasks to delete");
@@ -388,10 +409,10 @@ public class Today extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Error querying tasks for deletion", e));
     }
+
     private long calculateTimeDifferenceInMinutes(String startTime, String endTime) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         try {
-            // Chuyển đổi thời gian từ chuỗi sang đối tượng Date
             Date startDate = sdf.parse(startTime);
             Date endDate = sdf.parse(endTime);
 
@@ -400,13 +421,9 @@ public class Today extends AppCompatActivity {
                 return -1;
             }
 
-            // Tính khoảng cách thời gian bằng mili-giây
             long diffInMillis = endDate.getTime() - startDate.getTime();
-
-            // Chuyển đổi sang phút
             long diffInMinutes = diffInMillis / (1000 * 60);
 
-            // Kiểm tra nếu endTime trước startTime
             if (diffInMinutes <= 0) {
                 Log.w(TAG, "Thời gian kết thúc phải sau thời gian bắt đầu: diffInMinutes=" + diffInMinutes);
                 return -1;
@@ -418,6 +435,7 @@ public class Today extends AppCompatActivity {
             return -1;
         }
     }
+
     private void cancelReminder(String taskId) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, ReminderBroadcastReceiver.class);
@@ -476,7 +494,7 @@ public class Today extends AppCompatActivity {
 
                 String newStartTime = sdf.format(startCal.getTime());
                 String newEndTime = sdf.format(endCal.getTime());
-                Task2 recurringTask = new Task2(taskName, newStartTime, newEndTime, repeatMode, groupId, reminder, label);
+                Task2 recurringTask = new Task2(taskName, newStartTime, newEndTime, repeatMode, groupId, reminder, label, userId);
                 addTaskToFirestore(recurringTask, "overdue");
 
                 scheduleReminder(taskName, newStartTime, reminder, groupId);
@@ -684,6 +702,7 @@ public class Today extends AppCompatActivity {
         Log.d(TAG, "Listening for tasks on date: " + currentDate);
 
         db.collection("tasks")
+                .whereEqualTo("userId", userId)
                 .addSnapshotListener((snapshots, e) -> {
                     if (e != null) {
                         Log.e(TAG, "Firestore listen failed", e);
@@ -705,18 +724,19 @@ public class Today extends AppCompatActivity {
                             String repeatMode = doc.getString("repeatMode");
                             String groupId = doc.getString("groupId");
                             String reminder = doc.getString("reminder");
-                            String label = doc.getString("label"); // Retrieve label
+                            String label = doc.getString("label");
+                            String taskUserId = doc.getString("userId");
 
                             if ("overdue".equals(status) && startTime != null) {
                                 String taskDate = startTime.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
-                                    todayTasks.add(new Task2(name, startTime, endTime, repeatMode, groupId, reminder, label));
+                                    todayTasks.add(new Task2(name, startTime, endTime, repeatMode, groupId, reminder, label, taskUserId));
                                     Log.d(TAG, "Added task: " + name + " for " + taskDate);
                                 }
                             } else if ("done".equals(status) && startTime != null) {
                                 String taskDate = startTime.substring(0, 10);
                                 if (taskDate.equals(currentDate)) {
-                                    doneTasks.add(new Task2(name, startTime, null, repeatMode, groupId, reminder, label));
+                                    doneTasks.add(new Task2(name, startTime, null, repeatMode, groupId, reminder, label, taskUserId));
                                     Log.d(TAG, "Added done task: " + name + " for " + taskDate);
                                 }
                             }
@@ -814,7 +834,7 @@ public class Today extends AppCompatActivity {
                                 intent.putExtra("repeatMode", task.getRepeatMode());
                                 intent.putExtra("reminder", task.getReminder());
                                 intent.putExtra("groupId", task.getGroupId());
-                                intent.putExtra("label", task.getLabel()); // Pass label
+                                intent.putExtra("label", task.getLabel());
                                 intent.putExtra("originalTaskId", taskId);
                                 try {
                                     updateTaskLauncher.launch(intent);

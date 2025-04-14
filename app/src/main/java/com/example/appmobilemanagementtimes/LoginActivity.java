@@ -1,6 +1,8 @@
 package com.example.appmobilemanagementtimes;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,6 +16,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private TextView signUpText;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +42,16 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             if (email.equals(SAMPLE_EMAIL) && password.equals(SAMPLE_PASSWORD)) {
-                // Đăng nhập thành công
+                // Tạo userId từ email (tạm thời)
+                String userId = email;
+
+                // Lưu userId vào SharedPreferences
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                prefs.edit().putString("userId", userId).apply();
+
+                // Đăng nhập thành công, truyền userId
                 Intent intent = new Intent(LoginActivity.this, Today.class);
+                intent.putExtra("userId", userId);
                 startActivity(intent);
                 finish();
             } else {
@@ -55,4 +66,4 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         });
     }
-} 
+}
