@@ -42,9 +42,7 @@
         <activity
             android:name=".update_items"
             android:exported="true" />
-        <activity
-            android:name=".pass_date"
-            android:exported="true" />
+
 
         <activity
             android:name=".UpcomingActivity"

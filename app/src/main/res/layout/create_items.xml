@@ -15,7 +15,6 @@
         android:gravity="center_horizontal"
         android:paddingTop="40dp">
 
-        <!-- Title -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,7 +59,6 @@
                 tools:ignore="UseAppTint" />
         </LinearLayout>
 
-        <!-- Input Name -->
         <EditText
             android:id="@+id/editTextTaskName"
             android:layout_width="match_parent"
@@ -72,7 +70,6 @@
             android:textColor="#333333"
             android:layout_marginBottom="50dp" />
 
-        <!-- Toggle All Day -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -102,7 +99,6 @@
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
-        <!-- Start Time -->
         <LinearLayout
             android:id="@+id/linearLayoutStartTime"
             android:layout_width="match_parent"
@@ -137,7 +133,6 @@
                 android:textColor="#555555" />
         </LinearLayout>
 
-        <!-- End Time -->
         <LinearLayout
             android:id="@+id/linearLayoutEndTime"
             android:layout_width="match_parent"
@@ -172,12 +167,13 @@
                 android:textColor="#555555" />
         </LinearLayout>
 
-        <!-- Reminder -->
+        <!-- Phần nhắc nhở (reminderLayout) được đưa lên trước -->
         <LinearLayout
             android:id="@+id/reminderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="12dp"
             android:background="@drawable/rounded_bg"
             android:layout_marginBottom="8dp"
@@ -197,11 +193,11 @@
                 android:layout_height="wrap_content"
                 android:text="Không nhắc nhở"
                 android:textSize="16sp"
-                android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="@color/black"
+                android:paddingStart="12dp" />
         </LinearLayout>
 
-        <!-- Repeat -->
+        <!-- Phần lặp lại (repeatLayout) được đưa xuống sau -->
         <LinearLayout
             android:id="@+id/repeatLayout"
             android:layout_width="match_parent"
@@ -231,38 +227,6 @@
                 android:paddingStart="12dp" />
         </LinearLayout>
 
-        <!-- Ghim -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="12dp"
-            android:background="@drawable/rounded_bg"
-            android:layout_marginBottom="8dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/pin"
-                app:tint="#FF379AE6" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Ghim"
-                android:textSize="16sp"
-                android:textColor="@color/black"
-                android:paddingStart="12dp" />
-
-            <Switch
-                android:id="@+id/switch_pin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <!-- Custom Settings -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -294,6 +258,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/customLabelLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -304,51 +269,87 @@
             android:layout_marginStart="50dp">
 
             <ImageView
+                android:id="@+id/label1"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause1"
-                android:contentDescription="Icon 1"
+                android:contentDescription="Label 1"
                 android:padding="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:tag="label1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
 
             <ImageView
+                android:id="@+id/label2"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause2"
-                android:contentDescription="Icon 2"
+                android:contentDescription="Label 2"
                 android:padding="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:tag="label2"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
 
             <ImageView
+                android:id="@+id/label3"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause3"
-                android:contentDescription="Icon 3"
+                android:contentDescription="Label 3"
                 android:padding="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:tag="label3"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
 
             <ImageView
+                android:id="@+id/label4"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause4"
-                android:contentDescription="Icon 4"
+                android:contentDescription="Label 4"
                 android:padding="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:tag="label4"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
 
             <ImageView
+                android:id="@+id/label5"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause5"
-                android:contentDescription="Icon 5"
+                android:contentDescription="Label 5"
                 android:padding="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:tag="label5"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
 
             <ImageView
+                android:id="@+id/label6"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/global"
-                android:contentDescription="Icon 6"
-                android:padding="8dp" />
+                android:contentDescription="Label 6"
+                android:padding="8dp"
+                android:tag="label6"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:alpha="0.5" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

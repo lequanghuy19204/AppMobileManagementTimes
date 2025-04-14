@@ -8,7 +8,6 @@
     android:layout_height="match_parent"
     tools:context=".Today">
 
-    <!-- Nội dung chính của màn hình -->
     <LinearLayout
         android:id="@+id/root_layout"
         android:layout_width="match_parent"
@@ -16,13 +15,11 @@
         android:orientation="vertical"
         android:paddingTop="15dp">
 
-        <!-- Thanh trên cùng: Avatar + Thông báo -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp">
 
-            <!-- Nút Avatar Bên Trái -->
             <ImageView
                 android:id="@+id/img_avatar"
                 android:layout_width="40dp"
@@ -33,7 +30,6 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
 
-            <!-- Nút Thông Báo Bên Phải -->
             <ImageButton
                 android:id="@+id/btn_notification"
                 android:layout_width="40dp"
@@ -50,9 +46,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Nút mũi tên trái -->
             <ImageButton
                 android:id="@+id/btn_prev_day"
                 android:layout_width="40dp"
@@ -65,7 +60,6 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginStart="-10dp"/>
 
-            <!-- Tiêu đề ngày tháng -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,7 +90,6 @@
                     android:gravity="center"/>
             </LinearLayout>
 
-            <!-- Nút mũi tên phải -->
             <ImageButton
                 android:id="@+id/btn_next_day"
                 android:layout_width="40dp"
@@ -110,7 +103,6 @@
                 android:layout_marginEnd="-10dp"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Danh sách công việc -->
         <ScrollView
             android:id="@+id/task"
             android:layout_width="match_parent"
@@ -147,11 +139,10 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height ="wrap_content" />
             </LinearLayout>
         </ScrollView>
 
-        <!-- Nút Thêm -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_add"
             android:layout_width="wrap_content"
@@ -163,7 +154,6 @@
             android:src="@drawable/ic_add"
             app:tint="@color/white" />
 
-        <!-- Menu Điều Hướng -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
@@ -173,7 +163,6 @@
             app:menu="@menu/bottom_nav_menu"/>
     </LinearLayout>
 
-    <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -185,4 +174,3 @@
         app:itemIconTint="@color/nav_item_color" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
-

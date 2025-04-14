@@ -2,6 +2,7 @@ package com.example.appmobilemanagementtimes;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
     private boolean isOverdue;
     private Consumer<Task2> onTaskCompleted;
     private Consumer<Task2> onTaskDeleted;
+    private static final String TAG = "Taskadapter2";
 
     private static final int VIEW_TYPE_TODO = 0;
     private static final int VIEW_TYPE_OVERDUE = 1;
@@ -32,12 +34,11 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
 
     public void setOverdue(boolean isOverdue) {
         this.isOverdue = isOverdue;
-        notifyDataSetChanged(); // Làm mới toàn bộ giao diện khi trạng thái thay đổi
+        notifyDataSetChanged();
     }
 
     @Override
     public int getItemViewType(int position) {
-        // Trả về loại view dựa trên trạng thái isOverdue
         return isOverdue ? VIEW_TYPE_OVERDUE : VIEW_TYPE_TODO;
     }
 
@@ -55,7 +56,48 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
         holder.taskName.setText(task.getName());
         String startTime = task.getStartTime().substring(11);
         String endTime = task.getEndTime() != null ? task.getEndTime().substring(11) : "";
-        holder.taskTime.setText(startTime + (endTime.isEmpty() ? "" : " - " + endTime));
+        StringBuilder timeText = new StringBuilder(startTime + (endTime.isEmpty() ? "" : " - " + endTime));
+
+        String repeatDisplay = getRepeatDisplay(task.getRepeatMode());
+        if (!repeatDisplay.isEmpty()) {
+            timeText.append(" (").append(repeatDisplay).append(")");
+        }
+
+        String reminderDisplay = getReminderDisplay(task.getReminder());
+        if (!reminderDisplay.isEmpty()) {
+            timeText.append(" - Nhắc nhở: ").append(reminderDisplay);
+        }
+
+        holder.taskTime.setText(timeText.toString());
+
+        // Set label icon
+        String label = task.getLabel();
+        if (label != null) {
+            switch (label) {
+                case "label1":
+                    holder.label.setImageResource(R.drawable.pause1);
+                    break;
+                case "label2":
+                    holder.label.setImageResource(R.drawable.pause2);
+                    break;
+                case "label3":
+                    holder.label.setImageResource(R.drawable.pause3);
+                    break;
+                case "label4":
+                    holder.label.setImageResource(R.drawable.pause4);
+                    break;
+                case "label5":
+                    holder.label.setImageResource(R.drawable.pause5);
+                    break;
+                case "label6":
+                    holder.label.setImageResource(R.drawable.global);
+                    break;
+                default:
+                    holder.label.setImageResource(R.drawable.pause1); // Default
+            }
+        } else {
+            holder.label.setImageResource(R.drawable.pause1); // Default
+        }
 
         holder.checkbox.setOnCheckedChangeListener(null);
         holder.checkbox.setChecked(false);
@@ -67,6 +109,8 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
                     int pos = holder.getAdapterPosition();
                     if (pos != RecyclerView.NO_POSITION) {
                         onTaskCompleted.accept(task);
+                        taskList.remove(pos);
+                        notifyItemRemoved(pos);
                     }
                 }, 300);
             }
@@ -74,13 +118,10 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
 
         holder.btnDelete.setOnClickListener(v -> {
             int pos = holder.getAdapterPosition();
-            if (pos != RecyclerView.NO_POSITION) {
+            if (pos != RecyclerView.NO_POSITION && onTaskDeleted != null) {
                 Task2 taskToDelete = taskList.get(pos);
-                taskList.remove(pos);
-                notifyItemRemoved(pos);
-                if (onTaskDeleted != null) {
-                    onTaskDeleted.accept(taskToDelete);
-                }
+                Log.d(TAG, "Deleting task: " + taskToDelete.getName() + ", groupId: " + taskToDelete.getGroupId());
+                onTaskDeleted.accept(taskToDelete);
             }
         });
     }
@@ -97,6 +138,46 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
 
     public List<Task2> getTaskList() {
         return taskList;
+    }
+
+    private String getRepeatDisplay(String repeatMode) {
+        if (repeatMode == null) return "";
+        switch (repeatMode) {
+            case "every_day":
+                return "Mỗi ngày";
+            case "every_week":
+                return "Mỗi tuần";
+            case "every_2_weeks":
+                return "Mỗi 2 tuần";
+            case "every_3_weeks":
+                return "Mỗi 3 tuần";
+            case "every_month":
+                return "Mỗi tháng";
+            case "every_year":
+                return "Mỗi năm";
+            default:
+                return "";
+        }
+    }
+
+    private String getReminderDisplay(String reminder) {
+        if (reminder == null) return "";
+        switch (reminder) {
+            case "1m":
+                return "1 phút trước";
+            case "5m":
+                return "5 phút trước";
+            case "15m":
+                return "15 phút trước";
+            case "30m":
+                return "30 phút trước";
+            case "1h":
+                return "1 giờ trước";
+            case "1d":
+                return "1 ngày trước";
+            default:
+                return "";
+        }
     }
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
