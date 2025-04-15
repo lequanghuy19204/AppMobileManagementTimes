@@ -1,24 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background ring -->
+    <!-- Vòng nền -->
     <item android:id="@android:id/background">
         <shape
             android:shape="ring"
-            android:thickness="10dp"
+            android:thickness="8dp"
             android:useLevel="false">
-            <solid android:color="#E0E0E0"/> <!-- Màu nền xám -->
+            <solid android:color="#E0E0E0" /> <!-- Xám nhạt -->
         </shape>
     </item>
-
-    <!-- Progress ring -->
+    <!-- Vòng tiến trình -->
     <item android:id="@android:id/progress">
-        <rotate
-            android:fromDegrees="0"
-            android:toDegrees="360">
-            <shape
-                android:shape="ring"
-                android:thickness="10dp">
-                <solid android:color="#4CAF50"/> <!-- Màu tiến trình xanh lá -->
-            </shape>
-        </rotate>
+        <shape
+            android:shape="ring"
+            android:thickness="8dp"
+            android:useLevel="true">
+            <solid android:color="#FF6200EE" /> <!-- Tím -->
+        </shape>
     </item>
 </layer-list>
