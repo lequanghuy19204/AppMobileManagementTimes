@@ -1,5 +1,6 @@
 package com.example.appmobilemanagementtimes;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
@@ -23,17 +24,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.util.Locale;
 
 public class PomodoroActivity extends AppCompatActivity {
-
-    public enum Phase {
-        WORK, SHORT_BREAK, LONG_BREAK
-    }
 
     private static final String TAG = "PomodoroActivity";
     private static final String PREFS_NAME = "PomodoroPrefs";
@@ -51,7 +47,6 @@ public class PomodoroActivity extends AppCompatActivity {
     private boolean isTimerRunning = false;
     private long workDuration;
     private long shortBreakDuration;
-    private final long longBreakDuration = 15 * 60 * 1000;
     private long timeLeftInMillis;
     private long totalDuration;
     private final String[] pomodoroOptions = {"25/5", "50/10", "90/15"};
@@ -62,6 +57,10 @@ public class PomodoroActivity extends AppCompatActivity {
     private int notificationSoundId;
     private boolean isSoundPoolLoaded = false;
 
+    private enum Phase {
+        WORK, SHORT_BREAK
+    }
+
     private Phase currentPhase = Phase.WORK;
     private int pomodoroCount = 0;
 
@@ -71,14 +70,15 @@ public class PomodoroActivity extends AppCompatActivity {
     private int currentMusicIndex = -1;
     private int selectedMusicIndex = -1;
     private final String[] musicNames = {
-            "None", "Clock ticking", "Emotional Piano", "Light Rain",
+            "None", "Clock Ticking", "Emotional Piano", "Light Rain",
             "Rain", "Relaxing Piano", "The Ocean"
     };
     private final int[] musicResIds = {
-            0, R.raw.clock_ticking, R.raw.emotional_piano_music,
+            0, R.raw.oceanwave, R.raw.emotional_piano_music,
             R.raw.light_rain, R.raw.rain_sound,
             R.raw.relaxing_piano, R.raw.the_ocean_sound
     };
+    private static final int CLOCK_TICKING_INDEX = 1; // Index of "Clock Ticking" in musicNames/musicResIds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,9 +116,11 @@ public class PomodoroActivity extends AppCompatActivity {
                 notificationSoundId = soundPool.load(this, R.raw.notification_sound, 1);
             } else {
                 Log.e(TAG, "Notification sound resource not found");
+                isSoundPoolLoaded = false;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error initializing SoundPool", e);
+            isSoundPoolLoaded = false;
         }
     }
 
@@ -152,6 +154,7 @@ public class PomodoroActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(v -> pauseTimer());
         stopButton.setOnClickListener(v -> resetTimer());
         pomodoroDropdown.setOnClickListener(v -> showPomodoroOptions());
+        // Sửa lỗi biên dịch
         musicColumn.setOnClickListener(v -> showMusicSelectionDialog());
     }
 
@@ -161,14 +164,7 @@ public class PomodoroActivity extends AppCompatActivity {
         shortBreakDuration = sharedPref.getLong(BREAK_DURATION_KEY, 5 * 60 * 1000);
         selectedMusicIndex = sharedPref.getInt(SELECTED_MUSIC_KEY, -1);
         pomodoroCount = sharedPref.getInt(POMODORO_COUNT_KEY, 0);
-
-        int phaseIndex = sharedPref.getInt(CURRENT_PHASE_KEY, Phase.WORK.ordinal());
-        if (phaseIndex >= 0 && phaseIndex < Phase.values().length) {
-            currentPhase = Phase.values()[phaseIndex];
-        } else {
-            currentPhase = Phase.WORK;
-            Log.e(TAG, "Invalid phase index loaded: " + phaseIndex);
-        }
+        currentPhase = Phase.values()[sharedPref.getInt(CURRENT_PHASE_KEY, Phase.WORK.ordinal())];
 
         String currentSettingText = (workDuration / 60000) + "/" + (shortBreakDuration / 60000);
         pomodoroText.setText(currentSettingText);
@@ -192,8 +188,11 @@ public class PomodoroActivity extends AppCompatActivity {
     private void startTimer() {
         if (isTimerRunning) return;
 
-        if (selectedMusicIndex > 0 && !isMusicPlaying) {
+        // Play phase-specific music
+        if (currentPhase == Phase.WORK && selectedMusicIndex > 0) {
             playMusic(selectedMusicIndex);
+        } else if (currentPhase == Phase.SHORT_BREAK) {
+            playMusic(CLOCK_TICKING_INDEX);
         }
 
         countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
@@ -287,19 +286,52 @@ public class PomodoroActivity extends AppCompatActivity {
             Log.w(TAG, "Activity is finishing/destroyed, skipping notification sound.");
             return;
         }
-        if (!isSoundPoolLoaded || soundPool == null) {
-            Log.e(TAG, "SoundPool not loaded or null, cannot play notification sound.");
+
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
+            Log.w(TAG, "Media volume is muted, notification sound might not be heard.");
+        }
+
+        // Thử SoundPool trước
+        if (isSoundPoolLoaded && soundPool != null && notificationSoundId != 0) {
+            try {
+                soundPool.play(notificationSoundId, 1.0f, 1.0f, 1, 0, 1.0f);
+                Log.d(TAG, "Notification sound played via SoundPool.");
+                return;
+            } catch (Exception e) {
+                Log.e(TAG, "Error playing notification sound via SoundPool", e);
+            }
+        }
+
+        // Fallback sang MediaPlayer
+        if (!isResourceAvailable(R.raw.notification_sound)) {
+            Log.e(TAG, "Notification sound resource not found, cannot play.");
+            runOnUiThread(() -> Toast.makeText(this, "Notification sound not found", Toast.LENGTH_SHORT).show());
             return;
         }
+
         try {
-            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
-                Log.w(TAG, "Media volume is muted, notification sound might not be heard.");
+            MediaPlayer notificationPlayer = MediaPlayer.create(this, R.raw.notification_sound);
+            if (notificationPlayer != null) {
+                notificationPlayer.setVolume(1.0f, 1.0f);
+                notificationPlayer.setOnCompletionListener(mp -> {
+                    mp.release();
+                    Log.d(TAG, "Notification sound completed and released.");
+                });
+                notificationPlayer.setOnErrorListener((mp, what, extra) -> {
+                    Log.e(TAG, "MediaPlayer error for notification sound: what=" + what + ", extra=" + extra);
+                    mp.release();
+                    return true;
+                });
+                notificationPlayer.start();
+                Log.d(TAG, "Notification sound played via MediaPlayer.");
+            } else {
+                Log.e(TAG, "MediaPlayer.create returned null for notification sound.");
+                runOnUiThread(() -> Toast.makeText(this, "Cannot play notification sound", Toast.LENGTH_SHORT).show());
             }
-            soundPool.play(notificationSoundId, 1.0f, 1.0f, 1, 0, 1.0f);
-            Log.d(TAG, "Notification sound played.");
         } catch (Exception e) {
-            Log.e(TAG, "Error playing notification sound", e);
+            Log.e(TAG, "Error playing notification sound via MediaPlayer", e);
+            runOnUiThread(() -> Toast.makeText(this, "Error playing notification sound", Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -309,10 +341,13 @@ public class PomodoroActivity extends AppCompatActivity {
             pomodoroCount++;
             Log.d(TAG, "Pomodoro count incremented to: " + pomodoroCount);
             setPhase(Phase.SHORT_BREAK);
-        } else {
+        } else { // SHORT_BREAK
+            pomodoroCount = 0;
+            Log.d(TAG, "Break finished, resetting pomodoroCount to 0");
             setPhase(Phase.WORK);
         }
         saveSettings();
+        startTimer(); // Automatically start the next phase
     }
 
     private void setPhase(Phase phase) {
@@ -321,14 +356,20 @@ public class PomodoroActivity extends AppCompatActivity {
             case WORK:
                 totalDuration = workDuration;
                 Log.d(TAG, "Setting phase to WORK. Duration: " + totalDuration + "ms");
+                if (isTimerRunning) {
+                    stopMusic();
+                    if (selectedMusicIndex > 0) {
+                        playMusic(selectedMusicIndex);
+                    }
+                }
                 break;
             case SHORT_BREAK:
                 totalDuration = shortBreakDuration;
                 Log.d(TAG, "Setting phase to SHORT_BREAK. Duration: " + totalDuration + "ms");
-                break;
-            case LONG_BREAK:
-                totalDuration = longBreakDuration;
-                Log.d(TAG, "Setting phase to LONG_BREAK. Duration: " + totalDuration + "ms");
+                if (isTimerRunning) {
+                    stopMusic();
+                    playMusic(CLOCK_TICKING_INDEX);
+                }
                 break;
         }
         timeLeftInMillis = totalDuration;
@@ -344,11 +385,11 @@ public class PomodoroActivity extends AppCompatActivity {
                 long newBreakDuration = Long.parseLong(parts[1]) * 60_000L;
 
                 if (newWorkDuration <= 0 || newBreakDuration <= 0) {
-                    Toast.makeText(this, "Thời gian làm việc và giải lao phải lớn hơn 0", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Work and break times must be greater than 0", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Log.d(TAG, "Đặt chu kỳ Pomodoro: " + cycle + " -> Work: " + newWorkDuration + "ms, Break: " + newBreakDuration + "ms");
+                Log.d(TAG, "Setting Pomodoro Cycle to: " + cycle + " -> Work: " + newWorkDuration + "ms, Break: " + newBreakDuration + "ms");
 
                 workDuration = newWorkDuration;
                 shortBreakDuration = newBreakDuration;
@@ -357,14 +398,14 @@ public class PomodoroActivity extends AppCompatActivity {
                 resetTimer();
                 pomodoroText.setText(cycle);
             } else {
-                Toast.makeText(this, "Định dạng sai. Dùng phút/phút (ví dụ: 50/10)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Invalid format. Use minutes/minutes (e.g., 50/10)", Toast.LENGTH_SHORT).show();
             }
         } catch (NumberFormatException e) {
-            Log.e(TAG, "Định dạng chu kỳ Pomodoro sai: " + cycle, e);
-            Toast.makeText(this, "Số không hợp lệ", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Invalid pomodoro cycle format: " + cycle, e);
+            Toast.makeText(this, "Invalid number format", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Log.e(TAG, "Lỗi khi đặt chu kỳ Pomodoro: " + cycle, e);
-            Toast.makeText(this, "Lỗi khi đặt chu kỳ", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error setting pomodoro cycle: " + cycle, e);
+            Toast.makeText(this, "Error setting cycle", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -375,11 +416,11 @@ public class PomodoroActivity extends AppCompatActivity {
         for (String option : pomodoroOptions) {
             popup.getMenu().add(option);
         }
-        popup.getMenu().add("+ Tùy chỉnh");
+        popup.getMenu().add("+ Custom");
 
         popup.setOnMenuItemClickListener(item -> {
             String title = item.getTitle().toString();
-            if (title.equals("+ Tùy chỉnh")) {
+            if (title.equals("+ Custom")) {
                 showCustomTimeDialog();
             } else {
                 setPomodoroCycle(title);
@@ -403,18 +444,18 @@ public class PomodoroActivity extends AppCompatActivity {
         etWorkTime.setText(String.valueOf(workDuration / 60_000));
         etBreakTime.setText(String.valueOf(shortBreakDuration / 60_000));
 
-        builder.setTitle("Tùy chỉnh thời gian Pomodoro");
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
+        builder.setTitle("Custom Pomodoro Time");
+        builder.setPositiveButton("Save", (dialog, which) -> {
             try {
                 int workMinutes = Integer.parseInt(etWorkTime.getText().toString());
                 int breakMinutes = Integer.parseInt(etBreakTime.getText().toString());
 
                 if (workMinutes <= 0 || breakMinutes <= 0) {
-                    Toast.makeText(this, "Thời gian làm việc và giải lao phải lớn hơn 0", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Work and break times must be greater than 0", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (workMinutes > 180 || breakMinutes > 60) {
-                    Toast.makeText(this, "Vui lòng nhập thời gian hợp lý (Làm việc <= 180, Giải lao <= 60)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Please enter reasonable times (Work <= 180, Break <= 60)", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -422,14 +463,14 @@ public class PomodoroActivity extends AppCompatActivity {
                 setPomodoroCycle(newPreset);
 
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "Vui lòng nhập số hợp lệ", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter valid numbers", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
-                Log.e(TAG, "Lỗi khi lưu thời gian tùy chỉnh", e);
-                Toast.makeText(this, "Lỗi khi lưu thời gian", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error saving custom time", e);
+                Toast.makeText(this, "Error saving custom time", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }
 
@@ -439,7 +480,7 @@ public class PomodoroActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_music_control, null);
         builder.setView(dialogView);
-        builder.setTitle("Nhạc nền");
+        builder.setTitle("Background Music");
 
         ListView musicListView = dialogView.findViewById(R.id.musicListView);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -458,7 +499,7 @@ public class PomodoroActivity extends AppCompatActivity {
         final int[] previewSelectionIndex = {initialSelection};
 
         musicListView.setOnItemClickListener((parent, view, position, id) -> {
-            Log.d(TAG, "Nhạc được chọn: " + position + " (" + musicNames[position] + ")");
+            Log.d(TAG, "Music item clicked: " + position + " (" + musicNames[position] + ")");
             previewSelectionIndex[0] = position;
             playMusicForPreview(position);
             muteToggleIcon.setImageResource(isMusicPlaying ? R.drawable.ic_volume_on : R.drawable.ic_volume_off);
@@ -493,7 +534,7 @@ public class PomodoroActivity extends AppCompatActivity {
                     muteToggleIcon.setImageResource(R.drawable.ic_volume_off);
                 }
             }
-            Log.d(TAG, "Nút mute được nhấn. isMusicPlaying: " + isMusicPlaying + ", Volume: " + musicVolume);
+            Log.d(TAG, "Mute toggle clicked. isMusicPlaying: " + isMusicPlaying + ", Volume: " + musicVolume);
         });
 
         volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -506,32 +547,26 @@ public class PomodoroActivity extends AppCompatActivity {
                     if (mediaPlayer != null) {
                         mediaPlayer.setVolume(musicVolume, musicVolume);
                     }
-                    Log.d(TAG, "Âm lượng thay đổi thành: " + musicVolume);
+                    Log.d(TAG, "Volume changed to: " + musicVolume);
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        builder.setPositiveButton("Chọn", (dialog, which) -> {
+        builder.setPositiveButton("Select", (dialog, which) -> {
             selectedMusicIndex = previewSelectionIndex[0];
             saveSettings();
-            Log.d(TAG, "Nhạc được chọn: " + selectedMusicIndex + " (" + musicNames[selectedMusicIndex] + ")");
-            if (selectedMusicIndex <= 0) {
-                stopMusic();
-            } else {
-                if (currentMusicIndex != selectedMusicIndex) {
-                    stopMusic();
-                    if (isTimerRunning) {
-                        playMusic(selectedMusicIndex);
-                    }
-                }
-            }
+            Log.d(TAG, "Music selected: " + selectedMusicIndex + " (" + musicNames[selectedMusicIndex] + ")");
+            stopMusic();
             currentMusicIndex = selectedMusicIndex;
+            if (isTimerRunning && currentPhase == Phase.WORK && selectedMusicIndex > 0) {
+                playMusic(selectedMusicIndex);
+            }
         });
 
-        builder.setNegativeButton("Đóng", (dialog, which) -> {
-            Log.d(TAG, "Hủy chọn nhạc.");
+        builder.setNegativeButton("Close", (dialog, which) -> {
+            Log.d(TAG, "Music selection cancelled.");
             if (mediaPlayer != null && currentMusicIndex != selectedMusicIndex) {
                 stopMusic();
             }
@@ -554,12 +589,12 @@ public class PomodoroActivity extends AppCompatActivity {
 
         if (position <= 0 || musicResIds[position] == 0) {
             isMusicPlaying = false;
-            Log.d(TAG, "Dừng preview (Không chọn hoặc resId không hợp lệ).");
+            Log.d(TAG, "Preview stopped (None selected or invalid resId).");
             return;
         }
 
         if (!isResourceAvailable(musicResIds[position])) {
-            Toast.makeText(this, "Không tìm thấy file nhạc: " + musicNames[position], Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Music file not found: " + musicNames[position], Toast.LENGTH_SHORT).show();
             isMusicPlaying = false;
             currentMusicIndex = -1;
             return;
@@ -571,23 +606,23 @@ public class PomodoroActivity extends AppCompatActivity {
                 mediaPlayer.setLooping(true);
                 mediaPlayer.setVolume(musicVolume, musicVolume);
                 mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "Lỗi MediaPlayer khi preview: what=" + what + ", extra=" + extra + " cho " + musicNames[position]);
+                    Log.e(TAG, "MediaPlayer preview error: what=" + what + ", extra=" + extra);
                     releaseMediaPlayer();
-                    Toast.makeText(PomodoroActivity.this, "Lỗi phát nhạc", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PomodoroActivity.this, "Error playing music", Toast.LENGTH_SHORT).show();
                     return true;
                 });
                 mediaPlayer.start();
                 isMusicPlaying = true;
-                Log.d(TAG, "Bắt đầu preview cho: " + musicNames[position]);
+                Log.d(TAG, "Preview started for: " + musicNames[position]);
             } else {
-                Log.e(TAG, "MediaPlayer.create trả về null cho: " + musicNames[position]);
-                Toast.makeText(this, "Không thể tạo trình phát nhạc", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "MediaPlayer.create returned null for: " + musicNames[position]);
+                Toast.makeText(this, "Cannot create player for this music", Toast.LENGTH_SHORT).show();
                 isMusicPlaying = false;
                 currentMusicIndex = -1;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Lỗi khi phát preview nhạc: " + musicNames[position], e);
-            Toast.makeText(this, "Lỗi phát nhạc", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error playing preview music: " + musicNames[position], e);
+            Toast.makeText(this, "Error playing music", Toast.LENGTH_SHORT).show();
             isMusicPlaying = false;
             currentMusicIndex = -1;
             releaseMediaPlayer();
@@ -596,7 +631,7 @@ public class PomodoroActivity extends AppCompatActivity {
 
     private void playMusic(int position) {
         if (position == currentMusicIndex && mediaPlayer != null && mediaPlayer.isPlaying()) {
-            Log.d(TAG, "Nhạc đã phát: " + musicNames[position]);
+            Log.d(TAG, "Music already playing: " + musicNames[position]);
             return;
         }
         if (position == currentMusicIndex && mediaPlayer != null && !mediaPlayer.isPlaying()) {
@@ -604,10 +639,10 @@ public class PomodoroActivity extends AppCompatActivity {
                 mediaPlayer.setVolume(musicVolume, musicVolume);
                 mediaPlayer.start();
                 isMusicPlaying = true;
-                Log.d(TAG, "Tiếp tục nhạc: " + musicNames[position]);
+                Log.d(TAG, "Resuming music: " + musicNames[position]);
                 return;
             } catch (IllegalStateException e) {
-                Log.e(TAG, "Lỗi khi tiếp tục MediaPlayer, đang giải phóng.", e);
+                Log.e(TAG, "Error resuming MediaPlayer, releasing.", e);
                 releaseMediaPlayer();
             }
         }
@@ -617,12 +652,12 @@ public class PomodoroActivity extends AppCompatActivity {
 
         if (position <= 0 || musicResIds[position] == 0) {
             isMusicPlaying = false;
-            Log.d(TAG, "Dừng phát nhạc (Không chọn hoặc resId không hợp lệ).");
+            Log.d(TAG, "Play music stopped (None selected or invalid resId).");
             return;
         }
 
         if (!isResourceAvailable(musicResIds[position])) {
-            Log.e(TAG, "Không tìm thấy tài nguyên nhạc: " + musicNames[position]);
+            Log.e(TAG, "Music resource not found: " + musicNames[position]);
             isMusicPlaying = false;
             currentMusicIndex = -1;
             return;
@@ -634,20 +669,20 @@ public class PomodoroActivity extends AppCompatActivity {
                 mediaPlayer.setLooping(true);
                 mediaPlayer.setVolume(musicVolume, musicVolume);
                 mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "Lỗi MediaPlayer khi phát: what=" + what + ", extra=" + extra + " cho " + musicNames[position]);
+                    Log.e(TAG, "MediaPlayer error during playback: what=" + what + ", extra=" + extra);
                     releaseMediaPlayer();
                     return true;
                 });
                 mediaPlayer.start();
                 isMusicPlaying = true;
-                Log.d(TAG, "Bắt đầu nhạc: " + musicNames[position]);
+                Log.d(TAG, "Music started: " + musicNames[position]);
             } else {
-                Log.e(TAG, "MediaPlayer.create trả về null khi phát: " + musicNames[position]);
+                Log.e(TAG, "MediaPlayer.create returned null for playback: " + musicNames[position]);
                 isMusicPlaying = false;
                 currentMusicIndex = -1;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Lỗi khi phát nhạc: " + musicNames[position], e);
+            Log.e(TAG, "Error playing music: " + musicNames[position], e);
             isMusicPlaying = false;
             currentMusicIndex = -1;
             releaseMediaPlayer();
@@ -659,19 +694,19 @@ public class PomodoroActivity extends AppCompatActivity {
             try {
                 mediaPlayer.pause();
                 isMusicPlaying = false;
-                Log.d(TAG, "Nhạc đã tạm dừng.");
+                Log.d(TAG, "Music paused.");
             } catch (IllegalStateException e) {
-                Log.e(TAG, "Lỗi khi tạm dừng MediaPlayer, đang giải phóng.", e);
+                Log.e(TAG, "Error pausing MediaPlayer, releasing.", e);
                 releaseMediaPlayer();
             } catch (Exception e) {
-                Log.e(TAG, "Lỗi chung khi tạm dừng MediaPlayer.", e);
+                Log.e(TAG, "Generic error pausing MediaPlayer.", e);
                 releaseMediaPlayer();
             }
         }
     }
 
     private void stopMusic() {
-        Log.d(TAG, "Dừng và giải phóng trình phát nhạc.");
+        Log.d(TAG, "Stopping and releasing music player.");
         releaseMediaPlayer();
         currentMusicIndex = -1;
     }
@@ -684,10 +719,10 @@ public class PomodoroActivity extends AppCompatActivity {
                 }
                 mediaPlayer.reset();
                 mediaPlayer.release();
-                Log.d(TAG, "MediaPlayer đã được giải phóng.");
+                Log.d(TAG, "MediaPlayer released.");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Lỗi khi giải phóng MediaPlayer", e);
+            Log.e(TAG, "Exception during MediaPlayer release", e);
         } finally {
             mediaPlayer = null;
             isMusicPlaying = false;
@@ -701,13 +736,13 @@ public class PomodoroActivity extends AppCompatActivity {
             pauseTimer();
         }
         saveSettings();
-        Log.d(TAG, "onPause được gọi. Đã lưu cài đặt.");
+        Log.d(TAG, "onPause called. Settings saved.");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume được gọi.");
+        Log.d(TAG, "onResume called.");
         updateButtonVisibility();
         updateTimerText();
     }
@@ -715,7 +750,7 @@ public class PomodoroActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy được gọi.");
+        Log.d(TAG, "onDestroy called.");
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;
@@ -724,7 +759,7 @@ public class PomodoroActivity extends AppCompatActivity {
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;
-            Log.d(TAG, "SoundPool đã được giải phóng.");
+            Log.d(TAG, "SoundPool released.");
         }
     }
 }
