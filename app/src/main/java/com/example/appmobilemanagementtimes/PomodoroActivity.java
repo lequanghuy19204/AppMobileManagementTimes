@@ -12,9 +12,13 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -26,6 +30,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.view.GestureDetectorCompat;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -42,14 +47,24 @@ public class PomodoroActivity extends AppCompatActivity {
     private static final String POMODORO_COUNT_KEY = "pomodoroCount";
     private static final String CURRENT_PHASE_KEY = "currentPhase";
 
-    // UI Components
+    // UI Components (Normal Mode)
     private ImageView startButton, pauseButton, stopButton;
     private TextView timerText, pomodoroText, musicText, fullscreenText;
     private LinearLayout pomodoroDropdown, controlButtons, customTimeLayout;
     private ProgressBar progressBar;
-    private ConstraintLayout mainLayout, musicColumn, fullscreenColumn;
+    private ConstraintLayout mainLayout, normalLayout, musicColumn, fullscreenColumn;
     private ImageView musicIcon, fullscreenIcon;
-    private Handler soundHandler = new Handler(Looper.getMainLooper());
+    private FrameLayout timerContainer;
+
+    // UI Components (Fullscreen Mode)
+    private FrameLayout fullscreenLayout;
+    private LinearLayout fullscreenControlPanel;
+    private ImageView fullscreenStartButton, fullscreenPauseButton, fullscreenMusicButton, fullscreenExitButton;
+    private TextView fullscreenMinutesText, fullscreenSecondsText;
+    private Handler controlPanelHandler = new Handler(Looper.getMainLooper());
+    private Runnable hideControlPanelRunnable;
+    private GestureDetectorCompat gestureDetector;
+    private boolean isFullscreenMode = false;
 
     // Timer related
     private CountDownTimer countDownTimer;
@@ -94,6 +109,35 @@ public class PomodoroActivity extends AppCompatActivity {
         }
     }
 
+    // Gesture Detector for Swipe Down
+    private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final int SWIPE_THRESHOLD = 50; // Giảm ngưỡng để tăng độ nhạy
+        private static final int SWIPE_VELOCITY_THRESHOLD = 50; // Giảm ngưỡng để tăng độ nhạy
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (e1 == null || e2 == null) {
+                Log.d(TAG, "onFling: MotionEvent e1 or e2 is null");
+                return false;
+            }
+
+            float diffY = e2.getY() - e1.getY();
+            float diffX = e2.getX() - e1.getX();
+            Log.d(TAG, "onFling: diffY=" + diffY + ", diffX=" + diffX + ", velocityY=" + velocityY);
+
+            if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffY > 0) { // Swipe down
+                    Log.d(TAG, "Swipe down detected, resetting timer and exiting fullscreen");
+                    resetTimer();
+                    exitFullscreenMode();
+                    return true;
+                }
+            }
+            Log.d(TAG, "onFling: Swipe not detected - conditions not met");
+            return false;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +156,7 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
+        // Normal Mode Views
         startButton = findViewById(R.id.startButton);
         pauseButton = findViewById(R.id.pauseButton);
         stopButton = findViewById(R.id.stopButton);
@@ -121,6 +166,7 @@ public class PomodoroActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.circularProgress);
         controlButtons = findViewById(R.id.controlButtons);
         mainLayout = findViewById(R.id.pomodoroMainLayout);
+        normalLayout = findViewById(R.id.normalLayout);
         musicColumn = findViewById(R.id.musicColumn);
         musicIcon = findViewById(R.id.musicIcon);
         musicText = findViewById(R.id.musicText);
@@ -128,9 +174,21 @@ public class PomodoroActivity extends AppCompatActivity {
         fullscreenIcon = findViewById(R.id.fullscreenIcon);
         fullscreenText = findViewById(R.id.fullscreenText);
         customTimeLayout = findViewById(R.id.customTimeLayout);
+        timerContainer = findViewById(R.id.timerContainer);
 
-        if (controlButtons == null || startButton == null || pauseButton == null || stopButton == null) {
-            Log.e(TAG, "UI components missing. Check pomodoro_main.xml for IDs: controlButtons, startButton, pauseButton, stopButton");
+        // Fullscreen Mode Views
+        fullscreenLayout = findViewById(R.id.fullscreenLayout);
+        fullscreenControlPanel = findViewById(R.id.fullscreenControlPanel);
+        fullscreenStartButton = findViewById(R.id.fullscreenStartButton);
+        fullscreenPauseButton = findViewById(R.id.fullscreenPauseButton);
+        fullscreenMusicButton = findViewById(R.id.fullscreenMusicButton);
+        fullscreenExitButton = findViewById(R.id.fullscreenExitButton);
+        fullscreenMinutesText = findViewById(R.id.fullscreenMinutesText);
+        fullscreenSecondsText = findViewById(R.id.fullscreenSecondsText);
+
+        if (controlButtons == null || startButton == null || pauseButton == null || stopButton == null ||
+                fullscreenLayout == null || fullscreenControlPanel == null || fullscreenMinutesText == null || fullscreenSecondsText == null) {
+            Log.e(TAG, "UI components missing. Check pomodoro_main.xml for IDs.");
             Toast.makeText(this, "UI error: Missing components", Toast.LENGTH_LONG).show();
             return;
         }
@@ -141,6 +199,21 @@ public class PomodoroActivity extends AppCompatActivity {
         // Set initial visibility
         pauseButton.setVisibility(View.GONE);
         stopButton.setVisibility(View.GONE);
+        fullscreenPauseButton.setVisibility(View.GONE);
+
+        // Setup gesture detector for swipe down
+        gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener());
+        if (gestureDetector == null) {
+            Log.e(TAG, "Failed to initialize GestureDetectorCompat");
+        } else {
+            Log.d(TAG, "GestureDetectorCompat initialized successfully");
+        }
+
+        // Setup control panel auto-hide
+        hideControlPanelRunnable = () -> {
+            fullscreenControlPanel.setVisibility(View.GONE);
+            Log.d(TAG, "Fullscreen control panel auto-hidden");
+        };
     }
 
     private void setupListeners() {
@@ -149,7 +222,93 @@ public class PomodoroActivity extends AppCompatActivity {
         stopButton.setOnClickListener(v -> resetTimer());
         pomodoroDropdown.setOnClickListener(v -> showPomodoroOptions());
         musicColumn.setOnClickListener(v -> showMusicSelectionDialog());
-        // Add fullscreenColumn listener if needed
+
+        // Fullscreen mode toggle
+        fullscreenColumn.setOnClickListener(v -> enterFullscreenMode());
+        fullscreenIcon.setOnClickListener(v -> enterFullscreenMode());
+        fullscreenText.setOnClickListener(v -> enterFullscreenMode());
+
+        // Fullscreen control panel listeners
+        fullscreenStartButton.setOnClickListener(v -> startTimer());
+        fullscreenPauseButton.setOnClickListener(v -> pauseTimer());
+        fullscreenMusicButton.setOnClickListener(v -> showMusicSelectionDialog());
+        fullscreenExitButton.setOnClickListener(v -> {
+            resetTimer();
+            exitFullscreenMode();
+        });
+
+        // Show control panel on tap in fullscreen mode
+        fullscreenLayout.setOnTouchListener((v, event) -> {
+            if (!isFullscreenMode) {
+                Log.d(TAG, "Not in fullscreen mode, ignoring touch event");
+                return false;
+            }
+
+            Log.d(TAG, "Touch event received: action=" + event.getAction() + ", x=" + event.getX() + ", y=" + event.getY());
+            boolean handled = gestureDetector.onTouchEvent(event);
+            if (event.getAction() == MotionEvent.ACTION_DOWN && !handled) {
+                Log.d(TAG, "ACTION_DOWN detected, showing control panel");
+                showFullscreenControlPanel();
+                return true;
+            }
+            return handled;
+        });
+    }
+
+    private void enterFullscreenMode() {
+        if (isFullscreenMode) return;
+
+        // Hide status bar and navigation bar
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        );
+
+        // Show fullscreen layout, hide normal layout
+        fullscreenLayout.setVisibility(View.VISIBLE);
+        normalLayout.setVisibility(View.GONE);
+
+        // Sync timer text
+        updateTimerText();
+        updateFullscreenButtonVisibility();
+
+        isFullscreenMode = true;
+        Log.d(TAG, "Entered fullscreen mode");
+    }
+
+    private void exitFullscreenMode() {
+        if (!isFullscreenMode) return;
+
+        // Show status bar and navigation bar
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+
+        // Show normal layout, hide fullscreen layout
+        fullscreenLayout.setVisibility(View.GONE);
+        normalLayout.setVisibility(View.VISIBLE);
+        fullscreenControlPanel.setVisibility(View.GONE);
+        controlPanelHandler.removeCallbacks(hideControlPanelRunnable);
+
+        // Ensure normal mode UI is fully synced
+        updateTimerText();
+        updateProgressBar();
+        updateButtonVisibility();
+
+        isFullscreenMode = false;
+        Log.d(TAG, "Exited fullscreen mode");
+    }
+
+    private void showFullscreenControlPanel() {
+        fullscreenControlPanel.setVisibility(View.VISIBLE);
+        controlPanelHandler.removeCallbacks(hideControlPanelRunnable);
+        controlPanelHandler.postDelayed(hideControlPanelRunnable, 3000); // Hide after 3 seconds
+        Log.d(TAG, "Fullscreen control panel shown");
     }
 
     private void loadSoundResources() {
@@ -209,7 +368,7 @@ public class PomodoroActivity extends AppCompatActivity {
 
     private void loadSettings() {
         SharedPreferences sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        workDuration = sharedPref.getLong(WORK_DURATION_KEY, 50 * 60 * 1000); // Default 50min from XML
+        workDuration = sharedPref.getLong(WORK_DURATION_KEY, 50 * 60 * 1000); // Default 50min
         shortBreakDuration = sharedPref.getLong(BREAK_DURATION_KEY, 10 * 60 * 1000); // Default 10min
 
         int selectedSoundResId = sharedPref.getInt(SELECTED_MUSIC_KEY, -1);
@@ -265,16 +424,18 @@ public class PomodoroActivity extends AppCompatActivity {
             public void onFinish() {
                 isTimerRunning = false;
                 pauseMusic();
-                soundHandler.postDelayed(() -> {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     playNotificationSound();
                     onTimerFinish();
                     updateButtonVisibility();
+                    updateFullscreenButtonVisibility();
                 }, 200);
             }
         }.start();
 
         isTimerRunning = true;
         updateButtonVisibility();
+        updateFullscreenButtonVisibility();
     }
 
     private void playNotificationSound() {
@@ -397,6 +558,7 @@ public class PomodoroActivity extends AppCompatActivity {
         countDownTimer.cancel();
         isTimerRunning = false;
         updateButtonVisibility();
+        updateFullscreenButtonVisibility();
         pauseMusic();
         Log.d(TAG, "Timer paused at: " + timeLeftInMillis + "ms");
     }
@@ -416,13 +578,39 @@ public class PomodoroActivity extends AppCompatActivity {
         setPhase(Phase.WORK);
         saveSettings();
         updateButtonVisibility();
+        updateFullscreenButtonVisibility();
         stopMusic();
 
         Log.d(TAG, "Timer reset complete");
     }
 
+    private void restartTimerInFullscreen() {
+        Log.d(TAG, "Restarting timer in fullscreen mode...");
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
+
+        // Reset time to initial duration but keep currentPhase and pomodoroCount
+        totalDuration = currentPhase == Phase.WORK ? workDuration : shortBreakDuration;
+        timeLeftInMillis = totalDuration;
+        Log.d(TAG, "Restarting timer for phase " + currentPhase + ". Duration: " + totalDuration + "ms");
+
+        updateTimerText();
+        progressBar.setProgress(0, true);
+
+        // If timer was running, start it again
+        if (isTimerRunning) {
+            startTimer();
+        }
+
+        updateButtonVisibility();
+        updateFullscreenButtonVisibility();
+        Log.d(TAG, "Timer restarted in fullscreen mode");
+    }
+
     private void updateButtonVisibility() {
-        // Direct visibility change, no animation to avoid jank
+        // Direct visibility change for normal mode buttons
         if (isTimerRunning) {
             startButton.setVisibility(View.GONE);
             pauseButton.setVisibility(View.VISIBLE);
@@ -434,10 +622,28 @@ public class PomodoroActivity extends AppCompatActivity {
         }
     }
 
+    private void updateFullscreenButtonVisibility() {
+        // Direct visibility change for fullscreen mode buttons
+        if (isTimerRunning) {
+            fullscreenStartButton.setVisibility(View.GONE);
+            fullscreenPauseButton.setVisibility(View.VISIBLE);
+        } else {
+            fullscreenPauseButton.setVisibility(View.GONE);
+            fullscreenStartButton.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void updateTimerText() {
         int minutes = (int) (timeLeftInMillis / 1000) / 60;
         int seconds = (int) (timeLeftInMillis / 1000) % 60;
-        timerText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+
+        // Update normal mode timer (single line: "MM:SS")
+        String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+        timerText.setText(timeFormatted);
+
+        // Update fullscreen mode timer (two lines: "MM" and "SS")
+        fullscreenMinutesText.setText(String.format(Locale.getDefault(), "%02d", minutes));
+        fullscreenSecondsText.setText(String.format(Locale.getDefault(), "%02d", seconds));
     }
 
     private void updateProgressBar() {
@@ -467,7 +673,7 @@ public class PomodoroActivity extends AppCompatActivity {
         Log.d(TAG, "Setting phase to " + currentPhase + ". Duration: " + totalDuration + "ms");
 
         updateTimerText();
-        progressBar.setProgress(0, true);
+        updateProgressBar();
     }
 
     private void setPomodoroCycle(String cycle) {
@@ -753,6 +959,7 @@ public class PomodoroActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "onResume called.");
         updateButtonVisibility();
+        updateFullscreenButtonVisibility();
         updateTimerText();
     }
 
@@ -760,7 +967,7 @@ public class PomodoroActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy called.");
-        soundHandler.removeCallbacksAndMessages(null);
+        controlPanelHandler.removeCallbacksAndMessages(null);
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;

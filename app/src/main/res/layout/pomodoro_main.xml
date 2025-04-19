@@ -8,215 +8,312 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Header Text -->
-    <TextView
-        android:id="@+id/headerText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
-        android:text="POMODORO TIMER"
-        android:textColor="#EA916E"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.487"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Pomodoro Dropdown -->
-    <LinearLayout
-        android:id="@+id/pomodoroDropdown"
-        android:layout_width="180dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/spinner_background"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerText">
-
-        <TextView
-            android:id="@+id/pomodoroText"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="50/10"
-            android:textColor="#EA916E"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="match_parent"
-            android:background="#00B2FF"
-            android:contentDescription="Dropdown icon"
-            android:padding="12dp"
-            android:scaleType="center"
-            android:src="@drawable/ic_arrow_drop_down"
-            app:tint="#FFFFFF" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/customTimeLayout"
+    <!-- Normal Mode Layout -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/normalLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Music Column -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/musicColumn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="56dp"
-        android:layout_marginTop="44dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown">
-
-        <ImageView
-            android:id="@+id/musicIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_music_note"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#666" />
-
+        <!-- Header Text -->
         <TextView
-            android:id="@+id/musicText"
+            android:id="@+id/headerText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Music helping focus"
-            android:textColor="#666"
-            android:textSize="16sp"
+            android:layout_marginTop="68dp"
+            android:text="POMODORO TIMER"
+            android:textColor="#EA916E"
+            android:textSize="22sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.487"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/musicIcon" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Fullscreen Column -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/fullscreenColumn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="44dp"
-        android:layout_marginEnd="56dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown">
-
-        <ImageView
-            android:id="@+id/fullscreenIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_fullscreen"
+        <!-- Pomodoro Dropdown -->
+        <LinearLayout
+            android:id="@+id/pomodoroDropdown"
+            android:layout_width="180dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/spinner_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#666" />
+            app:layout_constraintTop_toBottomOf="@id/headerText">
 
-        <TextView
-            android:id="@+id/fullscreenText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Full screen mode"
-            android:textColor="#666"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullscreenIcon" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/pomodoroText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="50/10"
+                android:textColor="#EA916E"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-    <!-- Timer Circle -->
-    <FrameLayout
-        android:id="@+id/timerContainer"
-        android:layout_width="360dp"
-        android:layout_height="360dp"
-        android:layout_marginTop="52dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.47"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/musicColumn">
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="#00B2FF"
+                android:contentDescription="Dropdown icon"
+                android:padding="12dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_arrow_drop_down"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/circularProgress"
-            style="?android:attr/progressBarStyleHorizontal"
+        <LinearLayout
+            android:id="@+id/customTimeLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:progressDrawable="@drawable/circular_progress"
-            android:rotation="-90"
-            android:indeterminate="false"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/timerText"
+        <!-- Music Column -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/musicColumn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="50:00"
-            android:textColor="#333"
-            android:textSize="64sp" />
-    </FrameLayout>
+            android:layout_marginStart="56dp"
+            android:layout_marginTop="44dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown">
 
-    <!-- Control Buttons -->
-    <LinearLayout
-        android:id="@+id/controlButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:layout_marginBottom="20dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timerContainer"
-        app:layout_constraintVertical_bias="0.0">
+            <ImageView
+                android:id="@+id/musicIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_music_note"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#666" />
 
-        <ImageView
-            android:id="@+id/stopButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginEnd="40dp"
-            android:contentDescription="Stop Button"
-            android:src="@drawable/ic_stop"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/musicText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Music helping focus"
+                android:textColor="#666"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/musicIcon" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- Fullscreen Column -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/fullscreenColumn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="44dp"
+            android:layout_marginEnd="56dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown">
+
+            <ImageView
+                android:id="@+id/fullscreenIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_fullscreen"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#666" />
+
+            <TextView
+                android:id="@+id/fullscreenText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Full screen mode"
+                android:textColor="#666"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fullscreenIcon" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Timer Circle -->
         <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp">
+            android:id="@+id/timerContainer"
+            android:layout_width="360dp"
+            android:layout_height="360dp"
+            android:layout_marginTop="52dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.47"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/musicColumn">
 
-            <ImageView
-                android:id="@+id/startButton"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/ic_play_button" />
-
-            <ImageView
-                android:id="@+id/pauseButton"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+            <ProgressBar
+                android:id="@+id/circularProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:contentDescription="Pause Button"
-                android:src="@drawable/ic_pause"
-                android:visibility="gone" />
+                android:progressDrawable="@drawable/circular_progress"
+                android:rotation="-90"
+                android:indeterminate="false"/>
+
+            <TextView
+                android:id="@+id/timerText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="50:00"
+                android:textColor="#333"
+                android:textSize="64sp" />
         </FrameLayout>
 
-    </LinearLayout>
+        <!-- Control Buttons -->
+        <LinearLayout
+            android:id="@+id/controlButtons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.496"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/timerContainer"
+            app:layout_constraintVertical_bias="0.0">
 
-    <!-- Bottom Navigation (Placeholder) -->
-    <!-- Add bottom_navigation if needed -->
+            <ImageView
+                android:id="@+id/stopButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginEnd="40dp"
+                android:contentDescription="Stop Button"
+                android:src="@drawable/ic_stop"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:layout_width="72dp"
+                android:layout_height="72dp">
+
+                <ImageView
+                    android:id="@+id/startButton"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/ic_play_button" />
+
+                <ImageView
+                    android:id="@+id/pauseButton"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Pause Button"
+                    android:src="@drawable/ic_pause"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Fullscreen Layout -->
+    <FrameLayout
+        android:id="@+id/fullscreenLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Timer (Minutes and Seconds on Separate Lines) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/fullscreenMinutesText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="50"
+                android:textColor="#333"
+                android:textSize="250sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/fullscreenSecondsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00"
+                android:textColor="#333"
+                android:textSize="250sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Control Panel (Shown on Tap) -->
+        <LinearLayout
+            android:id="@+id/fullscreenControlPanel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/fullscreenMusicButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="40dp"
+                android:contentDescription="Music Button"
+                android:src="@drawable/ic_music_note"
+                app:tint="#333" />
+
+            <FrameLayout
+                android:layout_width="72dp"
+                android:layout_height="72dp">
+
+                <ImageView
+                    android:id="@+id/fullscreenStartButton"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/ic_play_button" />
+
+                <ImageView
+                    android:id="@+id/fullscreenPauseButton"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Pause Button"
+                    android:src="@drawable/ic_pause"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/fullscreenExitButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="40dp"
+                android:contentDescription="Restart Timer"
+                android:src="@drawable/ic_stop"
+                app:tint="#333" />
+        </LinearLayout>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
