@@ -7,9 +7,9 @@ import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +27,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class PomodoroActivity extends AppCompatActivity {
@@ -39,10 +42,16 @@ public class PomodoroActivity extends AppCompatActivity {
     private static final String POMODORO_COUNT_KEY = "pomodoroCount";
     private static final String CURRENT_PHASE_KEY = "currentPhase";
 
+    // UI Components
     private ImageView startButton, pauseButton, stopButton;
-    private TextView timerText, pomodoroText;
-    private LinearLayout pomodoroDropdown;
+    private TextView timerText, pomodoroText, musicText, fullscreenText;
+    private LinearLayout pomodoroDropdown, controlButtons, customTimeLayout;
     private ProgressBar progressBar;
+    private ConstraintLayout mainLayout, musicColumn, fullscreenColumn;
+    private ImageView musicIcon, fullscreenIcon;
+    private Handler soundHandler = new Handler(Looper.getMainLooper());
+
+    // Timer related
     private CountDownTimer countDownTimer;
     private boolean isTimerRunning = false;
     private long workDuration;
@@ -51,43 +60,48 @@ public class PomodoroActivity extends AppCompatActivity {
     private long totalDuration;
     private final String[] pomodoroOptions = {"25/5", "50/10", "90/15"};
 
-    private LinearLayout controlButtons;
-    private ConstraintLayout mainLayout, musicColumn;
-    private SoundPool soundPool;
-    private int notificationSoundId;
-    private boolean isSoundPoolLoaded = false;
-
-    private enum Phase {
-        WORK, SHORT_BREAK
-    }
-
-    private Phase currentPhase = Phase.WORK;
-    private int pomodoroCount = 0;
-
+    // Sound related
     private MediaPlayer mediaPlayer;
     private boolean isMusicPlaying = false;
     private float musicVolume = 0.5f;
-    private int currentMusicIndex = -1;
-    private int selectedMusicIndex = -1;
-    private final String[] musicNames = {
-            "None", "Clock Ticking", "Emotional Piano", "Light Rain",
-            "Rain", "Relaxing Piano", "The Ocean"
-    };
-    private final int[] musicResIds = {
-            0, R.raw.oceanwave, R.raw.emotional_piano_music,
-            R.raw.light_rain, R.raw.rain_sound,
-            R.raw.relaxing_piano, R.raw.the_ocean_sound
-    };
-    private static final int CLOCK_TICKING_INDEX = 1; // Index of "Clock Ticking" in musicNames/musicResIds
+    private SoundItem currentSoundItem;
+    private SoundItem selectedSoundItem;
+    private List<SoundItem> availableSounds = new ArrayList<>();
+    private SoundItem notificationSoundItem;
+    private SoundItem clockTickingSoundItem;
+
+    private enum Phase { WORK, SHORT_BREAK }
+    private Phase currentPhase = Phase.WORK;
+    private int pomodoroCount = 0;
+
+    // Sound item model class
+    private static class SoundItem {
+        String name;
+        int resourceId;
+
+        SoundItem(String name, int resourceId) {
+            this.name = name;
+            this.resourceId = resourceId;
+        }
+
+        String getDisplayName() {
+            return name.replace("_", " ")
+                    .replace(".mp3", "")
+                    .replace(".ogg", "")
+                    .replaceAll("(\\p{Ll})(\\p{Lu})", "$1 $2")
+                    .toLowerCase()
+                    .replaceFirst("^\\w", String.valueOf(Character.toUpperCase(name.charAt(0))));
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.pomodoro_main);
 
-        initializeSoundPool();
         initializeViews();
         setupListeners();
+        loadSoundResources();
         loadSettings();
 
         if (!isTimerRunning) {
@@ -95,42 +109,6 @@ public class PomodoroActivity extends AppCompatActivity {
         }
 
         updateButtonVisibility();
-    }
-
-    private void initializeSoundPool() {
-        try {
-            AudioAttributes attributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(1)
-                    .setAudioAttributes(attributes)
-                    .build();
-            soundPool.setOnLoadCompleteListener((pool, sampleId, status) -> {
-                isSoundPoolLoaded = status == 0;
-                Log.d(TAG, "SoundPool load status: " + (isSoundPoolLoaded ? "Success" : "Failed"));
-            });
-
-            if (isResourceAvailable(R.raw.notification_sound)) {
-                notificationSoundId = soundPool.load(this, R.raw.notification_sound, 1);
-            } else {
-                Log.e(TAG, "Notification sound resource not found");
-                isSoundPoolLoaded = false;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error initializing SoundPool", e);
-            isSoundPoolLoaded = false;
-        }
-    }
-
-    private boolean isResourceAvailable(int resId) {
-        try (AssetFileDescriptor fd = getResources().openRawResourceFd(resId)) {
-            return fd != null;
-        } catch (Exception e) {
-            Log.e(TAG, "Resource check failed for ID: " + resId, e);
-            return false;
-        }
     }
 
     private void initializeViews() {
@@ -144,9 +122,25 @@ public class PomodoroActivity extends AppCompatActivity {
         controlButtons = findViewById(R.id.controlButtons);
         mainLayout = findViewById(R.id.pomodoroMainLayout);
         musicColumn = findViewById(R.id.musicColumn);
+        musicIcon = findViewById(R.id.musicIcon);
+        musicText = findViewById(R.id.musicText);
+        fullscreenColumn = findViewById(R.id.fullscreenColumn);
+        fullscreenIcon = findViewById(R.id.fullscreenIcon);
+        fullscreenText = findViewById(R.id.fullscreenText);
+        customTimeLayout = findViewById(R.id.customTimeLayout);
+
+        if (controlButtons == null || startButton == null || pauseButton == null || stopButton == null) {
+            Log.e(TAG, "UI components missing. Check pomodoro_main.xml for IDs: controlButtons, startButton, pauseButton, stopButton");
+            Toast.makeText(this, "UI error: Missing components", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         progressBar.setMax(100);
         progressBar.setProgress(0);
+
+        // Set initial visibility
+        pauseButton.setVisibility(View.GONE);
+        stopButton.setVisibility(View.GONE);
     }
 
     private void setupListeners() {
@@ -154,15 +148,80 @@ public class PomodoroActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(v -> pauseTimer());
         stopButton.setOnClickListener(v -> resetTimer());
         pomodoroDropdown.setOnClickListener(v -> showPomodoroOptions());
-        // Sửa lỗi biên dịch
         musicColumn.setOnClickListener(v -> showMusicSelectionDialog());
+        // Add fullscreenColumn listener if needed
+    }
+
+    private void loadSoundResources() {
+        availableSounds.clear();
+
+        Field[] fields = R.raw.class.getFields();
+        for (Field field : fields) {
+            try {
+                String name = field.getName();
+                int resId = field.getInt(null);
+
+                if (!isResourceAvailable(resId)) {
+                    Log.e(TAG, "Resource not available: " + name);
+                    continue;
+                }
+
+                if (name.equals("notification_sound")) {
+                    notificationSoundItem = new SoundItem(name, resId);
+                    Log.d(TAG, "Loaded notification sound: " + name);
+                } else if (name.equals("clockticking")) {
+                    clockTickingSoundItem = new SoundItem(name, resId);
+                    Log.d(TAG, "Loaded clock ticking sound: " + name);
+                } else {
+                    availableSounds.add(new SoundItem(name, resId));
+                    Log.d(TAG, "Loaded background sound: " + name);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading sound resource: " + field.getName(), e);
+            }
+        }
+
+        if (notificationSoundItem == null) {
+            Log.e(TAG, "Notification sound not found. Check res/raw/notification_sound.mp3");
+            runOnUiThread(() -> Toast.makeText(this, "Notification sound missing", Toast.LENGTH_LONG).show());
+        }
+        if (clockTickingSoundItem == null) {
+            Log.e(TAG, "Clock ticking sound not found. Check res/raw/clockticking.mp3");
+            runOnUiThread(() -> Toast.makeText(this, "Clock ticking sound missing", Toast.LENGTH_LONG).show());
+        }
+
+        Log.d(TAG, "Loaded " + availableSounds.size() + " background sounds");
+    }
+
+    private boolean isResourceAvailable(int resId) {
+        try (AssetFileDescriptor fd = getResources().openRawResourceFd(resId)) {
+            if (fd == null || fd.getDeclaredLength() <= 0) {
+                Log.e(TAG, "Resource unavailable or empty for ID: " + resId);
+                return false;
+            }
+            Log.d(TAG, "Resource available for ID: " + resId + ", size: " + fd.getDeclaredLength() + " bytes");
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Resource check failed for ID: " + resId + ". Exception: " + e.getMessage(), e);
+            return false;
+        }
     }
 
     private void loadSettings() {
         SharedPreferences sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        workDuration = sharedPref.getLong(WORK_DURATION_KEY, 25 * 60 * 1000);
-        shortBreakDuration = sharedPref.getLong(BREAK_DURATION_KEY, 5 * 60 * 1000);
-        selectedMusicIndex = sharedPref.getInt(SELECTED_MUSIC_KEY, -1);
+        workDuration = sharedPref.getLong(WORK_DURATION_KEY, 50 * 60 * 1000); // Default 50min from XML
+        shortBreakDuration = sharedPref.getLong(BREAK_DURATION_KEY, 10 * 60 * 1000); // Default 10min
+
+        int selectedSoundResId = sharedPref.getInt(SELECTED_MUSIC_KEY, -1);
+        if (selectedSoundResId != -1) {
+            for (SoundItem item : availableSounds) {
+                if (item.resourceId == selectedSoundResId) {
+                    selectedSoundItem = item;
+                    break;
+                }
+            }
+        }
+
         pomodoroCount = sharedPref.getInt(POMODORO_COUNT_KEY, 0);
         currentPhase = Phase.values()[sharedPref.getInt(CURRENT_PHASE_KEY, Phase.WORK.ordinal())];
 
@@ -178,7 +237,7 @@ public class PomodoroActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
         editor.putLong(WORK_DURATION_KEY, workDuration);
         editor.putLong(BREAK_DURATION_KEY, shortBreakDuration);
-        editor.putInt(SELECTED_MUSIC_KEY, selectedMusicIndex);
+        editor.putInt(SELECTED_MUSIC_KEY, selectedSoundItem != null ? selectedSoundItem.resourceId : -1);
         editor.putInt(POMODORO_COUNT_KEY, pomodoroCount);
         editor.putInt(CURRENT_PHASE_KEY, currentPhase.ordinal());
         editor.apply();
@@ -188,11 +247,10 @@ public class PomodoroActivity extends AppCompatActivity {
     private void startTimer() {
         if (isTimerRunning) return;
 
-        // Play phase-specific music
-        if (currentPhase == Phase.WORK && selectedMusicIndex > 0) {
-            playMusic(selectedMusicIndex);
-        } else if (currentPhase == Phase.SHORT_BREAK) {
-            playMusic(CLOCK_TICKING_INDEX);
+        if (currentPhase == Phase.WORK && selectedSoundItem != null) {
+            playSound(selectedSoundItem, true);
+        } else if (currentPhase == Phase.SHORT_BREAK && clockTickingSoundItem != null) {
+            playSound(clockTickingSoundItem, true);
         }
 
         countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
@@ -207,17 +265,130 @@ public class PomodoroActivity extends AppCompatActivity {
             public void onFinish() {
                 isTimerRunning = false;
                 pauseMusic();
-
-                new android.os.Handler(Looper.getMainLooper()).postDelayed(() -> {
+                soundHandler.postDelayed(() -> {
                     playNotificationSound();
                     onTimerFinish();
                     updateButtonVisibility();
-                }, 500);
+                }, 200);
             }
         }.start();
 
         isTimerRunning = true;
         updateButtonVisibility();
+    }
+
+    private void playNotificationSound() {
+        if (isFinishing() || isDestroyed() || notificationSoundItem == null) {
+            Log.w(TAG, "Cannot play notification sound: Activity finishing/destroyed or notificationSoundItem null");
+            return;
+        }
+
+        Log.d(TAG, "Attempting to play notification sound: " + notificationSoundItem.name);
+
+        if (!isResourceAvailable(notificationSoundItem.resourceId)) {
+            Log.e(TAG, "Notification sound resource not found: " + notificationSoundItem.name);
+            runOnUiThread(() -> Toast.makeText(this, "Notification sound file not found", Toast.LENGTH_LONG).show());
+            return;
+        }
+
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+            int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+            Log.d(TAG, "Notification stream volume: " + currentVolume + "/" + maxVolume);
+            if (currentVolume == 0) {
+                Log.w(TAG, "Notification volume is muted");
+                runOnUiThread(() -> Toast.makeText(this, "Notification volume is muted", Toast.LENGTH_LONG).show());
+            }
+            int ringerMode = audioManager.getRingerMode();
+            if (ringerMode == AudioManager.RINGER_MODE_SILENT || ringerMode == AudioManager.RINGER_MODE_VIBRATE) {
+                Log.w(TAG, "Device in silent/vibrate mode, notification sound may not play");
+                runOnUiThread(() -> Toast.makeText(this, "Device in silent/vibrate mode", Toast.LENGTH_LONG).show());
+            }
+        }
+
+        try {
+            MediaPlayer notificationPlayer = new MediaPlayer();
+            AssetFileDescriptor afd = getResources().openRawResourceFd(notificationSoundItem.resourceId);
+            if (afd == null) {
+                Log.e(TAG, "AssetFileDescriptor is null for: " + notificationSoundItem.name);
+                runOnUiThread(() -> Toast.makeText(this, "Cannot load notification sound", Toast.LENGTH_LONG).show());
+                return;
+            }
+
+            notificationPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            afd.close();
+
+            notificationPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+
+            notificationPlayer.setVolume(1.0f, 1.0f);
+            notificationPlayer.setLooping(false);
+
+            notificationPlayer.setOnPreparedListener(mp -> {
+                Log.d(TAG, "Notification sound prepared, starting playback");
+                mp.start();
+            });
+
+            notificationPlayer.setOnCompletionListener(mp -> {
+                Log.d(TAG, "Notification sound playback completed");
+                mp.release();
+            });
+
+            notificationPlayer.setOnErrorListener((mp, what, extra) -> {
+                Log.e(TAG, "MediaPlayer error for notification sound: what=" + what + ", extra=" + extra);
+                mp.release();
+                runOnUiThread(() -> Toast.makeText(this, "Error playing notification sound", Toast.LENGTH_LONG).show());
+                return true;
+            });
+
+            notificationPlayer.prepare();
+            Log.d(TAG, "Notification sound player prepared");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting up notification sound: " + e.getMessage(), e);
+            runOnUiThread(() -> Toast.makeText(this, "Failed to play notification sound", Toast.LENGTH_LONG).show());
+        }
+    }
+
+    private void playSound(SoundItem soundItem, boolean looping) {
+        if (soundItem == null) {
+            Log.w(TAG, "SoundItem is null, cannot play sound");
+            return;
+        }
+
+        if (!isResourceAvailable(soundItem.resourceId)) {
+            Log.e(TAG, "Sound resource not available: " + soundItem.name);
+            runOnUiThread(() -> Toast.makeText(this, "Sound not found: " + soundItem.getDisplayName(), Toast.LENGTH_SHORT).show());
+            return;
+        }
+
+        releaseMediaPlayer();
+
+        try {
+            mediaPlayer = MediaPlayer.create(this, soundItem.resourceId);
+            if (mediaPlayer != null) {
+                currentSoundItem = soundItem;
+                mediaPlayer.setLooping(looping);
+                mediaPlayer.setVolume(musicVolume, musicVolume);
+                mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                    Log.e(TAG, "MediaPlayer error for sound " + soundItem.name + ": what=" + what + ", extra=" + extra);
+                    releaseMediaPlayer();
+                    runOnUiThread(() -> Toast.makeText(this, "Error playing sound: " + soundItem.getDisplayName(), Toast.LENGTH_SHORT).show());
+                    return true;
+                });
+                mediaPlayer.start();
+                isMusicPlaying = true;
+                Log.d(TAG, "Playing sound: " + soundItem.name);
+            } else {
+                Log.e(TAG, "MediaPlayer.create returned null for: " + soundItem.name);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error playing sound: " + soundItem.name, e);
+            releaseMediaPlayer();
+        }
     }
 
     private void pauseTimer() {
@@ -240,29 +411,26 @@ public class PomodoroActivity extends AppCompatActivity {
         isTimerRunning = false;
         currentPhase = Phase.WORK;
         pomodoroCount = 0;
-        Log.d(TAG, "Phase explicitly set to WORK, pomodoroCount reset to 0");
+        Log.d(TAG, "Phase set to WORK, pomodoroCount reset to 0");
 
         setPhase(Phase.WORK);
         saveSettings();
         updateButtonVisibility();
         stopMusic();
 
-        Log.d(TAG, "Timer reset complete. UI should show work duration: " + (workDuration / 1000) + "s");
+        Log.d(TAG, "Timer reset complete");
     }
 
     private void updateButtonVisibility() {
+        // Direct visibility change, no animation to avoid jank
         if (isTimerRunning) {
             startButton.setVisibility(View.GONE);
             pauseButton.setVisibility(View.VISIBLE);
             stopButton.setVisibility(View.VISIBLE);
         } else {
-            startButton.setVisibility(View.VISIBLE);
             pauseButton.setVisibility(View.GONE);
-            if (timeLeftInMillis > 0 && timeLeftInMillis < totalDuration) {
-                stopButton.setVisibility(View.VISIBLE);
-            } else {
-                stopButton.setVisibility(View.GONE);
-            }
+            startButton.setVisibility(View.VISIBLE);
+            stopButton.setVisibility(timeLeftInMillis > 0 && timeLeftInMillis < totalDuration ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -273,66 +441,8 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     private void updateProgressBar() {
-        if (totalDuration > 0) {
-            int progress = (int) (((double) (totalDuration - timeLeftInMillis) / totalDuration) * 100);
-            progressBar.setProgress(progress, true);
-        } else {
-            progressBar.setProgress(0, true);
-        }
-    }
-
-    private void playNotificationSound() {
-        if (isFinishing() || isDestroyed()) {
-            Log.w(TAG, "Activity is finishing/destroyed, skipping notification sound.");
-            return;
-        }
-
-        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
-            Log.w(TAG, "Media volume is muted, notification sound might not be heard.");
-        }
-
-        // Thử SoundPool trước
-        if (isSoundPoolLoaded && soundPool != null && notificationSoundId != 0) {
-            try {
-                soundPool.play(notificationSoundId, 1.0f, 1.0f, 1, 0, 1.0f);
-                Log.d(TAG, "Notification sound played via SoundPool.");
-                return;
-            } catch (Exception e) {
-                Log.e(TAG, "Error playing notification sound via SoundPool", e);
-            }
-        }
-
-        // Fallback sang MediaPlayer
-        if (!isResourceAvailable(R.raw.notification_sound)) {
-            Log.e(TAG, "Notification sound resource not found, cannot play.");
-            runOnUiThread(() -> Toast.makeText(this, "Notification sound not found", Toast.LENGTH_SHORT).show());
-            return;
-        }
-
-        try {
-            MediaPlayer notificationPlayer = MediaPlayer.create(this, R.raw.notification_sound);
-            if (notificationPlayer != null) {
-                notificationPlayer.setVolume(1.0f, 1.0f);
-                notificationPlayer.setOnCompletionListener(mp -> {
-                    mp.release();
-                    Log.d(TAG, "Notification sound completed and released.");
-                });
-                notificationPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "MediaPlayer error for notification sound: what=" + what + ", extra=" + extra);
-                    mp.release();
-                    return true;
-                });
-                notificationPlayer.start();
-                Log.d(TAG, "Notification sound played via MediaPlayer.");
-            } else {
-                Log.e(TAG, "MediaPlayer.create returned null for notification sound.");
-                runOnUiThread(() -> Toast.makeText(this, "Cannot play notification sound", Toast.LENGTH_SHORT).show());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error playing notification sound via MediaPlayer", e);
-            runOnUiThread(() -> Toast.makeText(this, "Error playing notification sound", Toast.LENGTH_SHORT).show());
-        }
+        int progress = totalDuration > 0 ? (int) (((double) (totalDuration - timeLeftInMillis) / totalDuration) * 100) : 0;
+        progressBar.setProgress(progress, true);
     }
 
     private void onTimerFinish() {
@@ -341,38 +451,21 @@ public class PomodoroActivity extends AppCompatActivity {
             pomodoroCount++;
             Log.d(TAG, "Pomodoro count incremented to: " + pomodoroCount);
             setPhase(Phase.SHORT_BREAK);
-        } else { // SHORT_BREAK
+        } else {
             pomodoroCount = 0;
             Log.d(TAG, "Break finished, resetting pomodoroCount to 0");
             setPhase(Phase.WORK);
         }
         saveSettings();
-        startTimer(); // Automatically start the next phase
+        startTimer();
     }
 
     private void setPhase(Phase phase) {
         currentPhase = phase;
-        switch (currentPhase) {
-            case WORK:
-                totalDuration = workDuration;
-                Log.d(TAG, "Setting phase to WORK. Duration: " + totalDuration + "ms");
-                if (isTimerRunning) {
-                    stopMusic();
-                    if (selectedMusicIndex > 0) {
-                        playMusic(selectedMusicIndex);
-                    }
-                }
-                break;
-            case SHORT_BREAK:
-                totalDuration = shortBreakDuration;
-                Log.d(TAG, "Setting phase to SHORT_BREAK. Duration: " + totalDuration + "ms");
-                if (isTimerRunning) {
-                    stopMusic();
-                    playMusic(CLOCK_TICKING_INDEX);
-                }
-                break;
-        }
+        totalDuration = currentPhase == Phase.WORK ? workDuration : shortBreakDuration;
         timeLeftInMillis = totalDuration;
+        Log.d(TAG, "Setting phase to " + currentPhase + ". Duration: " + totalDuration + "ms");
+
         updateTimerText();
         progressBar.setProgress(0, true);
     }
@@ -483,8 +576,23 @@ public class PomodoroActivity extends AppCompatActivity {
         builder.setTitle("Background Music");
 
         ListView musicListView = dialogView.findViewById(R.id.musicListView);
+        List<String> soundNames = new ArrayList<>();
+        for (SoundItem item : availableSounds) {
+            soundNames.add(item.getDisplayName());
+        }
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_single_choice, musicNames);
+                android.R.layout.simple_list_item_single_choice, soundNames) {
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = view.findViewById(android.R.id.text1);
+                textView.setTextColor(position == availableSounds.indexOf(currentSoundItem) && isMusicPlaying ?
+                        getResources().getColor(android.R.color.holo_purple) :
+                        getResources().getColor(android.R.color.black));
+                return view;
+            }
+        };
         musicListView.setAdapter(adapter);
         musicListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
@@ -494,15 +602,18 @@ public class PomodoroActivity extends AppCompatActivity {
         volumeSeekBar.setProgress((int) (musicVolume * 100));
         muteToggleIcon.setImageResource(musicVolume > 0 ? R.drawable.ic_volume_on : R.drawable.ic_volume_off);
 
-        int initialSelection = selectedMusicIndex >= 0 ? selectedMusicIndex : 0;
-        musicListView.setItemChecked(initialSelection, true);
+        int initialSelection = selectedSoundItem != null ? availableSounds.indexOf(selectedSoundItem) : -1;
+        if (initialSelection >= 0) {
+            musicListView.setItemChecked(initialSelection, true);
+        }
         final int[] previewSelectionIndex = {initialSelection};
 
         musicListView.setOnItemClickListener((parent, view, position, id) -> {
-            Log.d(TAG, "Music item clicked: " + position + " (" + musicNames[position] + ")");
+            Log.d(TAG, "Music item clicked: " + position + " (" + soundNames.get(position) + ")");
             previewSelectionIndex[0] = position;
-            playMusicForPreview(position);
+            playSound(availableSounds.get(position), true);
             muteToggleIcon.setImageResource(isMusicPlaying ? R.drawable.ic_volume_on : R.drawable.ic_volume_off);
+            adapter.notifyDataSetChanged();
         });
 
         muteToggleIcon.setOnClickListener(v -> {
@@ -517,24 +628,25 @@ public class PomodoroActivity extends AppCompatActivity {
                 volumeSeekBar.setProgress((int)(musicVolume * 100));
                 if (mediaPlayer != null) {
                     mediaPlayer.setVolume(musicVolume, musicVolume);
-                    if (!mediaPlayer.isPlaying() && previewSelectionIndex[0] > 0) {
+                    if (!mediaPlayer.isPlaying() && previewSelectionIndex[0] >= 0) {
                         try {
                             mediaPlayer.start();
                         } catch (IllegalStateException e) {
                             releaseMediaPlayer();
-                            playMusicForPreview(previewSelectionIndex[0]);
+                            playSound(availableSounds.get(previewSelectionIndex[0]), true);
                         }
                     }
                     isMusicPlaying = true;
                     muteToggleIcon.setImageResource(R.drawable.ic_volume_on);
-                } else if (previewSelectionIndex[0] > 0) {
-                    playMusicForPreview(previewSelectionIndex[0]);
+                } else if (previewSelectionIndex[0] >= 0) {
+                    playSound(availableSounds.get(previewSelectionIndex[0]), true);
                     muteToggleIcon.setImageResource(R.drawable.ic_volume_on);
                 } else {
                     muteToggleIcon.setImageResource(R.drawable.ic_volume_off);
                 }
             }
             Log.d(TAG, "Mute toggle clicked. isMusicPlaying: " + isMusicPlaying + ", Volume: " + musicVolume);
+            adapter.notifyDataSetChanged();
         });
 
         volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -548,6 +660,7 @@ public class PomodoroActivity extends AppCompatActivity {
                         mediaPlayer.setVolume(musicVolume, musicVolume);
                     }
                     Log.d(TAG, "Volume changed to: " + musicVolume);
+                    adapter.notifyDataSetChanged();
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -555,138 +668,34 @@ public class PomodoroActivity extends AppCompatActivity {
         });
 
         builder.setPositiveButton("Select", (dialog, which) -> {
-            selectedMusicIndex = previewSelectionIndex[0];
-            saveSettings();
-            Log.d(TAG, "Music selected: " + selectedMusicIndex + " (" + musicNames[selectedMusicIndex] + ")");
-            stopMusic();
-            currentMusicIndex = selectedMusicIndex;
-            if (isTimerRunning && currentPhase == Phase.WORK && selectedMusicIndex > 0) {
-                playMusic(selectedMusicIndex);
+            if (previewSelectionIndex[0] >= 0) {
+                selectedSoundItem = availableSounds.get(previewSelectionIndex[0]);
+                saveSettings();
+                Log.d(TAG, "Music selected: " + selectedSoundItem.name);
+                stopMusic();
+                currentSoundItem = selectedSoundItem;
+                if (isTimerRunning && currentPhase == Phase.WORK && selectedSoundItem != null) {
+                    playSound(selectedSoundItem, true);
+                }
             }
         });
 
         builder.setNegativeButton("Close", (dialog, which) -> {
             Log.d(TAG, "Music selection cancelled.");
-            if (mediaPlayer != null && currentMusicIndex != selectedMusicIndex) {
+            if (selectedSoundItem != null && !selectedSoundItem.equals(currentSoundItem)) {
+                playSound(selectedSoundItem, true);
+            } else {
                 stopMusic();
             }
-            currentMusicIndex = selectedMusicIndex;
         });
 
         builder.setOnDismissListener(dialog -> {
-            if (mediaPlayer != null && currentMusicIndex != selectedMusicIndex) {
-                stopMusic();
-                currentMusicIndex = selectedMusicIndex;
+            if (selectedSoundItem != null && !selectedSoundItem.equals(currentSoundItem)) {
+                playSound(selectedSoundItem, true);
             }
         });
 
         builder.create().show();
-    }
-
-    private void playMusicForPreview(int position) {
-        releaseMediaPlayer();
-        currentMusicIndex = position;
-
-        if (position <= 0 || musicResIds[position] == 0) {
-            isMusicPlaying = false;
-            Log.d(TAG, "Preview stopped (None selected or invalid resId).");
-            return;
-        }
-
-        if (!isResourceAvailable(musicResIds[position])) {
-            Toast.makeText(this, "Music file not found: " + musicNames[position], Toast.LENGTH_SHORT).show();
-            isMusicPlaying = false;
-            currentMusicIndex = -1;
-            return;
-        }
-
-        try {
-            mediaPlayer = MediaPlayer.create(this, musicResIds[position]);
-            if (mediaPlayer != null) {
-                mediaPlayer.setLooping(true);
-                mediaPlayer.setVolume(musicVolume, musicVolume);
-                mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "MediaPlayer preview error: what=" + what + ", extra=" + extra);
-                    releaseMediaPlayer();
-                    Toast.makeText(PomodoroActivity.this, "Error playing music", Toast.LENGTH_SHORT).show();
-                    return true;
-                });
-                mediaPlayer.start();
-                isMusicPlaying = true;
-                Log.d(TAG, "Preview started for: " + musicNames[position]);
-            } else {
-                Log.e(TAG, "MediaPlayer.create returned null for: " + musicNames[position]);
-                Toast.makeText(this, "Cannot create player for this music", Toast.LENGTH_SHORT).show();
-                isMusicPlaying = false;
-                currentMusicIndex = -1;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error playing preview music: " + musicNames[position], e);
-            Toast.makeText(this, "Error playing music", Toast.LENGTH_SHORT).show();
-            isMusicPlaying = false;
-            currentMusicIndex = -1;
-            releaseMediaPlayer();
-        }
-    }
-
-    private void playMusic(int position) {
-        if (position == currentMusicIndex && mediaPlayer != null && mediaPlayer.isPlaying()) {
-            Log.d(TAG, "Music already playing: " + musicNames[position]);
-            return;
-        }
-        if (position == currentMusicIndex && mediaPlayer != null && !mediaPlayer.isPlaying()) {
-            try {
-                mediaPlayer.setVolume(musicVolume, musicVolume);
-                mediaPlayer.start();
-                isMusicPlaying = true;
-                Log.d(TAG, "Resuming music: " + musicNames[position]);
-                return;
-            } catch (IllegalStateException e) {
-                Log.e(TAG, "Error resuming MediaPlayer, releasing.", e);
-                releaseMediaPlayer();
-            }
-        }
-
-        releaseMediaPlayer();
-        currentMusicIndex = position;
-
-        if (position <= 0 || musicResIds[position] == 0) {
-            isMusicPlaying = false;
-            Log.d(TAG, "Play music stopped (None selected or invalid resId).");
-            return;
-        }
-
-        if (!isResourceAvailable(musicResIds[position])) {
-            Log.e(TAG, "Music resource not found: " + musicNames[position]);
-            isMusicPlaying = false;
-            currentMusicIndex = -1;
-            return;
-        }
-
-        try {
-            mediaPlayer = MediaPlayer.create(this, musicResIds[position]);
-            if (mediaPlayer != null) {
-                mediaPlayer.setLooping(true);
-                mediaPlayer.setVolume(musicVolume, musicVolume);
-                mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "MediaPlayer error during playback: what=" + what + ", extra=" + extra);
-                    releaseMediaPlayer();
-                    return true;
-                });
-                mediaPlayer.start();
-                isMusicPlaying = true;
-                Log.d(TAG, "Music started: " + musicNames[position]);
-            } else {
-                Log.e(TAG, "MediaPlayer.create returned null for playback: " + musicNames[position]);
-                isMusicPlaying = false;
-                currentMusicIndex = -1;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error playing music: " + musicNames[position], e);
-            isMusicPlaying = false;
-            currentMusicIndex = -1;
-            releaseMediaPlayer();
-        }
     }
 
     private void pauseMusic() {
@@ -708,7 +717,6 @@ public class PomodoroActivity extends AppCompatActivity {
     private void stopMusic() {
         Log.d(TAG, "Stopping and releasing music player.");
         releaseMediaPlayer();
-        currentMusicIndex = -1;
     }
 
     private void releaseMediaPlayer() {
@@ -726,6 +734,7 @@ public class PomodoroActivity extends AppCompatActivity {
         } finally {
             mediaPlayer = null;
             isMusicPlaying = false;
+            currentSoundItem = null;
         }
     }
 
@@ -751,15 +760,11 @@ public class PomodoroActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy called.");
+        soundHandler.removeCallbacksAndMessages(null);
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;
         }
         releaseMediaPlayer();
-        if (soundPool != null) {
-            soundPool.release();
-            soundPool = null;
-            Log.d(TAG, "SoundPool released.");
-        }
     }
 }
