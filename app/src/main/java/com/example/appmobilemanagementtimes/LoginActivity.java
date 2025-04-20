@@ -1,5 +1,7 @@
 package com.example.appmobilemanagementtimes;
 
+import static android.provider.Settings.System.getString;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
