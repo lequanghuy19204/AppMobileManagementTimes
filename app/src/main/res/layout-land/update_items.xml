@@ -38,7 +38,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Create new item"
+                android:text="Update item"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#FF6600"
@@ -58,6 +58,7 @@
                 android:focusable="true"
                 tools:ignore="UseAppTint" />
         </LinearLayout>
+
         <EditText
             android:id="@+id/editTextTaskName"
             android:layout_width="match_parent"
@@ -67,9 +68,7 @@
             android:background="@drawable/rounded_edittext"
             android:textSize="16sp"
             android:textColor="#333333"
-            android:layout_marginBottom="50dp"
-            android:imeOptions="actionDone"
-            android:singleLine="true" />
+            android:layout_marginBottom="50dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -95,11 +94,11 @@
                 android:textColor="#333333" />
 
             <Switch
-                android:id="@+id/switch_pin"
+                android:id="@+id/switch_pin2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="182dp"
-                android:visibility="visible" />
+                android:visibility="visible"/>
         </LinearLayout>
 
         <LinearLayout
@@ -170,9 +169,9 @@
                 android:textColor="#555555" />
         </LinearLayout>
 
-        <!-- Phần nhắc nhở (reminderLayout) được đưa lên trước -->
+        <!-- Phần nhắc nhở được đưa lên trước -->
         <LinearLayout
-            android:id="@+id/reminderLayout"
+            android:id="@+id/linearLayoutReminderTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -190,7 +189,7 @@
                 app:tint="#FF379AE6" />
 
             <TextView
-                android:id="@+id/reminderText"
+                android:id="@+id/tvReminderTime"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -198,11 +197,17 @@
                 android:textSize="16sp"
                 android:textColor="@color/black"
                 android:paddingStart="12dp" />
+
+            <Switch
+                android:id="@+id/switch_pin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Phần lặp lại (repeatLayout) được đưa xuống sau -->
+        <!-- Phần lặp lại được đưa xuống sau -->
         <LinearLayout
-            android:id="@+id/repeatLayout"
+            android:id="@+id/linearLayoutRepeatMode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -220,7 +225,7 @@
                 app:tint="#FF379AE6" />
 
             <TextView
-                android:id="@+id/repeatText"
+                android:id="@+id/tvRepeatMode"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"

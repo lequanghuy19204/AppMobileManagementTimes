@@ -14,12 +14,15 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -321,6 +324,19 @@ public class update_items extends AppCompatActivity {
 
         datePickerDialog.show();
     }
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("taskName", editTextTaskName.getText().toString());
+        outState.putString("selectedStartTime", selectedStartTime);
+        outState.putString("selectedEndTime", selectedEndTime);
+        outState.putString("tempStartTime", tempStartTime);
+        outState.putString("tempEndTime", tempEndTime);
+        outState.putString("selectedRepeatMode", selectedRepeatMode);
+        outState.putString("selectedReminder", selectedReminder);
+        outState.putString("selectedLabel", selectedLabel);
+        outState.putBoolean("isAllDay", switchPin.isChecked());
+    }
 
     private void showDatePickerOnly(boolean isStartTime) {
         Calendar calendar = Calendar.getInstance();
@@ -461,13 +477,20 @@ public class update_items extends AppCompatActivity {
     private boolean isValidTimeRange(String startTime, String endTime) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-            Calendar startCal = Calendar.getInstance();
-            Calendar endCal = Calendar.getInstance();
-            startCal.setTime(sdf.parse(startTime));
-            endCal.setTime(sdf.parse(endTime));
-            return endCal.after(startCal);
+            // Chuyển chuỗi thời gian thành đối tượng Date
+            Date startDate = sdf.parse(startTime);
+            Date endDate = sdf.parse(endTime);
+
+            // Tính khoảng cách thời gian (mili giây)
+            long timeDifferenceMillis = endDate.getTime() - startDate.getTime();
+            // Chuyển sang giây
+            long timeDifferenceSeconds = timeDifferenceMillis / 1000;
+
+            // Kiểm tra nếu thời gian kết thúc sau thời gian bắt đầu (khoảng cách > 0)
+            return timeDifferenceSeconds > 0;
         } catch (ParseException e) {
-            Log.e(TAG, "Error validating time range", e);
+            Log.e(TAG, "Lỗi khi phân tích thời gian: " + e.getMessage());
+            Toast.makeText(this, "Lỗi định dạng thời gian", Toast.LENGTH_SHORT).show();
             return false;
         }
     }

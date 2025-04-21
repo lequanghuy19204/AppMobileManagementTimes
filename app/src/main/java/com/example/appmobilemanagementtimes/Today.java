@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -339,6 +340,31 @@ public class Today extends AppCompatActivity {
             hideSwipeActions();
             return false;
         });
+    }
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("currentDate", calendar.getTimeInMillis());
+        if (recyclerToday.getLayoutManager() != null) {
+            outState.putParcelable("todoRecyclerState", recyclerToday.getLayoutManager().onSaveInstanceState());
+        }
+        if (recyclerDone.getLayoutManager() != null) {
+            outState.putParcelable("doneRecyclerState", recyclerDone.getLayoutManager().onSaveInstanceState());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        long dateMillis = savedInstanceState.getLong("currentDate");
+        calendar.setTimeInMillis(dateMillis);
+        updateDateAndUI();
+        if (recyclerToday.getLayoutManager() != null && savedInstanceState.containsKey("todoRecyclerState")) {
+            recyclerToday.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable("todoRecyclerState"));
+        }
+        if (recyclerDone.getLayoutManager() != null && savedInstanceState.containsKey("doneRecyclerState")) {
+            recyclerDone.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable("doneRecyclerState"));
+        }
     }
 
     private void addTaskToFirestore(Task2 task, String status) {

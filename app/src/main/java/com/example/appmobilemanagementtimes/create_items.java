@@ -1,5 +1,7 @@
 package com.example.appmobilemanagementtimes;
 
+import static android.content.ContentValues.TAG;
+
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
@@ -9,6 +11,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -19,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -27,6 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -68,6 +74,34 @@ public class create_items extends AppCompatActivity {
         editTextTaskName = findViewById(R.id.editTextTaskName);
         rightButton = findViewById(R.id.rightButton);
         switchPin = findViewById(R.id.switch_pin);
+        editTextTaskName.setFocusable(true);
+        editTextTaskName.setFocusableInTouchMode(true);
+
+        // Hiển thị bàn phím khi nhấn vào EditText
+        editTextTaskName.setOnClickListener(v -> {
+            editTextTaskName.requestFocus(); // Yêu cầu focus cho EditText
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(editTextTaskName, InputMethodManager.SHOW_IMPLICIT);
+        });
+
+        // Tùy chọn: Hiển thị bàn phím khi EditText nhận focus
+        editTextTaskName.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(editTextTaskName, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+        editTextTaskName.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                // Ẩn bàn phím
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                // Bỏ focus khỏi EditText
+                v.clearFocus();
+                return true;
+            }
+            return false;
+        });
 
         // Initialize label icons
         labelIcons = new ImageView[]{
@@ -218,7 +252,12 @@ public class create_items extends AppCompatActivity {
         rightButton.setOnClickListener(v -> {
             String taskName = editTextTaskName.getText().toString().trim();
 
+
             if (!taskName.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
+                if (!isValidTimeRange(selectedStartTime, selectedEndTime)) {
+                    Toast.makeText(this, "Thời gian kết thúc phải sau thời gian bắt đầu", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String groupId = UUID.randomUUID().toString();
                 Log.d("create_items", "Creating task - Name: " + taskName + ", StartTime: " + selectedStartTime +
                         ", EndTime: " + selectedEndTime + ", RepeatMode: " + selectedRepeatMode +
@@ -242,6 +281,7 @@ public class create_items extends AppCompatActivity {
             }
         });
     }
+
 
     private void showDateTimePicker(boolean isStartTime) {
         // Kiểm tra trạng thái Activity để tránh hiển thị dialog khi không hợp lệ
@@ -684,5 +724,26 @@ public class create_items extends AppCompatActivity {
                 .set(taskData)
                 .addOnSuccessListener(aVoid -> Log.d("create_items", "Task added: " + documentId))
                 .addOnFailureListener(e -> Log.e("create_items", "Error adding task", e));
+    }
+
+    private boolean isValidTimeRange(String startTime, String endTime) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            // Chuyển chuỗi thời gian thành đối tượng Date
+            Date startDate = sdf.parse(startTime);
+            Date endDate = sdf.parse(endTime);
+
+            // Tính khoảng cách thời gian (mili giây)
+            long timeDifferenceMillis = endDate.getTime() - startDate.getTime();
+            // Chuyển sang giây
+            long timeDifferenceSeconds = timeDifferenceMillis / 1000;
+
+            // Kiểm tra nếu thời gian kết thúc sau thời gian bắt đầu (khoảng cách > 0)
+            return timeDifferenceSeconds > 0;
+        } catch (ParseException e) {
+            Log.e(TAG, "Lỗi khi phân tích thời gian: " + e.getMessage());
+            Toast.makeText(this, "Lỗi định dạng thời gian", Toast.LENGTH_SHORT).show();
+            return false;
+        }
     }
 }
