@@ -66,6 +66,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 public class PomodoroActivity extends AppCompatActivity {
 
     private static final String TAG = "PomodoroActivity";
@@ -352,6 +354,30 @@ public class PomodoroActivity extends AppCompatActivity {
             fullscreenControlPanel.setVisibility(View.GONE);
             Log.d(TAG, "Fullscreen control panel auto-hidden");
         };
+
+        // Thiết lập bottom navigation
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav.setSelectedItemId(R.id.navigation_pomo);
+        
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                startActivity(new Intent(PomodoroActivity.this, Today.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_upcoming) {
+                startActivity(new Intent(PomodoroActivity.this, UpcomingActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
+                startActivity(new Intent(PomodoroActivity.this, StatisticActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void setupListeners() {

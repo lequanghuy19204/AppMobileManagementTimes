@@ -67,11 +67,5 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
 
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-
-    // Sử dụng Firebase BoM để đồng bộ phiên bản
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0")) // Phiên bản mới nhất tính đến 4/2025
-    implementation("com.google.firebase:firebase-auth") // Đã có trong BoM
-    implementation("com.google.firebase:firebase-firestore") // Đã có trong BoM
-
     implementation("com.google.code.gson:gson:2.11.0") // Cập nhật phiên bản mới nhất
 }

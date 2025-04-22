@@ -81,6 +81,8 @@
         <item>90/15</item>
     </string-array>
 
+    <string name="default_web_client_id" translatable="false">920400821174-dkje80h6u35knvd042jnu26thn4uh5j6.apps.googleusercontent.com</string>
+
     <string name="custom_pomodoro_time">Custom Pomodoro Time</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
