@@ -17,6 +17,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
             android:padding="20dp">
 
             <ImageButton
@@ -147,6 +148,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/rounder_background"
             android:padding="10dp"
+            android:layout_marginTop="15dp"
             android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
@@ -157,7 +159,7 @@
                 />
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="300dp"
                 android:orientation="vertical">
 
                 <com.github.mikephil.charting.charts.LineChart

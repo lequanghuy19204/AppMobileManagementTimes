@@ -1,15 +1,9 @@
 package com.example.appmobilemanagementtimes;
 
-import static android.content.ContentValues.TAG;
-
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,238 +16,142 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class StatisticActivity extends AppCompatActivity {
-    private LineChart lineChart;
+    private LineChart lineChart; // Thay LineChart thành LineChart
     private FirebaseFirestore db;
     private ImageButton btnPreDay, btnNextDay;
     private TextView tvDate, tvToday;
     private Calendar calendar;
-    private String userId;
-
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private final SimpleDateFormat displayDateFormat = new SimpleDateFormat("dd MMM", Locale.getDefault());
-    private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.statistic);
 
-        // Initialize
-        initViews();
-        userId = getUserId();
-        if (userId == null) return;
-
+        // Khởi tạo Firebase
         db = FirebaseFirestore.getInstance();
 
-        setupChart();
-        setupBottomNavigation();
-        updateDateAndUI();
-    }
-
-    private void initViews() {
+        // Khởi tạo giao diện
         tvToday = findViewById(R.id.tv_today);
         tvDate = findViewById(R.id.tv_date);
         btnPreDay = findViewById(R.id.btn_prev_day);
         btnNextDay = findViewById(R.id.btn_next_day);
-        lineChart = findViewById(R.id.linechart);
-        calendar = Calendar.getInstance();
+        lineChart = findViewById(R.id.linechart); // ID vẫn là lineChart, nhưng kiểu là LineChart
 
+        // Khởi tạo calendar
+        calendar = Calendar.getInstance();
+        if (getIntent().hasExtra("selectedDate")) {
+            calendar.setTimeInMillis(getIntent().getLongExtra("selectedDate", calendar.getTimeInMillis()));
+        }
+        updateDateAndUI(false); // Gọi với tham số false khi khởi tạo
+
+        // Xử lý nút chuyển ngày
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-            updateDateAndUI();
+            updateDateAndUI(true);
         });
 
         btnPreDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
-            updateDateAndUI();
+            updateDateAndUI(false);
         });
-    }
 
-    private String getUserId() {
-        Intent intent = getIntent();
-        String userId = intent.getStringExtra("userId");
-
-        if (userId == null) {
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            userId = prefs.getString("userId", null);
-        }
-
-        if (userId == null) {
-            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-        }
-
-        return userId;
-    }
-
-    private void setupChart() {
-        lineChart.getDescription().setEnabled(false);
-        lineChart.getAxisRight().setEnabled(false);
-        lineChart.getLegend().setEnabled(true);
-        lineChart.setNoDataText("Đang tải dữ liệu...");
-        lineChart.setNoDataTextColor(Color.GRAY);
-
-        XAxis xAxis = lineChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f);
-        xAxis.setLabelRotationAngle(-45);
-        xAxis.setValueFormatter(new IndexAxisValueFormatter());
-    }
-
-    private void updateDateAndUI() {
-        tvDate.setText(new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(calendar.getTime()));
-
-        Calendar today = Calendar.getInstance();
-        zeroTime(today);
-        Calendar selectedDate = (Calendar) calendar.clone();
-        zeroTime(selectedDate);
-
-        if (selectedDate.before(today)) {
-            tvToday.setText("Ngày đã qua");
-        } else if (selectedDate.equals(today)) {
-            tvToday.setText("Hôm nay");
-        } else {
-            tvToday.setText("Ngày tới");
-        }
-
-        loadLast7DaysDoneTasksData();
-    }
-
-    private void zeroTime(Calendar cal) {
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-    }
-
-    private void loadLast7DaysDoneTasksData() {
-        Calendar startCal = (Calendar) calendar.clone();
-        startCal.add(Calendar.DAY_OF_MONTH, -6);
-
-        String startDate = dateFormat.format(startCal.getTime());
-        String endDate = dateFormat.format(calendar.getTime());
-
-        db.collection("tasks")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("status", "done")
-                .whereGreaterThanOrEqualTo("startTime", startDate + " 00:00")
-                .whereLessThanOrEqualTo("startTime", endDate + " 23:59")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Map<String, Float> dailyData = initializeDailyData(startCal);
-                        int taskCount = 0;
-
-                        for (QueryDocumentSnapshot doc : task.getResult()) {
-                            try {
-                                String startStr = doc.getString("startTime");
-                                String endStr = doc.getString("endTime");
-
-                                if (startStr != null && endStr != null) {
-                                    Date start = dateTimeFormat.parse(startStr);
-                                    Date end = dateTimeFormat.parse(endStr);
-
-                                    if (start != null && end != null) {
-                                        float hours = calculateTaskHours(start, end);
-                                        String dayKey = dateFormat.format(start);
-                                        if (dailyData.containsKey(dayKey)) {
-                                            dailyData.put(dayKey, dailyData.get(dayKey) + hours);
-                                            taskCount++;
-                                        }
-                                    }
-                                }
-                            } catch (ParseException e) {
-                                Log.e(TAG, "Lỗi phân tích thời gian", e);
-                            }
-                        }
-
-                        if (taskCount == 0) showNoDataMessage();
-                        else updateChartWith7DaysData(dailyData, startCal);
-
-                    } else {
-                        Toast.makeText(this, "Lỗi khi tải dữ liệu", Toast.LENGTH_SHORT).show();
-                        showNoDataMessage();
-                    }
-                });
-    }
-
-    private Map<String, Float> initializeDailyData(Calendar startCal) {
-        Map<String, Float> map = new LinkedHashMap<>();
-        Calendar temp = (Calendar) startCal.clone();
-        for (int i = 0; i < 7; i++) {
-            map.put(dateFormat.format(temp.getTime()), 0f);
-            temp.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        return map;
-    }
-
-    private float calculateTaskHours(Date start, Date end) {
-        long diff = end.getTime() - start.getTime();
-        return Math.min((float) diff / (1000 * 60 * 60), 24); // tối đa 24h
-    }
-
-    private void updateChartWith7DaysData(Map<String, Float> data, Calendar startCal) {
+        // Thiết lập biểu đồ đường (LineChart)
         ArrayList<Entry> entries = new ArrayList<>();
-        ArrayList<String> labels = new ArrayList<>();
+        entries.add(new Entry(0f, 5f));    // T2
+        entries.add(new Entry(1f, 6f));    // T3
+        entries.add(new Entry(2f, 4.5f));  // T4
+        entries.add(new Entry(3f, 7f));    // T5
+        entries.add(new Entry(4f, 3.5f));  // T6
+        entries.add(new Entry(5f, 2f));    // T7
+        entries.add(new Entry(6f, 5f));    // CN
 
-        Calendar temp = (Calendar) startCal.clone();
-        for (int i = 0; i < 7; i++) {
-            String dateKey = dateFormat.format(temp.getTime());
-            entries.add(new Entry(i, data.getOrDefault(dateKey, 0f)));
-            labels.add(displayDateFormat.format(temp.getTime()));
-            temp.add(Calendar.DAY_OF_MONTH, 1);
-        }
+        final String[] days = new String[]{"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
 
-        LineDataSet dataSet = new LineDataSet(entries, "Giờ làm việc đã hoàn thành");
-        dataSet.setColor(ColorTemplate.MATERIAL_COLORS[0]);
-        dataSet.setValueTextColor(Color.BLACK);
-        dataSet.setValueTextSize(12f);
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawCircleHole(false);
-        dataSet.setDrawValues(true);
+        LineDataSet lineDataSet = new LineDataSet(entries, "Số giờ làm việc");
+        lineDataSet.setColors(ColorTemplate.MATERIAL_COLORS[3]);
+        lineDataSet.setValueTextSize(14f);
+        lineDataSet.setLineWidth(2f); // Độ dày đường
+        lineDataSet.setCircleRadius(4f); // Kích thước điểm trên đường
+        lineDataSet.setDrawCircleHole(false); // Không vẽ lỗ trong điểm
 
-        LineData lineData = new LineData(dataSet);
+        LineData lineData = new LineData(lineDataSet);
         lineChart.setData(lineData);
 
+        // Thiết lập trục X
         XAxis xAxis = lineChart.getXAxis();
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
-        xAxis.setLabelCount(labels.size());
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(days));
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelRotationAngle(0);
 
-        lineChart.getAxisLeft().setAxisMinimum(0f);
-        lineChart.getAxisLeft().setGranularity(1f);
+        lineChart.getDescription().setEnabled(false);
         lineChart.animateY(1000);
         lineChart.invalidate();
-    }
 
-    private void showNoDataMessage() {
-        lineChart.clear();
-        lineChart.setNoDataText("Không có công việc đã hoàn thành trong 7 ngày này");
-        lineChart.invalidate();
-    }
-
-    private void setupBottomNavigation() {
+        // Xử lý bottom navigation
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setSelectedItemId(R.id.navigation_statistic);
 
         bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.navigation_home) {
-                startActivity(new Intent(this, Today.class).putExtra("userId", userId));
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                startActivity(new Intent(StatisticActivity.this, Today.class));
                 finish();
                 return true;
-            } else if (id == R.id.navigation_statistic) {
+            } else if (itemId == R.id.navigation_upcoming) {
+                startActivity(new Intent(StatisticActivity.this, UpcomingActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_pomo) {
+                startActivity(new Intent(StatisticActivity.this, PomodoroActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.navigation_statistic) {
                 return true;
             }
             return false;
         });
+    }
+
+    // Phương thức cập nhật ngày
+    private void updateDateAndUI(boolean isNextDay) {
+        if (isNextDay) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        } else {
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+        }
+
+        // Cập nhật tvDate để hiển thị ngày
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        tvDate.setText(sdf.format(calendar.getTime()));
+
+        // Cập nhật tvToday để hiển thị trạng thái ngày
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        todayCal.set(Calendar.MINUTE, 0);
+        todayCal.set(Calendar.SECOND, 0);
+        todayCal.set(Calendar.MILLISECOND, 0);
+
+        Calendar selectedCal = (Calendar) calendar.clone();
+        selectedCal.set(Calendar.HOUR_OF_DAY, 0);
+        selectedCal.set(Calendar.MINUTE, 0);
+        selectedCal.set(Calendar.SECOND, 0);
+        selectedCal.set(Calendar.MILLISECOND, 0);
+
+        if (selectedCal.before(todayCal)) {
+            tvToday.setText("Quá khứ");
+        } else if (selectedCal.equals(todayCal)) {
+            tvToday.setText("Hôm nay");
+        } else {
+            tvToday.setText("Tương lai");
+        }
     }
 }
