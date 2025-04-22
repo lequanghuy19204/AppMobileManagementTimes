@@ -31,6 +31,8 @@ import java.util.Set;
 import java.text.ParseException;
 import java.util.HashMap;
 
+import android.widget.SearchView;
+
 public class UpcomingActivity extends AppCompatActivity {
     private RecyclerView recyclerTodo;
     private RecyclerView recyclerDone;
@@ -50,6 +52,11 @@ public class UpcomingActivity extends AppCompatActivity {
     private List<Task2> doneTasks = new ArrayList<>();
     private boolean isOverdue = false;
     private FloatingActionButton fabAdd;
+
+    private RecyclerView searchResultsRecyclerView;
+    private SearchResultAdapter searchResultAdapter;
+    private List<Task2> searchResultTasks = new ArrayList<>();
+    private androidx.cardview.widget.CardView searchResultsCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +166,56 @@ public class UpcomingActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        // Khởi tạo thêm view cho tìm kiếm
+        searchResultsCard = findViewById(R.id.searchResultsCard);
+        searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
+        searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
+        // Khởi tạo adapter cho kết quả tìm kiếm
+        searchResultAdapter = new SearchResultAdapter(searchResultTasks, task -> {
+            // Khi người dùng nhấp vào kết quả tìm kiếm
+            // Chuyển đến ngày của nhiệm vụ
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+                Date taskDate = sdf.parse(task.getStartTime());
+                if (taskDate != null) {
+                    // Đặt calendar về ngày của nhiệm vụ
+                    currentCalendar.setTime(taskDate);
+                    // Cập nhật calendar view
+                    updateCalendarView();
+                    // Đặt ngày được chọn trong adapter
+                    calendarDayAdapter.setSelectedDay(currentCalendar.get(Calendar.DAY_OF_MONTH));
+                    // Tải nhiệm vụ cho ngày được chọn
+                    loadTasksForSelectedDate();
+                    // Ẩn kết quả tìm kiếm
+                    searchResultsCard.setVisibility(View.GONE);
+                }
+            } catch (ParseException e) {
+                Log.e(TAG, "Lỗi phân tích ngày: " + task.getStartTime(), e);
+            }
+        });
+        searchResultsRecyclerView.setAdapter(searchResultAdapter);
+        
+        // Thiết lập sự kiện tìm kiếm
+        SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchTasks(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.isEmpty()) {
+                    searchResultsCard.setVisibility(View.GONE);
+                } else {
+                    searchTasks(newText);
+                }
+                return true;
+            }
+        });
     }
 
     private void updateCalendarView() {
@@ -166,11 +223,11 @@ public class UpcomingActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy", Locale.getDefault());
         dateHeader.setText(dateFormat.format(currentCalendar.getTime()));
 
+        // Lưu lại ngày đang được chọn
+        int selectedDay = currentCalendar.get(Calendar.DAY_OF_MONTH);
+        
         // Tạo danh sách ngày trong tháng
         List<Integer> days = new ArrayList<>();
-        
-        // Lưu ngày hiện tại
-        int currentDay = currentCalendar.get(Calendar.DAY_OF_MONTH);
         
         // Đặt calendar về ngày đầu tiên của tháng
         Calendar tempCalendar = (Calendar) currentCalendar.clone();
@@ -212,16 +269,8 @@ public class UpcomingActivity extends AppCompatActivity {
             calendarDayAdapter.setSelectedDay(day);
         });
         
-        // Chọn ngày hiện tại nếu đang xem tháng hiện tại
-        Calendar today = Calendar.getInstance();
-        if (currentCalendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) && currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)) {
-            calendarDayAdapter.setSelectedDay(today.get(Calendar.DAY_OF_MONTH));
-            currentCalendar.set(Calendar.DAY_OF_MONTH, today.get(Calendar.DAY_OF_MONTH));
-        } else {
-            // Nếu không phải tháng hiện tại, chọn ngày 1
-            calendarDayAdapter.setSelectedDay(1);
-            currentCalendar.set(Calendar.DAY_OF_MONTH, 1);
-        }
+        // Đặt ngày được chọn là ngày đã lưu
+        calendarDayAdapter.setSelectedDay(selectedDay);
         
         calendarDaysRecyclerView.setLayoutManager(new GridLayoutManager(this, 7));
         calendarDaysRecyclerView.setAdapter(calendarDayAdapter);
@@ -443,6 +492,55 @@ public class UpcomingActivity extends AppCompatActivity {
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error updating task", e);
+            });
+    }
+
+    // Thêm phương thức tìm kiếm nhiệm vụ
+    private void searchTasks(String query) {
+        if (query.isEmpty()) {
+            searchResultsCard.setVisibility(View.GONE);
+            return;
+        }
+        
+        query = query.toLowerCase();
+        final String finalQuery = query;
+        
+        db.collection("tasks")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                searchResultTasks.clear();
+                
+                for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                    String name = doc.getString("name");
+                    if (name != null && name.toLowerCase().contains(finalQuery)) {
+                        String startTime = doc.getString("startTime");
+                        String endTime = doc.getString("endTime");
+                        String repeatMode = doc.getString("repeatMode");
+                        String groupId = doc.getString("groupId");
+                        String reminder = doc.getString("reminder");
+                        String label = doc.getString("label");
+                        String status = doc.getString("status");
+                        
+                        Task2 task = new Task2(name, startTime, endTime, 
+                            repeatMode, groupId, reminder, label, userId);
+                        
+                        searchResultTasks.add(task);
+                    }
+                }
+                
+                if (searchResultTasks.isEmpty()) {
+                    // Không có kết quả tìm kiếm
+                    searchResultsCard.setVisibility(View.GONE);
+                } else {
+                    // Có kết quả tìm kiếm
+                    searchResultAdapter.updateTasks(searchResultTasks);
+                    searchResultsCard.setVisibility(View.VISIBLE);
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Lỗi khi tìm kiếm nhiệm vụ", e);
+                Toast.makeText(UpcomingActivity.this, "Không thể tìm kiếm nhiệm vụ", Toast.LENGTH_SHORT).show();
             });
     }
 } 
