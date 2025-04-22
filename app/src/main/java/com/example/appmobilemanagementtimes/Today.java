@@ -117,6 +117,7 @@ public class Today extends AppCompatActivity {
             } else {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
+            hideSwipeActions();
         });
 
         rootLayout = findViewById(R.id.root_layout);
@@ -276,6 +277,7 @@ public class Today extends AppCompatActivity {
         btnAdd.setOnClickListener(v -> {
             Intent addIntent = new Intent(Today.this, create_items.class);
             createTaskLauncher.launch(addIntent);
+            hideSwipeActions();
         });
 
 
@@ -289,11 +291,14 @@ public class Today extends AppCompatActivity {
         btnNextDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             updateDateAndUI();
+            hideSwipeActions();
+
         });
 
         btnPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             updateDateAndUI();
+            hideSwipeActions();
         });
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
@@ -800,7 +805,6 @@ public class Today extends AppCompatActivity {
         if (selectedCal.before(todayCal)) {
             tvTodoLabel.setText("Overdue");
             tvToday.setText("Past Date");
-            btnAdd.setVisibility(View.GONE);
             isOverdue = true;
         } else if (selectedCal.equals(todayCal)) {
             tvTodoLabel.setText("To Do");
