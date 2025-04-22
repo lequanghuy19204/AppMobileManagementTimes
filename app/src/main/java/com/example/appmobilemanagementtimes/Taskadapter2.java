@@ -1,5 +1,7 @@
 package com.example.appmobilemanagementtimes;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -61,61 +63,67 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
         // Định dạng thời gian
         SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
-        StringBuilder timeText = new StringBuilder();
+        String timeText = "";
 
         try {
-            // Định dạng startTime
             if (task.getStartTime() != null) {
-                String startTime = timeFormat.format(storageFormat.parse(task.getStartTime()))
+                timeText = timeFormat.format(storageFormat.parse(task.getStartTime()))
                         .replace("AM", "SA").replace("PM", "CH");
-                timeText.append(startTime);
-            }
-
-            // Định dạng endTime nếu có
-            if (task.getEndTime() != null && !task.getEndTime().isEmpty()) {
-                String endTime = timeFormat.format(storageFormat.parse(task.getEndTime()))
-                        .replace("AM", "SA").replace("PM", "CH");
-                timeText.append(" - ").append(endTime);
             }
         } catch (ParseException e) {
             Log.e(TAG, "Error parsing time for task: " + task.getName(), e);
-            timeText = new StringBuilder(""); // Đặt rỗng nếu lỗi
+            timeText = "";
         }
 
-        holder.taskTime.setText(timeText.toString());
+        holder.taskTime.setText(timeText);
 
-        // Set label icon
-        String label = task.getLabel();
-        if (label != null) {
-            switch (label) {
-                case "label1":
-                    holder.label.setImageResource(R.drawable.pause1);
-                    break;
-                case "label2":
-                    holder.label.setImageResource(R.drawable.pause2);
-                    break;
-                case "label3":
-                    holder.label.setImageResource(R.drawable.pause3);
-                    break;
-                case "label4":
-                    holder.label.setImageResource(R.drawable.pause4);
-                    break;
-                case "label5":
-                    holder.label.setImageResource(R.drawable.pause5);
-                    break;
-                case "label6":
-                    holder.label.setImageResource(R.drawable.global);
-                    break;
-                default:
-                    holder.label.setImageResource(R.drawable.pause1); // Default
+        // Xử lý hiển thị nhãn
+        if (task.getLabel() != null && !task.getLabel().isEmpty() && !"null".equals(task.getLabel())) {
+            holder.label.setVisibility(View.VISIBLE);
+            // Set label icon
+            String label = task.getLabel();
+            if (label != null) {
+                switch (label) {
+                    case "label1":
+                        holder.label.setImageResource(R.drawable.pause1);
+                        break;
+                    case "label2":
+                        holder.label.setImageResource(R.drawable.pause2);
+                        break;
+                    case "label3":
+                        holder.label.setImageResource(R.drawable.pause3);
+                        break;
+                    case "label4":
+                        holder.label.setImageResource(R.drawable.pause4);
+                        break;
+                    case "label5":
+                        holder.label.setImageResource(R.drawable.pause5);
+                        break;
+                    case "label6":
+                        holder.label.setImageResource(R.drawable.global);
+                        break;
+                    default:
+                        holder.label.setImageResource(R.drawable.pause1); // Default
+                }
+            } else {
+                holder.label.setImageResource(R.drawable.pause1); // Default
             }
         } else {
-            holder.label.setImageResource(R.drawable.pause1); // Default
+            holder.label.setVisibility(View.GONE);
         }
 
+        // Thiết lập click listener cho item để hiển thị/ẩn các nút
+        holder.itemView.setOnClickListener(v -> {
+            // Toggle hiển thị nút edit và delete
+            boolean isVisible = holder.btnEdit.getVisibility() == View.VISIBLE;
+            int newVisibility = isVisible ? View.GONE : View.VISIBLE;
+            holder.btnEdit.setVisibility(newVisibility);
+            holder.btnDelete.setVisibility(newVisibility);
+        });
+
+        // Xử lý sự kiện khi checkbox được chọn
         holder.checkbox.setOnCheckedChangeListener(null);
         holder.checkbox.setChecked(false);
-
         holder.checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked && onTaskCompleted != null) {
                 holder.checkbox.setChecked(true);
@@ -130,12 +138,37 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
             }
         });
 
+        // Xử lý sự kiện khi nhấn nút edit
+        holder.btnEdit.setOnClickListener(v -> {
+            if (position < taskList.size()) {
+                Task2 taskToEdit = taskList.get(position);
+                Context context = holder.itemView.getContext();
+                Intent intent = new Intent(context, update_items.class);
+                
+                // Truyền dữ liệu của task qua để chỉnh sửa
+                intent.putExtra("taskName", taskToEdit.getName());
+                intent.putExtra("startTime", taskToEdit.getStartTime());
+                intent.putExtra("endTime", taskToEdit.getEndTime());
+                intent.putExtra("repeatMode", taskToEdit.getRepeatMode());
+                intent.putExtra("reminder", taskToEdit.getReminder());
+                intent.putExtra("groupId", taskToEdit.getGroupId());
+                intent.putExtra("label", taskToEdit.getLabel());
+                intent.putExtra("userId", taskToEdit.getUserId());
+                
+                // Thêm extra để xác định trạng thái hiện tại
+                intent.putExtra("status", isOverdue ? "overdue" : "overdue");
+                
+                context.startActivity(intent);
+            }
+        });
+
+        // Xử lý sự kiện khi nhấn nút delete
         holder.btnDelete.setOnClickListener(v -> {
-            int pos = holder.getAdapterPosition();
-            if (pos != RecyclerView.NO_POSITION && onTaskDeleted != null) {
-                Task2 taskToDelete = taskList.get(pos);
-                Log.d(TAG, "Deleting task: " + taskToDelete.getName() + ", groupId: " + taskToDelete.getGroupId());
-                onTaskDeleted.accept(taskToDelete);
+            if (position < taskList.size() && onTaskDeleted != null) {
+                onTaskDeleted.accept(taskList.get(position));
+                // Hide buttons after deletion
+                holder.btnEdit.setVisibility(View.GONE);
+                holder.btnDelete.setVisibility(View.GONE);
             }
         });
     }

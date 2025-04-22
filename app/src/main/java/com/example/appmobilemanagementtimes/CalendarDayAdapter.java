@@ -2,6 +2,7 @@ package com.example.appmobilemanagementtimes;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,9 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.CalendarDayViewHolder> {
     private List<Integer> days;
@@ -21,6 +24,7 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
     private int currentMonth;
     private int currentYear;
     private OnDayClickListener listener;
+    private Set<Integer> daysWithTasks = new HashSet<>();
 
     public interface OnDayClickListener {
         void onDayClick(int day);
@@ -39,6 +43,12 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
 
     public void setSelectedDay(int day) {
         this.selectedDay = day;
+        notifyDataSetChanged();
+    }
+
+    public void setDaysWithTasks(Set<Integer> daysWithTasks) {
+        this.daysWithTasks = daysWithTasks;
+        Log.d("CalendarDayAdapter", "Ngày có nhiệm vụ: " + daysWithTasks.toString());
         notifyDataSetChanged();
     }
 
@@ -65,6 +75,14 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
             // Kiểm tra ngày được chọn
             boolean isSelected = day == selectedDay;
             
+            // Hiển thị chỉ báo cho ngày có nhiệm vụ
+            if (daysWithTasks.contains(day)) {
+                Log.d("CalendarDayAdapter", "Hiển thị dấu chấm cho ngày: " + day);
+                holder.taskIndicator.setVisibility(View.VISIBLE);
+            } else {
+                holder.taskIndicator.setVisibility(View.INVISIBLE);
+            }
+            
             if (isSelected) {
                 holder.dayText.setBackgroundResource(R.drawable.selected_day_background);
                 holder.dayText.setTextColor(Color.WHITE);
@@ -86,6 +104,7 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
         } else {
             holder.dayText.setText("");
             holder.dayText.setBackgroundResource(0);
+            holder.taskIndicator.setVisibility(View.INVISIBLE);
             holder.itemView.setOnClickListener(null);
         }
     }
@@ -97,10 +116,12 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
 
     static class CalendarDayViewHolder extends RecyclerView.ViewHolder {
         TextView dayText;
+        View taskIndicator;
 
         CalendarDayViewHolder(View itemView) {
             super(itemView);
             dayText = itemView.findViewById(R.id.dayText);
+            taskIndicator = itemView.findViewById(R.id.taskIndicator);
         }
     }
 } 

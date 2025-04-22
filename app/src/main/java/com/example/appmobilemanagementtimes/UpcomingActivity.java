@@ -1,9 +1,13 @@
 package com.example.appmobilemanagementtimes;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -11,47 +15,97 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.text.ParseException;
+import java.util.HashMap;
 
 public class UpcomingActivity extends AppCompatActivity {
-    private RecyclerView taskRecyclerView;
+    private RecyclerView recyclerTodo;
+    private RecyclerView recyclerDone;
     private RecyclerView calendarDaysRecyclerView;
-    private TaskAdapter taskAdapter;
+    private Taskadapter2 todoAdapter;
+    private Taskadapter3 doneAdapter;
     private CalendarDayAdapter calendarDayAdapter;
     private TextView dateHeader;
+    private TextView tvTodoLabel;
     private ImageButton prevButton;
     private ImageButton nextButton;
     private Calendar currentCalendar;
+    private FirebaseFirestore db;
+    private String userId;
+    private static final String TAG = "UpcomingActivity";
+    private List<Task2> todoTasks = new ArrayList<>();
+    private List<Task2> doneTasks = new ArrayList<>();
+    private boolean isOverdue = false;
+    private FloatingActionButton fabAdd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upcoming);
 
+        // Lấy userId từ Intent hoặc SharedPreferences
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+            if (userId == null) {
+                Log.e(TAG, "Không tìm thấy userId, chuyển hướng về đăng nhập");
+                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
+        Log.d(TAG, "UserId: " + userId);
+        
+        // Khởi tạo Firestore
+        db = FirebaseFirestore.getInstance();
+
         // Khởi tạo các view
         dateHeader = findViewById(R.id.dateHeader);
         prevButton = findViewById(R.id.prevButton);
         nextButton = findViewById(R.id.nextButton);
         calendarDaysRecyclerView = findViewById(R.id.calendarDaysRecyclerView);
-        taskRecyclerView = findViewById(R.id.taskRecyclerView);
+        recyclerTodo = findViewById(R.id.recycler_todo);
+        recyclerDone = findViewById(R.id.recycler_done);
+        tvTodoLabel = findViewById(R.id.tv_todo_label);
+        fabAdd = findViewById(R.id.fabAdd);
 
         // Thiết lập RecyclerView cho tasks
-        taskRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerTodo.setLayoutManager(new LinearLayoutManager(this));
+        recyclerDone.setLayoutManager(new LinearLayoutManager(this));
 
-        // Tạo dữ liệu mẫu cho tasks
-        List<Task> taskList = new ArrayList<>();
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
-        taskList.add(new Task("Breathtaking", "20:15 - 22:15", false));
-
-        // Thiết lập adapter cho tasks
-        taskAdapter = new TaskAdapter(taskList);
-        taskRecyclerView.setAdapter(taskAdapter);
+        // Khởi tạo adapters
+        todoAdapter = new Taskadapter2(todoTasks, isOverdue, 
+            task -> {
+                // Xử lý khi task được đánh dấu hoàn thành
+                addTaskToFirestore(task, "done");
+                loadTasksForSelectedDate();
+            },
+            task -> {
+                // Xử lý khi task bị xóa
+                deleteTasksByGroupId(task.getGroupId());
+            }
+        );
+        
+        doneAdapter = new Taskadapter3(doneTasks);
+        recyclerTodo.setAdapter(todoAdapter);
+        recyclerDone.setAdapter(doneAdapter);
 
         // Khởi tạo calendar
         currentCalendar = Calendar.getInstance();
@@ -66,6 +120,20 @@ public class UpcomingActivity extends AppCompatActivity {
         nextButton.setOnClickListener(v -> {
             currentCalendar.add(Calendar.MONTH, 1);
             updateCalendarView();
+        });
+
+        // Thiết lập sự kiện cho nút thêm nhiệm vụ
+        fabAdd.setOnClickListener(v -> {
+            Intent addIntent = new Intent(UpcomingActivity.this, create_items.class);
+            // Truyền userId sang trang create_items
+            addIntent.putExtra("userId", userId);
+            
+            // Truyền ngày hiện tại đang chọn trong lịch
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String selectedDate = sdf.format(currentCalendar.getTime());
+            addIntent.putExtra("selectedDate", selectedDate);
+            
+            startActivity(addIntent);
         });
 
         // Thiết lập bottom navigation
@@ -135,21 +203,246 @@ public class UpcomingActivity extends AppCompatActivity {
             days.add(0);
         }
         
-        // Thiết lập adapter cho calendar
-        calendarDayAdapter = new CalendarDayAdapter(this, days, 
-                currentCalendar.get(Calendar.MONTH), 
-                currentCalendar.get(Calendar.YEAR));
-        calendarDayAdapter.setSelectedDay(currentDay);
+        // Thiết lập adapter
+        calendarDayAdapter = new CalendarDayAdapter(this, days, currentCalendar.get(Calendar.MONTH), currentCalendar.get(Calendar.YEAR));
         calendarDayAdapter.setOnDayClickListener(day -> {
-            // Xử lý khi người dùng chọn một ngày
             currentCalendar.set(Calendar.DAY_OF_MONTH, day);
-            SimpleDateFormat newDateFormat = new SimpleDateFormat("d MMMM yyyy", Locale.getDefault());
-            dateHeader.setText(newDateFormat.format(currentCalendar.getTime()));
-            
-            // Ở đây bạn có thể cập nhật danh sách task dựa trên ngày được chọn
+            updateDateHeader();
+            loadTasksForSelectedDate();
+            calendarDayAdapter.setSelectedDay(day);
         });
+        
+        // Chọn ngày hiện tại nếu đang xem tháng hiện tại
+        Calendar today = Calendar.getInstance();
+        if (currentCalendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) && currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)) {
+            calendarDayAdapter.setSelectedDay(today.get(Calendar.DAY_OF_MONTH));
+            currentCalendar.set(Calendar.DAY_OF_MONTH, today.get(Calendar.DAY_OF_MONTH));
+        } else {
+            // Nếu không phải tháng hiện tại, chọn ngày 1
+            calendarDayAdapter.setSelectedDay(1);
+            currentCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        }
         
         calendarDaysRecyclerView.setLayoutManager(new GridLayoutManager(this, 7));
         calendarDaysRecyclerView.setAdapter(calendarDayAdapter);
+        
+        // Lấy dữ liệu các ngày có nhiệm vụ
+        fetchDaysWithTasks(days, currentCalendar.get(Calendar.MONTH), currentCalendar.get(Calendar.YEAR));
+        
+        updateDateHeader();
+        loadTasksForSelectedDate();
+    }
+    
+    private void fetchDaysWithTasks(List<Integer> days, int month, int year) {
+        Set<Integer> daysWithTasks = new HashSet<>();
+        
+        if (userId == null || userId.isEmpty()) return;
+        
+        Calendar startOfMonth = Calendar.getInstance();
+        startOfMonth.set(year, month, 1, 0, 0, 0);
+        startOfMonth.set(Calendar.MILLISECOND, 0);
+        
+        Calendar endOfMonth = Calendar.getInstance();
+        endOfMonth.set(year, month, startOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59);
+        endOfMonth.set(Calendar.MILLISECOND, 999);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        String startDateStr = sdf.format(startOfMonth.getTime());
+        String endDateStr = sdf.format(endOfMonth.getTime());
+        
+        Log.d(TAG, "Tìm nhiệm vụ từ " + startDateStr + " đến " + endDateStr);
+        
+        db.collection("tasks")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                    String startTime = document.getString("startTime");
+                    if (startTime != null && !startTime.isEmpty()) {
+                        try {
+                            Date date = sdf.parse(startTime);
+                            Calendar cal = Calendar.getInstance();
+                            cal.setTime(date);
+                            
+                            // Chỉ xử lý nhiệm vụ trong tháng được chọn
+                            if (cal.get(Calendar.MONTH) == month && cal.get(Calendar.YEAR) == year) {
+                                int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+                                daysWithTasks.add(dayOfMonth);
+                                Log.d(TAG, "Nhiệm vụ tìm thấy cho ngày: " + dayOfMonth);
+                            }
+                        } catch (ParseException e) {
+                            Log.e(TAG, "Lỗi phân tích ngày: " + startTime, e);
+                        }
+                    }
+                }
+                
+                Log.d(TAG, "Tổng số ngày có nhiệm vụ: " + daysWithTasks.size());
+                Log.d(TAG, "Các ngày có nhiệm vụ: " + daysWithTasks.toString());
+                
+                // Cập nhật adapter với các ngày có nhiệm vụ
+                calendarDayAdapter.setDaysWithTasks(daysWithTasks);
+            })
+            .addOnFailureListener(e -> Log.e(TAG, "Lỗi khi tải nhiệm vụ", e));
+    }
+    
+    private void loadTasksForSelectedDate() {
+        // Lấy ngày được chọn hiện tại dưới dạng yyyy-MM-dd
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String selectedDate = sdf.format(currentCalendar.getTime());
+        Log.d(TAG, "Đang tải nhiệm vụ cho ngày: " + selectedDate);
+        
+        // Kiểm tra xem ngày được chọn có phải là quá khứ không
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        todayCal.set(Calendar.MINUTE, 0);
+        todayCal.set(Calendar.SECOND, 0);
+        todayCal.set(Calendar.MILLISECOND, 0);
+
+        Calendar selectedCal = (Calendar) currentCalendar.clone();
+        selectedCal.set(Calendar.HOUR_OF_DAY, 0);
+        selectedCal.set(Calendar.MINUTE, 0);
+        selectedCal.set(Calendar.SECOND, 0);
+        selectedCal.set(Calendar.MILLISECOND, 0);
+
+        if (selectedCal.before(todayCal)) {
+            tvTodoLabel.setText("Overdue");
+            isOverdue = true;
+        } else {
+            tvTodoLabel.setText("To Do");
+            isOverdue = false;
+        }
+        
+        // Cập nhật adapter state
+        todoAdapter.setOverdue(isOverdue);
+        
+        // Lấy dữ liệu từ Firestore
+        db.collection("tasks")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener(queryDocuments -> {
+                todoTasks.clear();
+                doneTasks.clear();
+                
+                for (DocumentSnapshot doc : queryDocuments.getDocuments()) {
+                    String status = doc.getString("status");
+                    String name = doc.getString("name");
+                    String startTime = doc.getString("startTime");
+                    String endTime = doc.getString("endTime");
+                    String repeatMode = doc.getString("repeatMode");
+                    String groupId = doc.getString("groupId");
+                    String reminder = doc.getString("reminder");
+                    String label = doc.getString("label");
+                    
+                    if (startTime != null) {
+                        String taskDate = startTime.substring(0, 10);
+                        if (taskDate.equals(selectedDate)) {
+                            if ("overdue".equals(status)) {
+                                todoTasks.add(new Task2(name, startTime, endTime, 
+                                    repeatMode, groupId, reminder, label, userId));
+                                Log.d(TAG, "Thêm nhiệm vụ: " + name + " cho " + taskDate);
+                            } else if ("done".equals(status)) {
+                                doneTasks.add(new Task2(name, startTime, null, 
+                                    repeatMode, groupId, reminder, label, userId));
+                                Log.d(TAG, "Thêm nhiệm vụ hoàn thành: " + name + " cho " + taskDate);
+                            }
+                        }
+                    }
+                }
+                
+                // Cập nhật adapters
+                todoAdapter.updateTasks(todoTasks);
+                doneAdapter.updateTasks(doneTasks);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Lỗi khi tải nhiệm vụ từ Firestore", e);
+                Toast.makeText(UpcomingActivity.this, "Không thể tải nhiệm vụ", Toast.LENGTH_SHORT).show();
+            });
+    }
+    
+    private void addTaskToFirestore(Task2 task, String status) {
+        java.util.Map<String, Object> taskData = new java.util.HashMap<>();
+        taskData.put("name", task.getName());
+        taskData.put("startTime", task.getStartTime());
+        taskData.put("endTime", task.getEndTime());
+        taskData.put("status", status);
+        taskData.put("repeatMode", task.getRepeatMode());
+        taskData.put("groupId", task.getGroupId());
+        taskData.put("reminder", task.getReminder());
+        taskData.put("label", task.getLabel());
+        taskData.put("userId", task.getUserId());
+
+        String documentId = task.getName() + "_" + task.getStartTime();
+        Log.d(TAG, "Thêm nhiệm vụ vào Firestore: " + taskData.toString());
+        db.collection("tasks")
+            .document(documentId)
+            .set(taskData)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Nhiệm vụ thêm thành công: " + documentId);
+                // Cập nhật lại danh sách nhiệm vụ
+                loadTasksForSelectedDate();
+            })
+            .addOnFailureListener(e -> Log.e(TAG, "Lỗi khi thêm nhiệm vụ", e));
+    }
+    
+    private void deleteTasksByGroupId(String groupId) {
+        if (groupId == null || groupId.isEmpty()) {
+            Log.e(TAG, "GroupId rỗng hoặc null, không thể xóa nhiệm vụ định kỳ");
+            return;
+        }
+
+        Log.d(TAG, "Đang xóa nhiệm vụ với groupId: " + groupId);
+        db.collection("tasks")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                Log.d(TAG, "Tìm thấy " + querySnapshot.size() + " nhiệm vụ với groupId: " + groupId);
+                if (querySnapshot.isEmpty()) {
+                    Log.d(TAG, "Không tìm thấy nhiệm vụ với groupId: " + groupId);
+                }
+                for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                    String docId = doc.getId();
+                    db.collection("tasks").document(docId)
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "Đã xóa nhiệm vụ: " + docId);
+                            // Cập nhật lại danh sách nhiệm vụ
+                            loadTasksForSelectedDate();
+                        })
+                        .addOnFailureListener(e -> Log.e(TAG, "Lỗi khi xóa nhiệm vụ: " + docId, e));
+                }
+            })
+            .addOnFailureListener(e -> Log.e(TAG, "Lỗi khi truy vấn nhiệm vụ theo groupId: " + groupId, e));
+    }
+
+    private void updateDateHeader() {
+        // Cập nhật tiêu đề tháng
+        SimpleDateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy", Locale.getDefault());
+        dateHeader.setText(dateFormat.format(currentCalendar.getTime()));
+    }
+
+    private void updateTaskInFirestore(Task2 task) {
+        if (task == null || task.getGroupId() == null) return;
+        
+        Map<String, Object> taskData = new HashMap<>();
+        taskData.put("name", task.getName());
+        taskData.put("startTime", task.getStartTime());
+        taskData.put("endTime", task.getEndTime());
+        taskData.put("status", "done");
+        taskData.put("groupId", task.getGroupId());
+        taskData.put("repeatMode", task.getRepeatMode());
+        taskData.put("reminder", task.getReminder());
+        taskData.put("label", task.getLabel());
+        taskData.put("userId", userId);
+        
+        db.collection("tasks")
+            .document(task.getGroupId())
+            .set(taskData)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Task updated successfully");
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error updating task", e);
+            });
     }
 } 
