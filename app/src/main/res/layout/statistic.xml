@@ -14,21 +14,65 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/today"
-            android:layout_gravity="center"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#FF0000"
-            android:paddingTop="30dp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/date_example"
-            android:layout_gravity="center"
-            android:paddingBottom="15dp"/>
+            android:padding="20dp">
+
+            <ImageButton
+                android:id="@+id/btn_prev_day"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/left"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Previous Day"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="-10dp"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                app:layout_constraintStart_toEndOf="@id/btn_prev_day"
+                app:layout_constraintEnd_toStartOf="@id/btn_next_day"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <TextView
+                    android:id="@+id/tv_today"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/title_today"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFEA916E"
+                    android:gravity="center"/>
+
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btn_next_day"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/right"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Next Day"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginEnd="-10dp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <LinearLayout
@@ -116,10 +160,11 @@
                 android:layout_height="200dp"
                 android:orientation="vertical">
 
-                <com.github.mikephil.charting.charts.BarChart
-                    android:id="@+id/barchart"
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/linechart"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent" />
+
 
             </LinearLayout>
 
