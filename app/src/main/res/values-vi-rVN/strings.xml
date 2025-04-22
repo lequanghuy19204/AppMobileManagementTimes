@@ -27,6 +27,7 @@
     <string name="task_name">Tên công việc</string>
     <string name="task_time">20:15 - 22:15</string>
     <string name="select_language">Chọn ngôn ngữ</string>
+    <string name="create_item">Tạo Mục Mới</string>
     <string name="pass_date">Ngày đã qua</string>
     <string name="overdue">Quá hạn</string>
     <string name="done">Hoàn thành</string>
@@ -50,6 +51,7 @@
     <string name="edit_task">Sửa nhiệm vụ</string>
     <string name="delete_task">Xóa nhiệm vụ</string>
     <string name="title_today">Hôm nay</string>
+    <string name="title_future">Ngày tương lai</string>
     <string name="label_todo">Cần làm</string>
     <string name="label_done">Đã xong</string>
     <string name="avatar">Ảnh đại diện</string>
@@ -66,6 +68,27 @@
         <string name="custom">Tùy chỉnh</string>
         <string name="left_button">Quay lại</string>
         <string name="right_button">Xác nhận</string>
+    <string name="repeat_every_day">Mỗi ngày</string>
+    <string name="repeat_every_week">Mỗi tuần</string>
+    <string name="repeat_every_2_weeks">Mỗi 2 tuần</string>
+    <string name="repeat_every_3_weeks">Mỗi 3 tuần</string>
+    <string name="repeat_every_month">Mỗi tháng</string>
+    <string name="repeat_every_year">Mỗi năm</string>
+    <string name="repeat_never">Không bao giờ</string>
+    <string name="select_repeat_frequency">Chọn tần suất lặp lại</string>
+    <string name="select_reminder_time">Chọn thời gian nhắc nhở</string>
+    <string name="cancel">Hủy</string>
+
+
+    <!-- Chuỗi cho reminder -->
+    <string name="reminder_1m">1 phút trước</string>
+    <string name="reminder_5m">5 phút trước</string>
+    <string name="reminder_15m">15 phút trước</string>
+    <string name="reminder_30m">30 phút trước</string>
+    <string name="reminder_1h">1 giờ trước</string>
+    <string name="reminder_1d">1 ngày trước</string>
+    <string name="reminder_none">Không nhắc nhở</string>
+    <string name="please_login">Vui lòng đăng nhập</string>
         <string name="label_1">Nhãn 1</string>
         <string name="label_2">Nhãn 2</string>
         <string name="label_3">Nhãn 3</string>

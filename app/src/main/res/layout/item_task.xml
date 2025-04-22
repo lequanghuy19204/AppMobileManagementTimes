@@ -33,7 +33,7 @@
             android:id="@+id/task_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/task_name"
+            android:text=""
             android:textSize="16sp"
             android:textStyle="bold"/>
 
@@ -41,7 +41,7 @@
             android:id="@+id/task_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/task_time"
+            android:text=""
             android:textSize="14sp"
             android:textColor="@color/black"/>
 

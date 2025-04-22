@@ -1,10 +1,14 @@
 package com.example.appmobilemanagementtimes;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,12 +21,16 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -50,6 +58,8 @@ public class update_items extends AppCompatActivity {
     private Switch switchPin;
     private ImageView[] labelIcons;
     private String originalTaskId;
+    private ActivityResultLauncher<Intent> exactAlarmPermissionLauncher;
+    private String pendingTaskName, pendingStartTime, pendingReminder, pendingGroupId;
     private static final String TAG = "update_items";
 
     @SuppressLint("MissingInflatedId")
@@ -82,6 +92,26 @@ public class update_items extends AppCompatActivity {
                 findViewById(R.id.label5),
                 findViewById(R.id.label6)
         };
+
+        // Initialize ActivityResultLauncher for exact alarm permission
+        exactAlarmPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (pendingTaskName != null && pendingStartTime != null && pendingReminder != null && pendingGroupId != null) {
+                        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+                            scheduleReminderAfterPermission(pendingTaskName, pendingStartTime, pendingReminder, pendingGroupId);
+                            Toast.makeText(this, "Báo thức đã được đặt thành công!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "Quyền báo thức chính xác chưa được cấp. Sử dụng báo thức không chính xác.", Toast.LENGTH_LONG).show();
+                            scheduleInexactReminder(pendingTaskName, pendingStartTime, pendingReminder, pendingGroupId);
+                        }
+                        pendingTaskName = null;
+                        pendingStartTime = null;
+                        pendingReminder = null;
+                        pendingGroupId = null;
+                    }
+                });
 
         // Receive data from intent
         Intent intent = getIntent();
@@ -275,8 +305,6 @@ public class update_items extends AppCompatActivity {
 
                 // Cập nhật task vào Firestore
                 updateTaskInFirestore(taskName, selectedStartTime, selectedEndTime, selectedRepeatMode, selectedReminder, groupId, selectedLabel);
-                
-                finish();
             }
         });
 
@@ -284,11 +312,6 @@ public class update_items extends AppCompatActivity {
         if (userId == null) {
             SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
             userId = prefs.getString("userId", null);
-        }
-        
-        // Nếu không có status, đặt mặc định là "todo"
-        if (status == null) {
-            status = "todo";
         }
     }
 
@@ -341,6 +364,7 @@ public class update_items extends AppCompatActivity {
 
         datePickerDialog.show();
     }
+
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -494,16 +518,12 @@ public class update_items extends AppCompatActivity {
     private boolean isValidTimeRange(String startTime, String endTime) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-            // Chuyển chuỗi thời gian thành đối tượng Date
             Date startDate = sdf.parse(startTime);
             Date endDate = sdf.parse(endTime);
 
-            // Tính khoảng cách thời gian (mili giây)
             long timeDifferenceMillis = endDate.getTime() - startDate.getTime();
-            // Chuyển sang giây
             long timeDifferenceSeconds = timeDifferenceMillis / 1000;
 
-            // Kiểm tra nếu thời gian kết thúc sau thời gian bắt đầu (khoảng cách > 0)
             return timeDifferenceSeconds > 0;
         } catch (ParseException e) {
             Log.e(TAG, "Lỗi khi phân tích thời gian: " + e.getMessage());
@@ -514,90 +534,371 @@ public class update_items extends AppCompatActivity {
 
     private void updateTaskInFirestore(String name, String startTime, String endTime, String repeatMode, String reminder, String groupId, String label) {
         if (groupId == null || groupId.isEmpty()) {
-            Log.e(TAG, "groupId is null or empty, cannot update task");
-            Toast.makeText(this, "Lỗi: Không thể xác định nhiệm vụ để cập nhật", Toast.LENGTH_SHORT).show();
-            return;
+            Log.e(TAG, "groupId is null or empty, generating new groupId");
+            groupId = UUID.randomUUID().toString();
         }
-        
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        
-        Map<String, Object> taskData = new HashMap<>();
-        taskData.put("name", name);
-        taskData.put("startTime", startTime);
-        taskData.put("endTime", endTime);
-        taskData.put("repeatMode", repeatMode);
-        taskData.put("reminder", reminder);
-        taskData.put("groupId", groupId);
-        taskData.put("label", label);
-        taskData.put("userId", userId);
-        taskData.put("status", status);
-        
-        // Log thông tin cập nhật để debug
-        Log.d(TAG, "Updating task with groupId: " + groupId);
-        Log.d(TAG, "Task data: " + taskData.toString());
-        
-        // Cập nhật tất cả các tasks có cùng groupId (cho nhiệm vụ lặp lại)
+
+        // Bước 1: Xóa tất cả task có cùng groupId
+        String finalGroupId = groupId;
         db.collection("tasks")
-            .whereEqualTo("groupId", groupId)
-            .get()
-            .addOnSuccessListener(querySnapshot -> {
-                if (querySnapshot.isEmpty()) {
-                    Log.d(TAG, "No tasks found with groupId: " + groupId);
-                    // Nếu không tìm thấy, tạo mới document với groupId là ID
-                    db.collection("tasks").document(groupId)
-                        .set(taskData)
-                        .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Task created successfully");
-                            Toast.makeText(update_items.this, "Cập nhật nhiệm vụ thành công", Toast.LENGTH_SHORT).show();
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error creating task", e);
-                            Toast.makeText(update_items.this, "Lỗi khi cập nhật nhiệm vụ", Toast.LENGTH_SHORT).show();
-                        });
-                } else {
-                    // Cập nhật tất cả các documents với groupId này
-                    Log.d(TAG, "Found " + querySnapshot.size() + " tasks with groupId: " + groupId);
+                .whereEqualTo("groupId", groupId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    Log.d(TAG, "Tìm thấy " + querySnapshot.size() + " task với groupId: " + finalGroupId);
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
                         db.collection("tasks").document(doc.getId())
-                            .update(taskData)
+                                .delete()
+                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Đã xóa task: " + doc.getId()))
+                                .addOnFailureListener(e -> Log.e(TAG, "Lỗi xóa task: " + doc.getId(), e));
+                    }
+
+                    // Bước 2: Tạo task chính với dữ liệu cập nhật
+                    Map<String, Object> taskData = new HashMap<>();
+                    taskData.put("name", name);
+                    taskData.put("startTime", startTime);
+                    taskData.put("endTime", endTime);
+                    taskData.put("repeatMode", repeatMode);
+                    taskData.put("reminder", reminder);
+                    taskData.put("groupId", finalGroupId);
+                    taskData.put("label", label);
+                    taskData.put("userId", userId);
+                    taskData.put("status", status);
+
+                    String documentId = name + "_" + startTime;
+                    Log.d(TAG, "Tạo task mới với documentId: " + documentId + ", groupId: " + finalGroupId);
+                    db.collection("tasks").document(documentId)
+                            .set(taskData)
                             .addOnSuccessListener(aVoid -> {
-                                Log.d(TAG, "Task updated successfully: " + doc.getId());
+                                Log.d(TAG, "Tạo task thành công: " + documentId);
                                 Toast.makeText(update_items.this, "Cập nhật nhiệm vụ thành công", Toast.LENGTH_SHORT).show();
+
+                                // Bước 3: Lập lịch nhắc nhở cho nhiệm vụ chính
+                                scheduleReminder(name, startTime, reminder, finalGroupId);
+
+                                // Bước 4: Tạo các task lặp lại nếu cần
+                                if (!repeatMode.equals("never")) {
+                                    createRecurringTasks(name, startTime, endTime, repeatMode, reminder, finalGroupId, label);
+                                }
+
+                                // Bước 5: Trả dữ liệu về activity Today
+                                Intent resultIntent = new Intent();
+                                resultIntent.putExtra("taskName", name);
+                                resultIntent.putExtra("startTime", startTime);
+                                resultIntent.putExtra("endTime", endTime);
+                                resultIntent.putExtra("repeatMode", repeatMode);
+                                resultIntent.putExtra("reminder", reminder);
+                                resultIntent.putExtra("groupId", finalGroupId);
+                                resultIntent.putExtra("label", label);
+                                resultIntent.putExtra("originalTaskId", originalTaskId);
+                                resultIntent.putExtra("newGroupId", finalGroupId);
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
                             })
                             .addOnFailureListener(e -> {
-                                Log.e(TAG, "Error updating task: " + doc.getId(), e);
+                                Log.e(TAG, "Lỗi tạo task: " + documentId, e);
                                 Toast.makeText(update_items.this, "Lỗi khi cập nhật nhiệm vụ", Toast.LENGTH_SHORT).show();
                             });
-                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Lỗi truy vấn task với groupId: " + finalGroupId, e);
+                    Toast.makeText(update_items.this, "Lỗi khi truy vấn nhiệm vụ", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void createRecurringTasks(String taskName, String startTime, String endTime, String repeatMode, String reminder, String groupId, String label) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        Calendar startCal = Calendar.getInstance();
+        Calendar endCal = Calendar.getInstance();
+
+        try {
+            startCal.setTime(sdf.parse(startTime));
+            endCal.setTime(sdf.parse(endTime));
+
+            for (int i = 0; i < 7; i++) {
+                switch (repeatMode) {
+                    case "every_day":
+                        startCal.add(Calendar.DAY_OF_MONTH, 1);
+                        endCal.add(Calendar.DAY_OF_MONTH, 1);
+                        break;
+                    case "every_week":
+                        startCal.add(Calendar.WEEK_OF_YEAR, 1);
+                        endCal.add(Calendar.WEEK_OF_YEAR, 1);
+                        break;
+                    case "every_2_weeks":
+                        startCal.add(Calendar.WEEK_OF_YEAR, 2);
+                        endCal.add(Calendar.WEEK_OF_YEAR, 2);
+                        break;
+                    case "every_3_weeks":
+                        startCal.add(Calendar.WEEK_OF_YEAR, 3);
+                        endCal.add(Calendar.WEEK_OF_YEAR, 3);
+                        break;
+                    case "every_month":
+                        startCal.add(Calendar.MONTH, 1);
+                        endCal.add(Calendar.MONTH, 1);
+                        break;
+                    case "every_year":
+                        startCal.add(Calendar.YEAR, 1);
+                        endCal.add(Calendar.YEAR, 1);
+                        break;
+                    default:
+                        return;
                 }
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error querying tasks with groupId: " + groupId, e);
-                Toast.makeText(update_items.this, "Lỗi khi truy vấn nhiệm vụ", Toast.LENGTH_SHORT).show();
-            });
+
+                String newStartTime = sdf.format(startCal.getTime());
+                String newEndTime = sdf.format(endCal.getTime());
+                Task2 recurringTask = new Task2(taskName, newStartTime, newEndTime, repeatMode, groupId, reminder, label, userId);
+                addTaskToFirestore(recurringTask, "overdue");
+
+                // Lập lịch nhắc nhở cho nhiệm vụ lặp lại
+                scheduleReminder(taskName, newStartTime, reminder, groupId);
+
+                if (startCal.getTimeInMillis() > Calendar.getInstance().getTimeInMillis() + 365L * 24 * 60 * 60 * 1000) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating recurring tasks", e);
+        }
+    }
+
+    private void addTaskToFirestore(Task2 task, String status) {
+        task.setUserId(userId);
+
+        Map<String, Object> taskData = new HashMap<>();
+        taskData.put("name", task.getName());
+        taskData.put("startTime", task.getStartTime());
+        taskData.put("endTime", task.getEndTime());
+        taskData.put("status", status);
+        taskData.put("repeatMode", task.getRepeatMode());
+        taskData.put("groupId", task.getGroupId());
+        taskData.put("reminder", task.getReminder());
+        taskData.put("label", task.getLabel());
+        taskData.put("userId", task.getUserId());
+
+        String documentId = task.getName() + "_" + task.getStartTime();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("tasks")
+                .document(documentId)
+                .set(taskData)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Task added: " + documentId))
+                .addOnFailureListener(e -> Log.e(TAG, "Error adding task", e));
     }
 
     private void updateSelectedLabelUI() {
-        // Reset tất cả các nhãn về trạng thái không được chọn
         for (ImageView icon : labelIcons) {
             icon.setBackground(null);
         }
-        
-        // Đánh dấu nhãn được chọn nếu có
+
         if (selectedLabel != null && !selectedLabel.isEmpty()) {
             int index = -1;
             switch (selectedLabel) {
-                case "label1": index = 0; break;
-                case "label2": index = 1; break;
-                case "label3": index = 2; break;
-                case "label4": index = 3; break;
-                case "label5": index = 4; break;
-                case "label6": index = 5; break;
+                case "label1":
+                    index = 0;
+                    break;
+                case "label2":
+                    index = 1;
+                    break;
+                case "label3":
+                    index = 2;
+                    break;
+                case "label4":
+                    index = 3;
+                    break;
+                case "label5":
+                    index = 4;
+                    break;
+                case "label6":
+                    index = 5;
+                    break;
             }
-            
+
             if (index >= 0 && index < labelIcons.length) {
                 labelIcons[index].setBackground(getResources().getDrawable(R.drawable.round_bg_selected));
             }
+        }
+    }
+
+    private void scheduleReminder(String taskName, String startTime, String reminder, String groupId) {
+        if (reminder.equals("none")) return;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        Calendar reminderCal = Calendar.getInstance();
+
+        try {
+            reminderCal.setTime(sdf.parse(startTime));
+
+            switch (reminder) {
+                case "1m":
+                    reminderCal.add(Calendar.MINUTE, -1);
+                    break;
+                case "5m":
+                    reminderCal.add(Calendar.MINUTE, -5);
+                    break;
+                case "15m":
+                    reminderCal.add(Calendar.MINUTE, -15);
+                    break;
+                case "30m":
+                    reminderCal.add(Calendar.MINUTE, -30);
+                    break;
+                case "1h":
+                    reminderCal.add(Calendar.HOUR_OF_DAY, -1);
+                    break;
+                case "1d":
+                    reminderCal.add(Calendar.DAY_OF_MONTH, -1);
+                    break;
+            }
+
+            if (reminderCal.getTimeInMillis() > System.currentTimeMillis()) {
+                AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(this, ReminderBroadcastReceiver.class);
+                intent.putExtra("taskName", taskName);
+                intent.putExtra("taskId", taskName + "_" + startTime);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        (taskName + "_" + startTime).hashCode(),
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (!alarmManager.canScheduleExactAlarms()) {
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        boolean hasPrompted = prefs.getBoolean("hasPromptedExactAlarm", false);
+                        if (!hasPrompted) {
+                            Log.w(TAG, "Cannot schedule exact alarms, prompting user for permission");
+                            Toast.makeText(this, "Vui lòng cấp quyền báo thức chính xác để nhận nhắc nhở đúng giờ.", Toast.LENGTH_LONG).show();
+                            pendingTaskName = taskName;
+                            pendingStartTime = startTime;
+                            pendingReminder = reminder;
+                            pendingGroupId = groupId;
+                            requestExactAlarmPermission();
+                            prefs.edit().putBoolean("hasPromptedExactAlarm", true).apply();
+                        }
+                        return;
+                    }
+                }
+
+                try {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, reminderCal.getTimeInMillis(), pendingIntent);
+                    Log.d(TAG, "Scheduled reminder for task: " + taskName + " at " + sdf.format(reminderCal.getTime()));
+                } catch (SecurityException e) {
+                    Log.e(TAG, "SecurityException when setting exact alarm", e);
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, reminderCal.getTimeInMillis(), pendingIntent);
+                }
+            } else {
+                Log.d(TAG, "Reminder is in the past, not scheduling: " + taskName + " at " + sdf.format(reminderCal.getTime()));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error scheduling reminder", e);
+        }
+    }
+
+    private void scheduleReminderAfterPermission(String taskName, String startTime, String reminder, String groupId) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        Calendar reminderCal = Calendar.getInstance();
+
+        try {
+            reminderCal.setTime(sdf.parse(startTime));
+
+            switch (reminder) {
+                case "1m":
+                    reminderCal.add(Calendar.MINUTE, -1);
+                    break;
+                case "5m":
+                    reminderCal.add(Calendar.MINUTE, -5);
+                    break;
+                case "15m":
+                    reminderCal.add(Calendar.MINUTE, -15);
+                    break;
+                case "30m":
+                    reminderCal.add(Calendar.MINUTE, -30);
+                    break;
+                case "1h":
+                    reminderCal.add(Calendar.HOUR_OF_DAY, -1);
+                    break;
+                case "1d":
+                    reminderCal.add(Calendar.DAY_OF_MONTH, -1);
+                    break;
+            }
+
+            if (reminderCal.getTimeInMillis() > System.currentTimeMillis()) {
+                AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(this, ReminderBroadcastReceiver.class);
+                intent.putExtra("taskName", taskName);
+                intent.putExtra("taskId", taskName + "_" + startTime);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        (taskName + "_" + startTime).hashCode(),
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, reminderCal.getTimeInMillis(), pendingIntent);
+                Log.d(TAG, "Scheduled reminder after permission granted for task: " + taskName + " at " + sdf.format(reminderCal.getTime()));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error scheduling reminder after permission", e);
+        }
+    }
+
+    private void scheduleInexactReminder(String taskName, String startTime, String reminder, String groupId) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        Calendar reminderCal = Calendar.getInstance();
+
+        try {
+            reminderCal.setTime(sdf.parse(startTime));
+
+            switch (reminder) {
+                case "1m":
+                    reminderCal.add(Calendar.MINUTE, -1);
+                    break;
+                case "5m":
+                    reminderCal.add(Calendar.MINUTE, -5);
+                    break;
+                case "15m":
+                    reminderCal.add(Calendar.MINUTE, -15);
+                    break;
+                case "30m":
+                    reminderCal.add(Calendar.MINUTE, -30);
+                    break;
+                case "1h":
+                    reminderCal.add(Calendar.HOUR_OF_DAY, -1);
+                    break;
+                case "1d":
+                    reminderCal.add(Calendar.DAY_OF_MONTH, -1);
+                    break;
+            }
+
+            if (reminderCal.getTimeInMillis() > System.currentTimeMillis()) {
+                AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(this, ReminderBroadcastReceiver.class);
+                intent.putExtra("taskName", taskName);
+                intent.putExtra("taskId", taskName + "_" + startTime);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        (taskName + "_" + startTime).hashCode(),
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+
+                alarmManager.set(AlarmManager.RTC_WAKEUP, reminderCal.getTimeInMillis(), pendingIntent);
+                Log.d(TAG, "Scheduled inexact reminder for task: " + taskName + " at " + sdf.format(reminderCal.getTime()));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error scheduling inexact reminder", e);
+        }
+    }
+
+    private void requestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            intent.setData(android.net.Uri.fromParts("package", getPackageName(), null));
+            exactAlarmPermissionLauncher.launch(intent);
         }
     }
 }

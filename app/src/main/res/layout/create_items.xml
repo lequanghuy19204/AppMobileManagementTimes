@@ -38,7 +38,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Create new item"
+                android:text="@string/create_item"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#FF6600"
@@ -62,7 +62,7 @@
             android:id="@+id/editTextTaskName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter item name"
+            android:hint="@string/enter_item_name"
             android:padding="12dp"
             android:background="@drawable/rounded_edittext"
             android:textSize="16sp"
@@ -89,7 +89,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cả ngày"
+                android:text="@string/all_day"
                 android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
@@ -248,7 +248,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Custom"
+                android:text="@string/custom"
                 android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
@@ -257,7 +257,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/right_fit"
-                android:layout_marginStart="230dp" />
+                android:layout_marginStart="210dp" />
         </LinearLayout>
 
         <LinearLayout

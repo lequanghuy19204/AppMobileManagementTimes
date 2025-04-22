@@ -253,7 +253,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/right_fit"
-                android:layout_marginStart="230dp" />
+                android:layout_marginStart="210dp" />
         </LinearLayout>
 
         <LinearLayout
