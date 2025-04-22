@@ -1,6 +1,5 @@
 package com.example.appmobilemanagementtimes;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -12,7 +11,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,16 +27,16 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
+                // Xử lý khi chọn Home
                 return true;
             } else if (itemId == R.id.navigation_upcoming) {
-                startActivity(new Intent(MainActivity.this, UpcomingActivity.class));
+                // Xử lý khi chọn Upcoming
                 return true;
             } else if (itemId == R.id.navigation_pomo) {
-                // Chuyển đến PomoActivity
+                // Xử lý khi chọn Pomo
                 return true;
             } else if (itemId == R.id.navigation_statistic) {
-                Intent intent = new Intent(MainActivity.this, StatisticActivity.class);
-                startActivity(intent);
+                // Xử lý khi chọn Statistic
                 return true;
             }
             return false;

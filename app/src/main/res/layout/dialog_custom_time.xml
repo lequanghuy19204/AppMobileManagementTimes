@@ -33,7 +33,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:inputType="number"
-            android:text="25"/>
+            android:digits="0123456789"
+            android:hint="25"
+            android:background="@android:drawable/edit_text"
+            android:padding="8dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -56,6 +59,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:inputType="number"
-            android:text="5"/>
+            android:digits="0123456789"
+            android:hint="5"
+            android:background="@android:drawable/edit_text"
+            android:padding="8dp"/>
     </LinearLayout>
 </LinearLayout>
