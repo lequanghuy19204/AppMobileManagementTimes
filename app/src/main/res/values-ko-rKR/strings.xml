@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">모바일 시간 관리 앱</string>
+
+    <string-array name="weekday_names">
+        <item>월</item> <!-- Mon -->
+        <item>화</item> <!-- Tue -->
+        <item>수</item> <!-- Wed -->
+        <item>목</item> <!-- Thu -->
+        <item>금</item> <!-- Fri -->
+        <item>토</item> <!-- Sat -->
+        <item>일</item> <!-- Sun -->
+    </string-array>
+    <string name="title_home">홈</string>
+    <string name="title_upcoming">예정</string>
+    <string name="title_pomo">포모도로</string>
+    <string name="title_statistic">통계</string>
+
+    <string name="hint_task_title">작업 제목</string>
+    <string name="hint_task_time">시간 (HH:mm - HH:mm)</string>
+    <string name="custom_time">사용자 정의 시간</string>
+    <string name="to_do_minutes">할 일 (분):</string>
+    <string name="short_break_minutes">짧은 휴식 (분):</string>
+    <string name="select_music">집중 음악 선택</string>
+    <string name="music_on">음악 켜기</string>
+    <string name="music_off">음악 끄기</string>
+    <string name="volume">음량</string>
+    <string name="task_name">작업 이름</string>
+    <string name="task_time">20:15 - 22:15</string>
+    <string name="select_language">언어 선택</string>
+    <string name="pass_date">지난 날짜</string>
+    <string name="overdue">연체된</string>
+    <string name="done">완료</string>
+    <string name="header_text">당신은 포모도로 중입니다</string>
+    <string name="dropdown_text">50/10</string>
+    <string name="music_text">집중을 도와주는 음악</string>
+    <string name="fullscreen_text">전체 화면 모드</string>
+    <string name="timer_default">50:00</string>
+    <string name="stop_button_desc">정지 버튼</string>
+    <string name="pause_button_desc">일시 정지 버튼</string>
+    <string name="dropdown_icon_desc">드롭다운 아이콘</string>
+    <string name="task_name_placeholder">작업 이름</string>
+    <string name="task_date_placeholder">날짜: 2023년 4월 27일</string>
+    <string name="task_time_placeholder">시간: 08:00 - 10:00</string>
+    <string name="today">오늘</string>
+    <string name="date_example">2025년 2월 9일</string>
+    <string name="tasks_done">작업 3/4 완료</string>
+    <string name="promo_done">프로모션 3/4 완료</string>
+    <string name="statistic">통계</string>
+    <string name="task_title">숨막히게 아름다운</string>
+    <string name="edit_task">작업 수정</string>
+    <string name="delete_task">작업 삭제</string>
+    <string name="title_today">오늘</string>
+    <string name="label_todo">할 일</string>
+    <string name="label_done">완료됨</string>
+    <string name="avatar">아바타</string>
+    <string name="notification">알림</string>
+    <string name="previous_day">이전 날짜</string>
+    <string name="next_day">다음 날짜</string>
+        <string name="update_item">항목 업데이트</string>
+        <string name="enter_item_name">항목 이름 입력</string>
+        <string name="all_day">종일</string>
+        <string name="select_start_time">시작 시간 선택</string>
+        <string name="select_end_time">종료 시간 선택</string>
+        <string name="no_reminder">알림 없음</string>
+        <string name="never">절대</string>
+        <string name="custom">사용자 지정</string>
+        <string name="left_button">뒤로</string>
+        <string name="right_button">확인</string>
+        <string name="label_1">라벨 1</string>
+        <string name="label_2">라벨 2</string>
+        <string name="label_3">라벨 3</string>
+        <string name="label_4">라벨 4</string>
+        <string name="label_5">라벨 5</string>
+        <string name="label_6">라벨 6</string>
+
+    <string-array name="pomodoro_modes">
+        <item>50분/10분</item>
+        <item>45분/15분</item>
+        <item>30분/5분</item>
+        <item>사용자 정의</item> <!-- Custom -->
+    </string-array>
+</resources>

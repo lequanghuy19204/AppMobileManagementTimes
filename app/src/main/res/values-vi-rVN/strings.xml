@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ứng dụng Quản lý Thời gian</string>
+
+    <string-array name="weekday_names">
+        <item>Thứ Hai</item>   <!-- Mon -->
+        <item>Thứ Ba</item>    <!-- Tue -->
+        <item>Thứ Tư</item>    <!-- Wed -->
+        <item>Thứ Năm</item>   <!-- Thu -->
+        <item>Thứ Sáu</item>   <!-- Fri -->
+        <item>Thứ Bảy</item>   <!-- Sat -->
+        <item>Chủ Nhật</item>  <!-- Sun -->
+    </string-array>
+    <string name="title_home">Trang chủ</string>
+    <string name="title_upcoming">Sắp tới</string>
+    <string name="title_pomo">Pomodoro</string>
+    <string name="title_statistic">Thống kê</string>
+    <string name="hint_task_title">Tiêu đề công việc</string>
+    <string name="hint_task_time">Thời gian (HH:mm - HH:mm)</string>
+    <string name="custom_time">Thời gian tùy chỉnh</string>
+    <string name="to_do_minutes">Công việc (phút):</string>
+    <string name="short_break_minutes">Nghỉ ngắn (phút):</string>
+    <string name="select_music">Chọn nhạc tập trung</string>
+    <string name="music_on">Bật nhạc</string>
+    <string name="music_off">Tắt nhạc</string>
+    <string name="volume">Âm lượng</string>
+    <string name="task_name">Tên công việc</string>
+    <string name="task_time">20:15 - 22:15</string>
+    <string name="select_language">Chọn ngôn ngữ</string>
+    <string name="pass_date">Ngày đã qua</string>
+    <string name="overdue">Quá hạn</string>
+    <string name="done">Hoàn thành</string>
+    <string name="header_text">BẠN ĐANG Ở CHẾ ĐỘ POMODORO</string>
+    <string name="dropdown_text">50/10</string>
+    <string name="music_text">Âm nhạc giúp tập trung</string>
+    <string name="fullscreen_text">Chế độ toàn màn hình</string>
+    <string name="timer_default">50:00</string>
+    <string name="stop_button_desc">Nút dừng</string>
+    <string name="pause_button_desc">Nút tạm dừng</string>
+    <string name="dropdown_icon_desc">Biểu tượng mở rộng</string>
+    <string name="task_name_placeholder">Tên nhiệm vụ</string>
+    <string name="task_date_placeholder">Ngày: 27/04/2023</string>
+    <string name="task_time_placeholder">Thời gian: 08:00 - 10:00</string>
+    <string name="today">Hôm nay</string>
+    <string name="date_example">09 Thg 2, 2025</string>
+    <string name="tasks_done">3/4 nhiệm vụ hoàn thành</string>
+    <string name="promo_done">3/4 promo hoàn thành</string>
+    <string name="statistic">Thống kê</string>
+    <string name="task_title">Ngoạn mục</string>
+    <string name="edit_task">Sửa nhiệm vụ</string>
+    <string name="delete_task">Xóa nhiệm vụ</string>
+    <string name="title_today">Hôm nay</string>
+    <string name="label_todo">Cần làm</string>
+    <string name="label_done">Đã xong</string>
+    <string name="avatar">Ảnh đại diện</string>
+    <string name="notification">Thông báo</string>
+    <string name="previous_day">Hôm trước</string>
+    <string name="next_day">Hôm sau</string>
+        <string name="update_item">Cập nhật mục</string>
+        <string name="enter_item_name">Nhập tên mục</string>
+        <string name="all_day">Cả ngày</string>
+        <string name="select_start_time">Chọn thời gian bắt đầu</string>
+        <string name="select_end_time">Chọn thời gian kết thúc</string>
+        <string name="no_reminder">Không nhắc nhở</string>
+        <string name="never">Không bao giờ</string>
+        <string name="custom">Tùy chỉnh</string>
+        <string name="left_button">Quay lại</string>
+        <string name="right_button">Xác nhận</string>
+        <string name="label_1">Nhãn 1</string>
+        <string name="label_2">Nhãn 2</string>
+        <string name="label_3">Nhãn 3</string>
+        <string name="label_4">Nhãn 4</string>
+        <string name="label_5">Nhãn 5</string>
+        <string name="label_6">Nhãn 6</string>
+
+
+
+    <string-array name="pomodoro_modes">
+        <item>50 phút / 10 phút</item>
+        <item>45 phút / 15 phút</item>
+        <item>30 phút / 5 phút</item>
+        <item>Tùy chỉnh</item> <!-- Custom -->
+    </string-array>
+</resources>

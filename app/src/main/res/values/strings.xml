@@ -9,6 +9,71 @@
         <item>Sat</item>
         <item>Sun</item>
     </string-array>
+    <string name="title_home">Home</string>
+    <string name="title_upcoming">Upcoming</string>
+    <string name="title_pomo">Pomo</string>
+    <string name="title_statistic">Statistic</string>
+
+    <string name="hint_task_title">Task Title</string>
+    <string name="hint_task_time">Task Time (HH:mm - HH:mm)</string>
+    <string name="custom_time">Custom time</string>
+    <string name="to_do_minutes">To do (minutes):</string>
+    <string name="short_break_minutes">Short break (minutes):</string>
+    <string name="select_music">Select Focus Music</string>
+    <string name="music_on">Turn Music On</string>
+    <string name="music_off">Turn Music Off</string>
+    <string name="volume">Volume</string>
+
+    <string name="task_name">Task Name</string>
+    <string name="task_time">20:15 - 22:15</string>
+    <string name="select_language">Select language</string>
+    <string name="pass_date">Pass date</string>
+    <string name="overdue">Overdue</string>
+    <string name="done">Done</string>
+    <string name="header_text">YOU ARE ON POMODORO</string>
+    <string name="dropdown_text">50/10</string>
+    <string name="music_text">Music helping focus</string>
+    <string name="fullscreen_text">Full screen mode</string>
+    <string name="timer_default">50:00</string>
+    <string name="stop_button_desc">Stop Button</string>
+    <string name="pause_button_desc">Pause Button</string>
+    <string name="dropdown_icon_desc">Dropdown icon</string>
+    <string name="task_name_placeholder">Task name</string>
+    <string name="task_date_placeholder">Date: 27/04/2023</string>
+    <string name="task_time_placeholder">Time: 08:00 - 10:00</string>
+    <string name="today">Today</string>
+    <string name="date_example">09 Feb 2025</string>
+    <string name="tasks_done">3/4 tasks done</string>
+    <string name="promo_done">3/4 Promo done</string>
+    <string name="statistic">Static</string>
+    <string name="task_title">Breathtaking</string>
+    <string name="edit_task">Edit task</string>
+    <string name="delete_task">Delete task</string>
+    <string name="title_today">Today</string>
+    <string name="label_todo">To Do</string>
+    <string name="label_done">Done</string>
+    <string name="avatar">Avatar</string>
+    <string name="notification">Notification</string>
+    <string name="previous_day">Previous Day</string>
+    <string name="next_day">Next Day</string>
+        <string name="update_item">Update Item</string>
+        <string name="enter_item_name">Enter item name</string>
+        <string name="all_day">All Day</string>
+        <string name="select_start_time">Select Start Time</string>
+        <string name="select_end_time">Select End Time</string>
+        <string name="no_reminder">No Reminder</string>
+        <string name="never">Never</string>
+        <string name="custom">Custom</string>
+        <string name="left_button">Back</string>
+        <string name="right_button">Confirm</string>
+        <string name="label_1">Label 1</string>
+        <string name="label_2">Label 2</string>
+        <string name="label_3">Label 3</string>
+        <string name="label_4">Label 4</string>
+        <string name="label_5">Label 5</string>
+        <string name="label_6">Label 6</string>
+
+
 
     <string-array name="pomodoro_modes">
         <item>50/10</item>

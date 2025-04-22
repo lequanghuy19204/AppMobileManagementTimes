@@ -20,20 +20,20 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/black"
-            android:text="Tên nhiệm vụ" />
+            android:text="@string/task_name_placeholder" />
 
         <TextView
             android:id="@+id/taskDateTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:text="Ngày: 27/04/2023" />
+            android:text="@string/task_date_placeholder" />
 
         <TextView
             android:id="@+id/taskTimeTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:text="Thời gian: 08:00 - 10:00" />
+            android:text="@string/task_time_placeholder" />
     </LinearLayout>
 </androidx.cardview.widget.CardView> 
