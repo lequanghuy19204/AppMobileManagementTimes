@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="?android:attr/colorBackground">
 
 
     <SearchView
@@ -31,6 +31,7 @@
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
         android:visibility="gone"
+        app:cardBackgroundColor="?attr/cardBackgroundColor"
         app:layout_constraintTop_toBottomOf="@id/searchView">
 
         <LinearLayout
@@ -46,6 +47,7 @@
                 android:text="Kết quả tìm kiếm"
                 android:textStyle="bold"
                 android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
                 android:padding="8dp"/>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -64,6 +66,7 @@
         android:layout_marginTop="16dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
+        app:cardBackgroundColor="?attr/cardBackgroundColor"
         app:layout_constraintTop_toBottomOf="@id/searchView">
 
         <LinearLayout
@@ -86,7 +89,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
                     android:text="26 February 2022"
-                    android:textColor="@color/black"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -96,7 +99,8 @@
                     android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_arrow_left"
-                    android:contentDescription="Previous" />
+                    android:contentDescription="Previous"
+                    android:tint="?attr/colorSecondary" />
 
                 <ImageButton
                     android:id="@+id/nextButton"
@@ -104,7 +108,8 @@
                     android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_arrow_right"
-                    android:contentDescription="Next" />
+                    android:contentDescription="Next"
+                    android:tint="?attr/colorSecondary" />
             </LinearLayout>
 
             <LinearLayout
@@ -121,7 +126,7 @@
                     android:layout_weight="1"
                     android:text="Mon"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -130,7 +135,7 @@
                     android:layout_weight="1"
                     android:text="Tue"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -139,7 +144,7 @@
                     android:layout_weight="1"
                     android:text="Wed"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -148,7 +153,7 @@
                     android:layout_weight="1"
                     android:text="Thu"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -157,7 +162,7 @@
                     android:layout_weight="1"
                     android:text="Fri"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -166,7 +171,7 @@
                     android:layout_weight="1"
                     android:text="Sat"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -175,7 +180,7 @@
                     android:layout_weight="1"
                     android:text="Sun"
                     android:textAlignment="center"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -201,6 +206,7 @@
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:textColor="?android:attr/textColorPrimary"
         app:layout_constraintTop_toBottomOf="@id/calendarCard"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -223,6 +229,7 @@
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:textColor="?android:attr/textColorPrimary"
         app:layout_constraintTop_toBottomOf="@id/recycler_todo"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -242,19 +249,19 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="4dp"
-        android:backgroundTint="#F4A67C"
+        android:backgroundTint="?attr/colorSecondary"
         android:src="@drawable/ic_add"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
         app:layout_constraintEnd_toEndOf="parent"
-        app:tint="@color/white" />
+        app:tint="?attr/colorOnSecondary" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        app:itemIconTint="@color/bottom_nav_color"
-        app:itemTextColor="@color/bottom_nav_color"
+        android:background="?attr/colorSurface"
+        app:itemIconTint="@drawable/bottom_nav_color"
+        app:itemTextColor="@drawable/bottom_nav_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

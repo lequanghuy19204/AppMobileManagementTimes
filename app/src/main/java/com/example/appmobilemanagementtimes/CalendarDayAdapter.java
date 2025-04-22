@@ -91,7 +91,10 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
                 holder.dayText.setTextColor(ContextCompat.getColor(context, R.color.orange_accent));
             } else {
                 holder.dayText.setBackgroundResource(0);
-                holder.dayText.setTextColor(Color.BLACK);
+                // Sử dụng màu từ thuộc tính theme thay vì màu cứng
+                int textColorAttr = android.R.attr.textColorPrimary;
+                int textColor = getThemeColor(textColorAttr);
+                holder.dayText.setTextColor(textColor);
             }
             
             holder.itemView.setOnClickListener(v -> {
@@ -107,6 +110,13 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
             holder.taskIndicator.setVisibility(View.INVISIBLE);
             holder.itemView.setOnClickListener(null);
         }
+    }
+
+    // Phương thức lấy màu từ theme
+    private int getThemeColor(int attr) {
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attr, typedValue, true);
+        return typedValue.data;
     }
 
     @Override

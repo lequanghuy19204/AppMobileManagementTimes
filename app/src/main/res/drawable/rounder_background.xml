@@ -1,13 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Màu nền của LinearLayout (Có thể bỏ nếu không cần màu nền) -->
-    <solid
-        android:color="@android:color/white" />
+    <solid android:color="?attr/cardBackgroundColor" />
 
     <!-- Viền (Border) xung quanh -->
     <stroke
-        android:color="#D3D3D3"
-        android:width="2dp"/> <!-- Độ dày viền -->
+        android:width="1dp"
+        android:color="?attr/dividerColor" />
 
     <!-- Bo góc cho LinearLayout -->
-    <corners android:radius="16dp" /> <!-- Bo góc với bán kính 16dp -->
+    <corners android:radius="15dp" /> <!-- Bo góc với bán kính 15dp -->
+
+    <padding
+        android:bottom="5dp"
+        android:left="5dp"
+        android:right="5dp"
+        android:top="5dp" />
 </shape>

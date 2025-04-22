@@ -1,10 +1,13 @@
 package com.example.appmobilemanagementtimes;
 
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -38,9 +41,22 @@ public class StatisticActivity extends AppCompatActivity {
         // Nhãn cho trục X
         final String[] days = new String[]{"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
 
+        // Lấy màu từ resources thay vì thuộc tính theme
+        int accentColor = getResources().getColor(R.color.accent);
+        
+        // Lấy màu văn bản dựa trên chế độ sáng/tối hiện tại
+        int textColor;
+        int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        if (nightMode == Configuration.UI_MODE_NIGHT_YES) {
+            textColor = getResources().getColor(R.color.text_primary_light); // Màu văn bản cho dark mode
+        } else {
+            textColor = getResources().getColor(R.color.text_primary_light); // Màu văn bản cho light mode
+        }
+        
         BarDataSet barDataSet = new BarDataSet(entries, "Số giờ làm việc");
-        barDataSet.setColors(ColorTemplate.MATERIAL_COLORS[3]);
+        barDataSet.setColors(accentColor);
         barDataSet.setValueTextSize(14f);
+        barDataSet.setValueTextColor(textColor);
 
         BarData barData = new BarData(barDataSet);
         barChart.setData(barData);
@@ -52,7 +68,22 @@ public class StatisticActivity extends AppCompatActivity {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setLabelRotationAngle(0); // Góc xoay nhãn
+        xAxis.setTextColor(textColor); // Đặt màu chữ cho trục X
 
+        // Thiết lập màu chữ cho trục Y bên trái và phải
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setTextColor(textColor);
+        
+        YAxis rightAxis = barChart.getAxisRight();
+        rightAxis.setTextColor(textColor);
+
+        // Thiết lập màu cho legend (chú thích)
+        barChart.getLegend().setTextColor(textColor);
+        
+        // Đặt màu nền cho chart
+        barChart.setDrawGridBackground(false);
+        barChart.setBackgroundColor(Color.TRANSPARENT);
+        
         barChart.getDescription().setEnabled(false); // Tắt mô tả mặc định
         barChart.animateY(1000); // Hiệu ứng chạy biểu đồ
         barChart.invalidate(); // Vẽ lại
