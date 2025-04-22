@@ -5,18 +5,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pomodoroMainLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:layout_height="match_parent">
 
     <!-- Normal Mode Layout -->
+
+    <!-- Fullscreen Layout -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/normalLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <!-- Header Text -->
         <TextView
@@ -24,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="68dp"
-            android:text="POMODORO TIMER"
+            android:text="@string/pomodoro_timer_title"
             android:textColor="#EA916E"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -55,7 +58,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="50/10"
+                android:text="@string/default_pomodoro_mode"
                 android:textColor="#EA916E"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -75,12 +78,12 @@
             android:id="@+id/customTimeLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
             android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/pomodoroDropdown" />
 
         <!-- Music Column -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -96,6 +99,7 @@
                 android:id="@+id/musicIcon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:contentDescription="@string/music_icon_description"
                 android:src="@drawable/ic_music_note"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -107,7 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Music helping focus"
+                android:text="@string/music_helping_focus"
                 android:textColor="#666"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -129,6 +133,7 @@
                 android:id="@+id/fullscreenIcon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:contentDescription="@string/fullscreen_icon_description"
                 android:src="@drawable/ic_fullscreen"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -140,7 +145,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Full screen mode"
+                android:text="@string/full_screen_mode"
                 android:textColor="#666"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -151,13 +156,15 @@
         <!-- Timer Circle -->
         <FrameLayout
             android:id="@+id/timerContainer"
-            android:layout_width="360dp"
-            android:layout_height="360dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="16dp"
             android:layout_marginTop="52dp"
+            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.47"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/musicColumn">
+            app:layout_constraintTop_toBottomOf="@id/musicColumn"
+            app:layout_constraintWidth_percent="0.8">
 
             <ProgressBar
                 android:id="@+id/circularProgress"
@@ -165,16 +172,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
+                android:indeterminate="false"
                 android:progressDrawable="@drawable/circular_progress"
-                android:rotation="-90"
-                android:indeterminate="false"/>
+                android:rotation="-90" />
 
             <TextView
                 android:id="@+id/timerText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="50:00"
+                android:text="@string/default_timer_text"
                 android:textColor="#333"
                 android:textSize="64sp" />
         </FrameLayout>
@@ -212,6 +219,7 @@
                     android:id="@+id/startButton"
                     android:layout_width="72dp"
                     android:layout_height="72dp"
+                    android:contentDescription="Start Button"
                     android:src="@drawable/ic_play_button" />
 
                 <ImageView
@@ -226,12 +234,10 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Fullscreen Layout -->
     <FrameLayout
         android:id="@+id/fullscreenLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#FFFFFF"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -250,18 +256,18 @@
                 android:id="@+id/fullscreenMinutesText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="50"
+                android:text="@string/default_minutes"
                 android:textColor="#333"
-                android:textSize="250sp"
+                android:textSize="200sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/fullscreenSecondsText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="00"
+                android:text="@string/default_seconds"
                 android:textColor="#333"
-                android:textSize="250sp"
+                android:textSize="200sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -293,6 +299,7 @@
                     android:id="@+id/fullscreenStartButton"
                     android:layout_width="72dp"
                     android:layout_height="72dp"
+                    android:contentDescription="Start Button"
                     android:src="@drawable/ic_play_button" />
 
                 <ImageView

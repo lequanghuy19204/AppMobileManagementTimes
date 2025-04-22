@@ -2,9 +2,32 @@
     <string name="app_name">AppMobileManagementTimes</string>
 
     <string-array name="pomodoro_modes">
+        <item>25/5</item>
         <item>50/10</item>
-        <item>45/15</item>
-        <item>30/5</item>
-        <item>Custom</item>
+        <item>90/15</item>
     </string-array>
+
+    <string name="custom_pomodoro_time">Custom Pomodoro Time</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_times_must_be_positive">Work and break times must be greater than 0</string>
+    <string name="error_times_too_large">Please enter reasonable times (Work &lt;= 180, Break &lt;= 60)</string>
+    <string name="error_invalid_numbers">Please enter valid numbers</string>
+    <string name="error_saving_custom_time">Error saving custom time</string>
+    <string name="ui_error_missing_components">UI error: Missing components</string>
+    <string name="failed_to_sign_in_anonymously">Failed to sign in anonymously</string>
+    <string name="notification_permission_denied">Notification permission denied. Some features may not work.</string>
+    <string name="invalid_format_minutes">Invalid format. Use minutes/minutes (e.g., 50/10)</string>
+    <string name="invalid_number_format">Invalid number format</string>
+    <string name="error_setting_cycle">Error setting cycle</string>
+    <string name="pomodoro_timer_title">POMODORO TIMER</string>
+    <string name="default_pomodoro_mode">50/10</string>
+    <string name="music_helping_focus">Music helping focus</string>
+    <string name="full_screen_mode">Full screen mode</string>
+    <string name="default_timer_text">50:00</string>
+    <string name="default_minutes">50</string>
+    <string name="default_seconds">00</string>
+    <string name="music_icon_description">Music settings</string>
+    <string name="fullscreen_icon_description">Enter fullscreen mode</string>
+    <string name="pomodoro_time_format">%d/%d</string>
 </resources>
