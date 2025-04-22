@@ -121,6 +121,7 @@ public class PomodoroActivity extends AppCompatActivity {
 
     // Sound related
     private MediaPlayer mediaPlayer;
+    private MediaPlayer notificationPlayer;
     private boolean isMusicPlaying = false;
     private float musicVolume = 0.5f;
     private int currentMusicIndex = -1;
@@ -177,6 +178,7 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     // Gesture Detector for Swipe Down
+
     private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final int SWIPE_THRESHOLD = 100;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
@@ -194,9 +196,8 @@ public class PomodoroActivity extends AppCompatActivity {
 
             if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                 if (diffY > 0) { // Swipe down
-                    Log.d(TAG, "Swipe down detected, resetting timer and exiting fullscreen");
-                    resetTimer();
-                    exitFullscreenMode();
+                    Log.d(TAG, "Swipe down detected, exiting fullscreen");
+                    exitFullscreenMode(); // Chỉ thoát fullscreen
                     return true;
                 }
             }
@@ -250,6 +251,12 @@ public class PomodoroActivity extends AppCompatActivity {
         }
         updateButtonVisibility();
 
+        // Handle notification tap
+        if (getIntent().getBooleanExtra("fromNotification", false)) {
+            stopNotificationSound();
+            Log.d(TAG, "onCreate: Detected notification tap, stopped notification sound");
+        }
+
         // Attempt to sign in with Firebase and sync data if successful
         if (currentUser == null) {
             if (isNetworkAvailable()) {
@@ -261,12 +268,12 @@ public class PomodoroActivity extends AppCompatActivity {
                         syncWithFirebase();
                     } else {
                         Log.e(TAG, "onCreate: Firebase anonymous sign-in failed", task.getException());
-                        Toast.makeText(this, "Failed to sign in anonymously", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Không thể đăng nhập ẩn danh", Toast.LENGTH_LONG).show();
                     }
                 });
             } else {
                 Log.w(TAG, "onCreate: No network available, skipping Firebase sign-in");
-                Toast.makeText(this, "No internet connection. Running in offline mode.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Không có kết nối mạng. Chạy ở chế độ offline.", Toast.LENGTH_LONG).show();
             }
         } else {
             syncWithFirebase();
@@ -452,21 +459,15 @@ public class PomodoroActivity extends AppCompatActivity {
         fullscreenControlPanel.setVisibility(View.GONE);
         controlPanelHandler.removeCallbacks(hideControlPanelRunnable);
 
-        // Sync UI without resetting timer
+        // Sync UI with current timer state
         updateTimerText();
         updateProgressBar();
         updateButtonVisibility();
         pomodoroText.setText((workDuration / 60000) + "/" + (shortBreakDuration / 60000));
         musicText.setText(selectedMusicIndex >= 0 ? musicNames[selectedMusicIndex] : "None");
 
-        // Check if timer just finished and send notification if needed
-        if (timeLeftInMillis == 0 && !isTimerRunning) {
-            playNotificationSound();
-            sendNotification(currentPhase == Phase.WORK ? "Work session completed!" : "Break time is over!");
-        }
-
         isFullscreenMode = false;
-        Log.d(TAG, "Exited fullscreen mode, UI synced");
+        Log.d(TAG, "Exited fullscreen mode, UI synced: timeLeftInMillis=" + timeLeftInMillis + ", phase=" + currentPhase);
     }
 
     private void showFullscreenControlPanel() {
@@ -741,6 +742,7 @@ public class PomodoroActivity extends AppCompatActivity {
             Log.d(TAG, "startTimer: Added new session to history, size: " + sessionHistory.size());
         }
 
+        totalDuration = currentPhase == Phase.WORK ? workDuration : shortBreakDuration;
         countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -755,7 +757,7 @@ public class PomodoroActivity extends AppCompatActivity {
                 pauseMusic();
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     playNotificationSound();
-                    sendNotification(currentPhase == Phase.WORK ? "Work session completed!" : "Break time is over!");
+                    sendNotification(currentPhase == Phase.WORK ? "Phiên làm việc hoàn tất!" : "Thời gian nghỉ kết thúc!");
                     onTimerFinish();
                     updateButtonVisibility();
                     updateFullscreenButtonVisibility();
@@ -766,6 +768,7 @@ public class PomodoroActivity extends AppCompatActivity {
         isTimerRunning = true;
         updateButtonVisibility();
         updateFullscreenButtonVisibility();
+        Log.d(TAG, "startTimer: Timer started, timeLeftInMillis=" + timeLeftInMillis + ", phase=" + currentPhase);
     }
 
     private void sendNotification(String message) {
@@ -782,14 +785,15 @@ public class PomodoroActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(this, PomodoroActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("fromNotification", true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification) // Ensure this drawable exists
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Pomodoro Timer")
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -808,14 +812,16 @@ public class PomodoroActivity extends AppCompatActivity {
 
         if (notificationSoundResId == 0 || !isResourceAvailable(notificationSoundResId)) {
             Log.w(TAG, "playNotificationSound: Notification sound resource unavailable");
-            Toast.makeText(this, "Notification sound resource missing", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Âm thanh thông báo bị thiếu", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        stopNotificationSound();
+
         try {
-            MediaPlayer notificationPlayer = MediaPlayer.create(this, notificationSoundResId);
+            notificationPlayer = MediaPlayer.create(this, notificationSoundResId);
             if (notificationPlayer == null) {
-                Log.e(TAG, "playNotificationSound: Failed to create MediaPlayer");
+                Log.e(TAG, "playNotificationSound: Không thể tạo MediaPlayer");
                 return;
             }
 
@@ -828,27 +834,43 @@ public class PomodoroActivity extends AppCompatActivity {
             notificationPlayer.setLooping(false);
 
             notificationPlayer.setOnPreparedListener(mp -> {
-                Log.d(TAG, "playNotificationSound: Notification sound prepared, starting");
+                Log.d(TAG, "playNotificationSound: Âm thanh thông báo đã sẵn sàng, bắt đầu phát");
                 mp.start();
             });
 
             notificationPlayer.setOnCompletionListener(mp -> {
-                Log.d(TAG, "playNotificationSound: Notification sound completed");
-                mp.release();
+                Log.d(TAG, "playNotificationSound: Âm thanh thông báo hoàn tất");
+                stopNotificationSound();
             });
 
             notificationPlayer.setOnErrorListener((mp, what, extra) -> {
-                Log.e(TAG, "playNotificationSound: Error: what=" + what + ", extra=" + extra);
-                mp.release();
+                Log.e(TAG, "playNotificationSound: Lỗi: what=" + what + ", extra=" + extra);
+                stopNotificationSound();
                 return true;
             });
 
             notificationPlayer.prepareAsync();
-            Log.d(TAG, "playNotificationSound: Preparing notification sound");
-
+            Log.d(TAG, "playNotificationSound: Đang chuẩn bị âm thanh thông báo");
         } catch (Exception e) {
-            Log.e(TAG, "playNotificationSound: Failed to play notification sound", e);
-            Toast.makeText(this, "Error playing notification sound", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "playNotificationSound: Không thể phát âm thanh thông báo", e);
+            Toast.makeText(this, "Lỗi phát âm thanh thông báo", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopNotificationSound() {
+        try {
+            if (notificationPlayer != null) {
+                if (notificationPlayer.isPlaying()) {
+                    notificationPlayer.stop();
+                }
+                notificationPlayer.reset();
+                notificationPlayer.release();
+                Log.d(TAG, "stopNotificationSound: notificationPlayer đã được release");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "stopNotificationSound: Lỗi khi release notificationPlayer", e);
+        } finally {
+            notificationPlayer = null;
         }
     }
 
@@ -963,8 +985,11 @@ public class PomodoroActivity extends AppCompatActivity {
         String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         timerText.setText(timeFormatted);
 
-        fullscreenMinutesText.setText(String.format(Locale.getDefault(), "%02d", minutes));
-        fullscreenSecondsText.setText(String.format(Locale.getDefault(), "%02d", seconds));
+        if (isFullscreenMode) {
+            fullscreenMinutesText.setText(String.format(Locale.getDefault(), "%02d", minutes));
+            fullscreenSecondsText.setText(String.format(Locale.getDefault(), "%02d", seconds));
+        }
+        Log.d(TAG, "updateTimerText: timeLeftInMillis=" + timeLeftInMillis + ", formatted=" + timeFormatted);
     }
 
     private void updateProgressBar() {
@@ -1346,6 +1371,15 @@ public class PomodoroActivity extends AppCompatActivity {
             }
         }
     }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent.getBooleanExtra("fromNotification", false)) {
+            stopNotificationSound();
+            Log.d(TAG, "onNewIntent: Detected notification tap, stopped notification sound");
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -1365,6 +1399,7 @@ public class PomodoroActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume: Activity resumed");
+        stopNotificationSound();
         if (backgroundStartTime > 0) {
             long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
             Log.d(TAG, "onResume: Time in background: " + timeInBackground + "ms");
@@ -1390,6 +1425,7 @@ public class PomodoroActivity extends AppCompatActivity {
             countDownTimer = null;
         }
         releaseMediaPlayer();
+        stopNotificationSound();
         try {
             unregisterReceiver(resetReceiver);
             Log.d(TAG, "onDestroy: Reset receiver unregistered");
