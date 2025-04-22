@@ -30,7 +30,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    aaptOptions {
+            noCompress( "mp3", "ogg")
+        }
+
 }
+
 
 dependencies {
 
@@ -61,5 +67,5 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
 
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-
+    implementation("com.google.code.gson:gson:2.11.0") // Cập nhật phiên bản mới nhất
 }

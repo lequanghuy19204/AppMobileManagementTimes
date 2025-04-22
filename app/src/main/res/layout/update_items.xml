@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#F5F5F5"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -27,7 +27,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/arrow_back"
-                app:tint="#FF1DD75B"
+                app:tint="?attr/colorSecondary"
                 android:contentDescription="Left Button"
                 android:padding="8dp"
                 android:background="?android:attr/selectableItemBackground"
@@ -38,9 +38,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/update_item"                android:textSize="24sp"
+                android:text="@string/update_item"
+                android:textSize="24sp"
                 android:textStyle="bold"
-                android:textColor="#FF6600"
+                android:textColor="?attr/colorSecondary"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp" />
 
@@ -49,22 +50,24 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/check"
-                app:tint="#FF379AE6"
-                android:contentDescription="@string/right_button"                android:padding="8dp"
+                app:tint="?attr/colorSecondary"
+                android:contentDescription="Right Button"
+                android:padding="8dp"
                 android:layout_marginStart="50dp"
                 android:clickable="true"
-                android:focusable="true"
-                tools:ignore="UseAppTint" />
+                android:focusable="true" />
         </LinearLayout>
 
         <EditText
             android:id="@+id/editTextTaskName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/enter_item_name"            android:padding="12dp"
+            android:hint="@string/enter_item_name"
+            android:padding="12dp"
             android:background="@drawable/rounded_edittext"
             android:textSize="16sp"
-            android:textColor="#333333"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorSecondary"
             android:layout_marginBottom="50dp" />
 
         <LinearLayout
@@ -73,21 +76,22 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_calendar"
-                app:tint="#FF379AE6" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/all_day"                android:textSize="16sp"
+                android:text="@string/all_day"
+                android:textSize="16sp"
                 android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <Switch
                 android:id="@+id/switch_pin2"
@@ -103,22 +107,23 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/arrow_next"
-                app:tint="#FF379AE6" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:id="@+id/editStartTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/select_start_time"                android:textSize="16sp"
+                android:text="Select Start Time"
+                android:textSize="16sp"
                 android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:id="@+id/editStartTimeHours"
@@ -127,7 +132,7 @@
                 android:text=""
                 android:textSize="16sp"
                 android:paddingLeft="110dp"
-                android:textColor="#555555" />
+                android:textColor="?android:attr/textColorSecondary" />
         </LinearLayout>
 
         <LinearLayout
@@ -136,22 +141,23 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/arrow_back"
-                app:tint="#FF1DD75B" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:id="@+id/editEndTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/select_end_time"                android:textSize="16sp"
+                android:text="Select End Time"
+                android:textSize="16sp"
                 android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:id="@+id/editEndTimeHours"
@@ -160,10 +166,9 @@
                 android:text=""
                 android:textSize="16sp"
                 android:paddingLeft="110dp"
-                android:textColor="#555555" />
+                android:textColor="?android:attr/textColorSecondary" />
         </LinearLayout>
 
-        <!-- Phần nhắc nhở được đưa lên trước -->
         <LinearLayout
             android:id="@+id/linearLayoutReminderTime"
             android:layout_width="match_parent"
@@ -171,7 +176,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="8dp"
             android:clickable="true"
             android:focusable="true">
@@ -180,15 +185,16 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_calendar"
-                app:tint="#FF379AE6" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:id="@+id/tvReminderTime"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="@string/no_reminder"                android:textSize="16sp"
-                android:textColor="@color/black"
+                android:text="Không nhắc nhở"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
                 android:paddingStart="12dp" />
 
             <Switch
@@ -198,14 +204,13 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Phần lặp lại được đưa xuống sau -->
         <LinearLayout
             android:id="@+id/linearLayoutRepeatMode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="8dp"
             android:padding="12dp"
             android:clickable="true"
@@ -215,15 +220,16 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/repeat"
-                app:tint="#FF379AE6" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:id="@+id/tvRepeatMode"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="@string/never"                android:textSize="16sp"
-                android:textColor="@color/black"
+                android:text="Không bao giờ"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
                 android:paddingStart="12dp" />
         </LinearLayout>
 
@@ -232,28 +238,29 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="16dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/custom"
-                app:tint="#FF379AE6"
-                tools:ignore="UseAppTint" />
+                app:tint="?attr/colorSecondary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/custom"                android:textSize="16sp"
+                android:text="@string/custom"
+                android:textSize="16sp"
                 android:layout_marginStart="8dp"
-                android:textColor="#333333" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/right_fit"
-                android:layout_marginStart="210dp" />
+                android:layout_marginStart="215dp"
+                app:tint="?android:attr/textColorSecondary" />
         </LinearLayout>
 
         <LinearLayout
@@ -263,7 +270,7 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:padding="12dp"
-            android:background="@drawable/rounded_bg"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="16dp"
             android:layout_marginStart="50dp">
 
@@ -272,7 +279,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause1"
-                android:contentDescription="@string/label_1"                android:padding="8dp"
+                android:contentDescription="Label 1"
+                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label1"
                 android:clickable="true"
@@ -285,7 +293,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause2"
-                android:contentDescription="@string/label_2"                android:padding="8dp"
+                android:contentDescription="Label 2"
+                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label2"
                 android:clickable="true"
@@ -298,7 +307,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause3"
-                android:contentDescription="@string/label_3"                android:padding="8dp"
+                android:contentDescription="Label 3"
+                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label3"
                 android:clickable="true"
@@ -311,7 +321,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause4"
-                android:contentDescription="@string/label_4"                android:padding="8dp"
+                android:contentDescription="Label 4"
+                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label4"
                 android:clickable="true"
@@ -324,7 +335,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause5"
-                android:contentDescription="@string/label_5"                android:padding="8dp"
+                android:contentDescription="Label 5"
+                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label5"
                 android:clickable="true"
@@ -337,7 +349,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/global"
-                android:contentDescription="@string/label_6"                android:padding="8dp"
+                android:contentDescription="Label 6"
+                android:padding="8dp"
                 android:tag="label6"
                 android:clickable="true"
                 android:focusable="true"

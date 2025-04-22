@@ -91,27 +91,42 @@
         <string name="label_5">Label 5</string>
         <string name="label_6">Label 6</string>
     <string name="please_login">Please login</string>
-    <string name="cancel">Cancel</string>
+
     <string name="select_repeat_frequency">Select repeat frequency</string>
     <string name="select_reminder_time">Select reminder time</string>
-    <string name="task_name_empty">Please enter a task name and select both times</string>
-    <string name="invalid_time_range">End time must be after start time</string>
-    <string name="time_display_error">Error displaying time</string>
-    <string name="date_picker_error">Cannot show date picker, please try again</string>
-    <string name="time_picker_error">Cannot show time picker, please try again</string>
-    <string name="exact_alarm_permission_denied">Cannot set exact alarm. Please grant permission in settings.</string>
-    <string name="exact_alarm_success">Alarm set successfully!</string>
-    <string name="exact_alarm_fallback">Exact alarm permission not granted. Using inexact alarm.</string>
-    <string name="exact_alarm_security_error">Cannot set exact alarm due to permission restrictions.</string>
+
 
 
 
     <string-array name="pomodoro_modes">
+        <item>25/5</item>
         <item>50/10</item>
-        <item>45/15</item>
-        <item>30/5</item>
-        <item>Custom</item>
+        <item>90/15</item>
     </string-array>
 
     <string name="default_web_client_id" translatable="false">920400821174-dkje80h6u35knvd042jnu26thn4uh5j6.apps.googleusercontent.com</string>
+
+    <string name="custom_pomodoro_time">Custom Pomodoro Time</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_times_must_be_positive">Work and break times must be greater than 0</string>
+    <string name="error_times_too_large">Please enter reasonable times (Work &lt;= 180, Break &lt;= 60)</string>
+    <string name="error_invalid_numbers">Please enter valid numbers</string>
+    <string name="error_saving_custom_time">Error saving custom time</string>
+    <string name="ui_error_missing_components">UI error: Missing components</string>
+    <string name="failed_to_sign_in_anonymously">Failed to sign in anonymously</string>
+    <string name="notification_permission_denied">Notification permission denied. Some features may not work.</string>
+    <string name="invalid_format_minutes">Invalid format. Use minutes/minutes (e.g., 50/10)</string>
+    <string name="invalid_number_format">Invalid number format</string>
+    <string name="error_setting_cycle">Error setting cycle</string>
+    <string name="pomodoro_timer_title">POMODORO TIMER</string>
+    <string name="default_pomodoro_mode">50/10</string>
+    <string name="music_helping_focus">Music helping focus</string>
+    <string name="full_screen_mode">Full screen mode</string>
+    <string name="default_timer_text">50:00</string>
+    <string name="default_minutes">50</string>
+    <string name="default_seconds">00</string>
+    <string name="music_icon_description">Music settings</string>
+    <string name="fullscreen_icon_description">Enter fullscreen mode</string>
+    <string name="pomodoro_time_format">%d/%d</string>
 </resources>

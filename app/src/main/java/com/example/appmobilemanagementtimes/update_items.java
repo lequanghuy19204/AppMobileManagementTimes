@@ -2,7 +2,6 @@ package com.example.appmobilemanagementtimes;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -24,6 +23,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -146,11 +146,11 @@ public class update_items extends AppCompatActivity {
         }
         if (repeatMode != null) {
             selectedRepeatMode = repeatMode;
-            tvRepeatMode.setText(getRepeatModeDisplayText(repeatMode));
+            tvRepeatMode.setText(getString(R.string.repeat_never));
         }
         if (reminder != null) {
             selectedReminder = reminder;
-            tvReminderTime.setText(getReminderDisplayText(reminder));
+            tvReminderTime.setText(getString(R.string.reminder_none));
         }
         if (label != null) {
             selectedLabel = label;
@@ -261,7 +261,7 @@ public class update_items extends AppCompatActivity {
                 showDateTimePicker(false);
             }
         });
-        linearLayoutRepeatMode.setOnClickListener(v -> showRepeatModeDialog());
+        linearLayoutRepeatMode.setOnClickListener(v -> showRepeatDialog());
         linearLayoutReminderTime.setOnClickListener(v -> showReminderDialog());
 
         // Set click listeners for label icons
@@ -422,31 +422,47 @@ public class update_items extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    private void showRepeatModeDialog() {
-        String[] repeatOptions = {"Không bao giờ", "Mỗi ngày", "Mỗi tuần", "Mỗi 2 tuần", "Mỗi 3 tuần", "Mỗi tháng", "Mỗi năm"};
+    private void showRepeatDialog() {
+        String[] repeatOptions = {
+                getString(R.string.repeat_never),
+                getString(R.string.repeat_every_day),
+                getString(R.string.repeat_every_week),
+                getString(R.string.repeat_every_2_weeks),
+                getString(R.string.repeat_every_3_weeks),
+                getString(R.string.repeat_every_month),
+                getString(R.string.repeat_every_year)
+        };
         String[] repeatValues = {"never", "every_day", "every_week", "every_2_weeks", "every_3_weeks", "every_month", "every_year"};
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn chế độ lặp lại");
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.select_repeat_frequency));
         builder.setItems(repeatOptions, (dialog, which) -> {
             selectedRepeatMode = repeatValues[which];
             tvRepeatMode.setText(repeatOptions[which]);
         });
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel), null);
         builder.show();
     }
 
     private void showReminderDialog() {
-        String[] reminderOptions = {"Không nhắc nhở", "1 phút trước", "5 phút trước", "15 phút trước", "30 phút trước", "1 giờ trước", "1 ngày trước"};
+        String[] reminderOptions = {
+                getString(R.string.reminder_none),
+                getString(R.string.reminder_1m),
+                getString(R.string.reminder_5m),
+                getString(R.string.reminder_15m),
+                getString(R.string.reminder_30m),
+                getString(R.string.reminder_1h),
+                getString(R.string.reminder_1d)
+        };
         String[] reminderValues = {"none", "1m", "5m", "15m", "30m", "1h", "1d"};
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn thời gian nhắc nhở");
+        androidx.appcompat.app.AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.select_reminder_time));
         builder.setItems(reminderOptions, (dialog, which) -> {
             selectedReminder = reminderValues[which];
             tvReminderTime.setText(reminderOptions[which]);
         });
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel), null);
         builder.show();
     }
 

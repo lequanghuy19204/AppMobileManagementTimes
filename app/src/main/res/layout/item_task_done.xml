@@ -18,8 +18,9 @@
         android:layout_height="30dp"
         android:button="@drawable/custom_checkbox"
         android:textSize="16sp"
-        android:layout_marginRight="5dp"/>
-
+        android:layout_marginRight="5dp"
+        android:checked="true"
+        android:buttonTint="?attr/colorSecondary"/>
 
     <!-- Nội dung Task -->
     <LinearLayout
@@ -34,7 +35,9 @@
             android:layout_height="wrap_content"
             android:text="@string/task_name"
             android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:alpha="0.8"/>
 
         <TextView
             android:id="@+id/task_time"
@@ -42,7 +45,8 @@
             android:layout_height="wrap_content"
             android:text="@string/task_time"
             android:textSize="14sp"
-            android:textColor="@color/black"/>
+            android:textColor="?android:attr/textColorPrimary"
+            android:alpha="0.6"/>
     </LinearLayout>
 
     <!-- Nút sửa -->
@@ -53,7 +57,8 @@
         android:src="@drawable/ic_edit"
         android:visibility="gone"
         android:background="?android:attr/selectableItemBackground"
-        android:layout_marginEnd="8dp"/>
+        android:layout_marginEnd="8dp"
+        android:tint="?attr/colorSecondary"/>
 
     <!-- Nút xoá -->
     <ImageButton
@@ -61,6 +66,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:visibility="gone"
-        android:src="@drawable/ic_delete"/>
+        android:src="@drawable/ic_delete"
+        android:tint="?attr/colorSecondary"/>
 
 </LinearLayout>

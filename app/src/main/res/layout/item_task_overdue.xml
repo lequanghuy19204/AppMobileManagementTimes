@@ -18,8 +18,8 @@
         android:layout_height="30dp"
         android:button="@drawable/custom_checkbox"
         android:textSize="16sp"
-        android:layout_marginRight="5dp"/>
-
+        android:layout_marginRight="5dp"
+        android:buttonTint="@color/error"/>
 
     <!-- Nội dung Task -->
     <LinearLayout
@@ -34,7 +34,8 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:textColor="@color/error"/>
 
         <TextView
             android:id="@+id/task_time"
@@ -42,7 +43,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textSize="14sp"
-            android:textColor="@color/black"/>
+            android:textColor="@color/error"/>
 
     </LinearLayout>
     <ImageView
@@ -50,7 +51,8 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:padding="2dp"
-        android:src="@drawable/pause3"/>
+        android:src="@drawable/pause3"
+        android:tint="@color/error"/>
 
     <!-- Nút sửa -->
     <ImageButton
@@ -60,7 +62,8 @@
         android:src="@drawable/ic_edit"
         android:visibility="gone"
         android:background="?android:attr/selectableItemBackground"
-        android:layout_marginEnd="8dp"/>
+        android:layout_marginEnd="8dp"
+        android:tint="@color/error"/>
 
     <!-- Nút xoá -->
     <ImageButton
@@ -69,6 +72,7 @@
         android:layout_height="32dp"
         android:visibility="gone"
         android:background="?android:attr/selectableItemBackground"
-        android:src="@drawable/ic_delete"/>
+        android:src="@drawable/ic_delete"
+        android:tint="@color/error"/>
 
 </LinearLayout>

@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@android:color/white">
+    android:background="?attr/colorSurface">
     <!-- Logo (hai vòng tròn) -->
     <ImageView
         android:layout_width="36dp"
