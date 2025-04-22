@@ -479,7 +479,7 @@ public class create_items extends AppCompatActivity {
 
             scheduleReminder(taskName, startTime, reminder, groupId);
 
-            for (int i = 0; i < 365; i++) {
+            for (int i = 0; i < 7; i++) {
                 switch (repeatMode) {
                     case "every_day":
                         startCal.add(Calendar.DAY_OF_MONTH, 1);
