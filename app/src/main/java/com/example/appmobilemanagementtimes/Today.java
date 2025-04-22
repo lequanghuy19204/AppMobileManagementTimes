@@ -12,6 +12,7 @@ import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import androidx.appcompat.app.AppCompatDelegate;
 
 public class Today extends AppCompatActivity {
     private LinearLayout rootLayout;
@@ -67,6 +69,16 @@ public class Today extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Áp dụng chế độ tối từ cài đặt đã lưu
+        SharedPreferences sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE);
+        boolean isDarkMode = sharedPreferences.getBoolean("DarkMode", false);
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+        
         setContentView(R.layout.today);
 
         // Lấy userId từ Intent hoặc SharedPreferences
@@ -120,8 +132,7 @@ public class Today extends AppCompatActivity {
                 dialog.show();
 
             } else if (itemId == R.id.nav_dark_mode) {
-
-                // Handle dark mode
+                toggleDarkMode();
             } else if (itemId == R.id.nav_setting) {
                 // Handle settings
             }
@@ -299,8 +310,6 @@ public class Today extends AppCompatActivity {
             hideSwipeActions();
         });
 
-
-
         calendar = Calendar.getInstance();
         if (intent.hasExtra("selectedDate")) {
             calendar.setTimeInMillis(intent.getLongExtra("selectedDate", calendar.getTimeInMillis()));
@@ -365,6 +374,7 @@ public class Today extends AppCompatActivity {
             return false;
         });
     }
+
     private void changeLanguage(String langCode) {
         Locale locale = new Locale(langCode);
         Locale.setDefault(locale);
@@ -838,17 +848,17 @@ public class Today extends AppCompatActivity {
         selectedCal.set(Calendar.MILLISECOND, 0);
 
         if (selectedCal.before(todayCal)) {
-            tvTodoLabel.setText("Overdue");
-            tvToday.setText("Past Date");
+            tvTodoLabel.setText(getString(R.string.overdue));
+            tvToday.setText(getString(R.string.pass_date));
             isOverdue = true;
         } else if (selectedCal.equals(todayCal)) {
-            tvTodoLabel.setText("To Do");
-            tvToday.setText("Today");
+            tvTodoLabel.setText(getString(R.string.label_todo));
+            tvToday.setText(getString(R.string.title_today));
             btnAdd.setVisibility(View.VISIBLE);
             isOverdue = false;
         } else {
-            tvTodoLabel.setText("To Do");
-            tvToday.setText("Future Date");
+            tvTodoLabel.setText(getString(R.string.label_todo));
+            tvToday.setText(getString(R.string.title_future));
             btnAdd.setVisibility(View.VISIBLE);
             isOverdue = false;
         }
@@ -958,5 +968,29 @@ public class Today extends AppCompatActivity {
             itemView.setTranslationX(0);
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
         }
+    }
+
+    private void toggleDarkMode() {
+        // Lấy SharedPreferences để lưu trạng thái chế độ tối
+        SharedPreferences sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE);
+        boolean isDarkMode = sharedPreferences.getBoolean("DarkMode", false);
+        
+        // Đảo ngược trạng thái chế độ tối
+        isDarkMode = !isDarkMode;
+        
+        // Lưu trạng thái mới
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("DarkMode", isDarkMode);
+        editor.apply();
+        
+        // Áp dụng chế độ tối mới
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+        
+        // Khởi động lại activity để áp dụng thay đổi
+        recreate();
     }
 }

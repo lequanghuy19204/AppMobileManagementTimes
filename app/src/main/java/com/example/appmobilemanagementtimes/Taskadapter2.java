@@ -63,17 +63,25 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
         // Định dạng thời gian
         SimpleDateFormat storageFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
-        String timeText = "";
-
+        StringBuilder timeText = new StringBuilder();
         try {
+            // Định dạng startTime
             if (task.getStartTime() != null) {
-                timeText = timeFormat.format(storageFormat.parse(task.getStartTime()))
+                String startTime = timeFormat.format(storageFormat.parse(task.getStartTime()))
                         .replace("AM", "SA").replace("PM", "CH");
+                timeText.append(startTime);
+            }
+            // Định dạng endTime nếu có
+            if (task.getEndTime() != null && !task.getEndTime().isEmpty()) {
+                String endTime = timeFormat.format(storageFormat.parse(task.getEndTime()))
+                        .replace("AM", "SA").replace("PM", "CH");
+                timeText.append(" - ").append(endTime);
             }
         } catch (ParseException e) {
             Log.e(TAG, "Error parsing time for task: " + task.getName(), e);
-            timeText = "";
+            timeText = new StringBuilder(""); // Đặt rỗng nếu lỗi
         }
+        holder.taskTime.setText(timeText.toString());
 
         holder.taskTime.setText(timeText);
 
@@ -105,21 +113,14 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
                     default:
                         holder.label.setImageResource(R.drawable.pause1); // Default
                 }
-            } else {
-                holder.label.setImageResource(R.drawable.pause1); // Default
+                // Default
             }
         } else {
-            holder.label.setVisibility(View.GONE);
+            holder.label.setVisibility(View.VISIBLE);
         }
 
         // Thiết lập click listener cho item để hiển thị/ẩn các nút
-        holder.itemView.setOnClickListener(v -> {
-            // Toggle hiển thị nút edit và delete
-            boolean isVisible = holder.btnEdit.getVisibility() == View.VISIBLE;
-            int newVisibility = isVisible ? View.GONE : View.VISIBLE;
-            holder.btnEdit.setVisibility(newVisibility);
-            holder.btnDelete.setVisibility(newVisibility);
-        });
+
 
         // Xử lý sự kiện khi checkbox được chọn
         holder.checkbox.setOnCheckedChangeListener(null);
@@ -144,7 +145,7 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
                 Task2 taskToEdit = taskList.get(position);
                 Context context = holder.itemView.getContext();
                 Intent intent = new Intent(context, update_items.class);
-                
+
                 // Truyền dữ liệu của task qua để chỉnh sửa
                 intent.putExtra("taskName", taskToEdit.getName());
                 intent.putExtra("startTime", taskToEdit.getStartTime());
@@ -154,10 +155,10 @@ public class Taskadapter2 extends RecyclerView.Adapter<Taskadapter2.TaskViewHold
                 intent.putExtra("groupId", taskToEdit.getGroupId());
                 intent.putExtra("label", taskToEdit.getLabel());
                 intent.putExtra("userId", taskToEdit.getUserId());
-                
+
                 // Thêm extra để xác định trạng thái hiện tại
                 intent.putExtra("status", isOverdue ? "overdue" : "overdue");
-                
+
                 context.startActivity(intent);
             }
         });

@@ -50,12 +50,14 @@
     <string name="edit_task">Edit task</string>
     <string name="delete_task">Delete task</string>
     <string name="title_today">Today</string>
+    <string name="title_future">Future day</string>
     <string name="label_todo">To Do</string>
     <string name="label_done">Done</string>
     <string name="avatar">Avatar</string>
     <string name="notification">Notification</string>
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
+    <string name="create_item">Create New Item</string>
         <string name="update_item">Update Item</string>
         <string name="enter_item_name">Enter item name</string>
         <string name="all_day">All Day</string>
@@ -66,12 +68,33 @@
         <string name="custom">Custom</string>
         <string name="left_button">Back</string>
         <string name="right_button">Confirm</string>
+    <string name="repeat_every_day">Every day</string>
+    <string name="repeat_every_week">Every week</string>
+    <string name="repeat_every_2_weeks">Every 2 weeks</string>
+    <string name="repeat_every_3_weeks">Every 3 weeks</string>
+    <string name="repeat_every_month">Every month</string>
+    <string name="repeat_every_year">Every year</string>
+    <string name="repeat_never">Never</string>
+
+    <!-- Chuỗi cho reminder -->
+    <string name="reminder_1m">1 minute before</string>
+    <string name="reminder_5m">5 minutes before</string>
+    <string name="reminder_15m">15 minutes before</string>
+    <string name="reminder_30m">30 minutes before</string>
+    <string name="reminder_1h">1 hour before</string>
+    <string name="reminder_1d">1 day before</string>
+    <string name="reminder_none">No reminder</string>
         <string name="label_1">Label 1</string>
         <string name="label_2">Label 2</string>
         <string name="label_3">Label 3</string>
         <string name="label_4">Label 4</string>
         <string name="label_5">Label 5</string>
         <string name="label_6">Label 6</string>
+    <string name="please_login">Please login</string>
+
+    <string name="select_repeat_frequency">Select repeat frequency</string>
+    <string name="select_reminder_time">Select reminder time</string>
+
 
 
 

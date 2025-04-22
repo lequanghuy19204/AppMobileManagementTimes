@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="?attr/colorSurface">
 
     <RadioGroup
         android:id="@+id/musicRadioGroup"
@@ -24,7 +25,8 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_volume_on"
-            android:contentDescription="Toggle mute" />
+            android:contentDescription="Toggle mute"
+            android:tint="?attr/colorSecondary" />
 
         <SeekBar
             android:id="@+id/volumeSeekBar"

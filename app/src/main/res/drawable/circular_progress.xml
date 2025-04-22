@@ -4,18 +4,24 @@
     <item android:id="@android:id/background">
         <shape
             android:shape="ring"
-            android:thickness="8dp"
+            android:thicknessRatio="16"
             android:useLevel="false">
-            <solid android:color="#E0E0E0" /> <!-- Xám nhạt -->
+            <solid android:color="?attr/dividerColor" />
         </shape>
     </item>
     <!-- Vòng tiến trình -->
     <item android:id="@android:id/progress">
-        <shape
-            android:shape="ring"
-            android:thickness="8dp"
-            android:useLevel="true">
-            <solid android:color="#FF6200EE" /> <!-- Tím -->
-        </shape>
+        <rotate
+            android:fromDegrees="270"
+            android:toDegrees="270">
+            <shape
+                android:shape="ring"
+                android:thicknessRatio="16">
+                <gradient
+                    android:endColor="?attr/colorSecondary"
+                    android:startColor="?attr/colorSecondary"
+                    android:type="sweep" />
+            </shape>
+        </rotate>
     </item>
 </layer-list>

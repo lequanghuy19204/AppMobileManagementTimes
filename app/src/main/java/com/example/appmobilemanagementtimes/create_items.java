@@ -198,8 +198,8 @@ public class create_items extends AppCompatActivity {
 
         editStartTime.setText(displayDate.replace("Thu", "T5"));
         editEndTime.setText(displayDate.replace("Thu", "T5"));
-        repeatText.setText("Không bao giờ");
-        reminderText.setText("Không nhắc nhở");
+        repeatText.setText(getString(R.string.repeat_never));
+        reminderText.setText(getString(R.string.reminder_none));
 
         // Handle Switch for all-day
         switchPin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -480,33 +480,48 @@ public class create_items extends AppCompatActivity {
     }
 
     private void showRepeatDialog() {
-        String[] repeatOptions = {"Không bao giờ", "Mỗi ngày", "Mỗi tuần", "Mỗi 2 tuần", "Mỗi 3 tuần", "Mỗi tháng", "Mỗi năm"};
+        String[] repeatOptions = {
+                getString(R.string.repeat_never),
+                getString(R.string.repeat_every_day),
+                getString(R.string.repeat_every_week),
+                getString(R.string.repeat_every_2_weeks),
+                getString(R.string.repeat_every_3_weeks),
+                getString(R.string.repeat_every_month),
+                getString(R.string.repeat_every_year)
+        };
         String[] repeatValues = {"never", "every_day", "every_week", "every_2_weeks", "every_3_weeks", "every_month", "every_year"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn tần suất lặp lại");
+        builder.setTitle(getString(R.string.select_repeat_frequency));
         builder.setItems(repeatOptions, (dialog, which) -> {
             selectedRepeatMode = repeatValues[which];
             repeatText.setText(repeatOptions[which]);
         });
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel), null);
         builder.show();
     }
 
     private void showReminderDialog() {
-        String[] reminderOptions = {"Không nhắc nhở", "1 phút trước", "5 phút trước", "15 phút trước", "30 phút trước", "1 giờ trước", "1 ngày trước"};
+        String[] reminderOptions = {
+                getString(R.string.reminder_none),
+                getString(R.string.reminder_1m),
+                getString(R.string.reminder_5m),
+                getString(R.string.reminder_15m),
+                getString(R.string.reminder_30m),
+                getString(R.string.reminder_1h),
+                getString(R.string.reminder_1d)
+        };
         String[] reminderValues = {"none", "1m", "5m", "15m", "30m", "1h", "1d"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn thời gian nhắc nhở");
+        builder.setTitle(getString(R.string.select_reminder_time));
         builder.setItems(reminderOptions, (dialog, which) -> {
             selectedReminder = reminderValues[which];
             reminderText.setText(reminderOptions[which]);
         });
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel), null);
         builder.show();
     }
-
     private void createRecurringTasks(String taskName, String startTime, String endTime, String repeatMode, String reminder, String groupId, String label) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         Calendar startCal = Calendar.getInstance();

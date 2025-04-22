@@ -12,7 +12,7 @@
         android:layout_height="32dp"
         android:gravity="center"
         android:textSize="14sp"
-        android:textColor="@color/black" />
+        android:textColor="?android:attr/textColorPrimary" />
 
     <View
         android:id="@+id/taskIndicator"

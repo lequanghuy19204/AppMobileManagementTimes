@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pomodoroMainLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
 
     <!-- Normal Mode Layout -->
 
@@ -28,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="68dp"
             android:text="@string/pomodoro_timer_title"
-            android:textColor="#EA916E"
+            android:textColor="?attr/colorSecondary"
             android:textSize="22sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -59,7 +60,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="@string/default_pomodoro_mode"
-                android:textColor="#EA916E"
+                android:textColor="?attr/colorSecondary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -104,7 +105,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="#666" />
+                app:tint="?android:attr/textColorSecondary" />
 
             <TextView
                 android:id="@+id/musicText"
@@ -112,7 +113,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/music_helping_focus"
-                android:textColor="#666"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -138,7 +139,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="#666" />
+                app:tint="?android:attr/textColorSecondary" />
 
             <TextView
                 android:id="@+id/fullscreenText"
@@ -146,7 +147,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/full_screen_mode"
-                android:textColor="#666"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -182,7 +183,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="@string/default_timer_text"
-                android:textColor="#333"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="64sp" />
         </FrameLayout>
 
@@ -209,7 +210,8 @@
                 android:layout_marginEnd="40dp"
                 android:contentDescription="Stop Button"
                 android:src="@drawable/ic_stop"
-                android:visibility="gone" />
+                android:visibility="gone"
+                app:tint="?attr/colorSecondary" />
 
             <FrameLayout
                 android:layout_width="72dp"
@@ -220,7 +222,8 @@
                     android:layout_width="72dp"
                     android:layout_height="72dp"
                     android:contentDescription="Start Button"
-                    android:src="@drawable/ic_play_button" />
+                    android:src="@drawable/ic_play_button"
+                    app:tint="?attr/colorSecondary" />
 
                 <ImageView
                     android:id="@+id/pauseButton"
@@ -229,7 +232,8 @@
                     android:layout_gravity="center"
                     android:contentDescription="Pause Button"
                     android:src="@drawable/ic_pause"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:tint="?attr/colorSecondary" />
             </FrameLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -239,6 +243,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
+        android:background="?android:attr/colorBackground"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -257,7 +262,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/default_minutes"
-                android:textColor="#333"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="200sp"
                 android:textStyle="bold" />
 
@@ -266,7 +271,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/default_seconds"
-                android:textColor="#333"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="200sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -289,7 +294,7 @@
                 android:layout_marginEnd="40dp"
                 android:contentDescription="Music Button"
                 android:src="@drawable/ic_music_note"
-                app:tint="#333" />
+                app:tint="?attr/colorSecondary" />
 
             <FrameLayout
                 android:layout_width="72dp"
@@ -300,7 +305,8 @@
                     android:layout_width="72dp"
                     android:layout_height="72dp"
                     android:contentDescription="Start Button"
-                    android:src="@drawable/ic_play_button" />
+                    android:src="@drawable/ic_play_button"
+                    app:tint="?attr/colorSecondary" />
 
                 <ImageView
                     android:id="@+id/fullscreenPauseButton"
@@ -309,7 +315,8 @@
                     android:layout_gravity="center"
                     android:contentDescription="Pause Button"
                     android:src="@drawable/ic_pause"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:tint="?attr/colorSecondary" />
             </FrameLayout>
 
             <ImageView
@@ -319,7 +326,7 @@
                 android:layout_marginStart="40dp"
                 android:contentDescription="Restart Timer"
                 android:src="@drawable/ic_stop"
-                app:tint="#333" />
+                app:tint="?attr/colorSecondary" />
         </LinearLayout>
     </FrameLayout>
 
@@ -327,9 +334,9 @@
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        app:itemIconTint="@color/bottom_nav_color"
-        app:itemTextColor="@color/bottom_nav_color"
+        android:background="?attr/colorSurface"
+        app:itemIconTint="@drawable/bottom_nav_color"
+        app:itemTextColor="@drawable/bottom_nav_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

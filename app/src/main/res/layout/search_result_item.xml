@@ -19,7 +19,6 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
             android:text="@string/task_name_placeholder" />
 
         <TextView
