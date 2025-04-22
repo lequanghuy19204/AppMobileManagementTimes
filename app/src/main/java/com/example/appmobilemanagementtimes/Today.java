@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
@@ -100,7 +101,24 @@ public class Today extends AppCompatActivity {
                 startActivity(loginIntent);
                 finish();
             } else if (itemId == R.id.nav_language) {
-                // Handle language
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                View view = getLayoutInflater().inflate(R.layout.languages, null);
+                ImageButton btnVN = view.findViewById(R.id.btn_vn);
+                ImageButton btnEN = view.findViewById(R.id.btn_en);
+                ImageButton btnKR = view.findViewById(R.id.btn_kr);
+                btnVN.setOnClickListener(v->{
+                    changeLanguage("vi");
+                });
+                btnEN.setOnClickListener(v->{
+                    changeLanguage("en");
+                });
+                btnKR.setOnClickListener(v->{
+                    changeLanguage("ko");
+                });
+                builder.setView(view);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
             } else if (itemId == R.id.nav_dark_mode) {
 
                 // Handle dark mode
@@ -347,6 +365,22 @@ public class Today extends AppCompatActivity {
             return false;
         });
     }
+    private void changeLanguage(String langCode) {
+        Locale locale = new Locale(langCode);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        // Nếu muốn lưu lại ngôn ngữ đã chọn:
+        SharedPreferences.Editor editor = getSharedPreferences("settings", MODE_PRIVATE).edit();
+        editor.putString("language", langCode);
+        editor.apply();
+
+        recreate(); // Reload lại activity để áp dụng ngôn ngữ mới
+    }
+
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);

@@ -25,13 +25,13 @@
             <!-- Nút Avatar Bên Trái -->
             <ImageView
                 android:id="@+id/img_avatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_avatar"
+                android:layout_width="27dp"
+                android:layout_height="22dp"
                 android:contentDescription="Avatar"
+                android:src="@drawable/ic_avatar"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent" />
 
             <!-- Nút Thông Báo Bên Phải -->
             <ImageButton
@@ -80,8 +80,7 @@
                     android:id="@+id/tv_today"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pass Date"
-                    android:textSize="20sp"
+                    android:text="@string/pass_date"                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="#FFEA916E"
                     android:gravity="center"/>
@@ -124,8 +123,7 @@
                 android:padding="3dp">
 
                 <TextView
-                    android:text="Overdue"
-                    android:textSize="20sp"
+                    android:text="@string/overdue"                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"/>
@@ -136,8 +134,7 @@
                     android:layout_height="wrap_content" />
 
                 <TextView
-                    android:text="Done"
-                    android:textSize="20sp"
+                    android:text="@string/done"                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginTop="20dp"
                     android:layout_height="wrap_content"

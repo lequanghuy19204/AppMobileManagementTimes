@@ -27,8 +27,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/ic_avatar"
-                android:contentDescription="Avatar"
-                app:layout_constraintStart_toStartOf="parent"
+                android:contentDescription="@string/avatar"                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
 
@@ -131,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:paddingLeft="25dp"
                     android:paddingRight="25dp"
-                    android:text="To Do"
+                    android:text="@string/label_todo"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -147,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:paddingLeft="25dp"
                     android:paddingRight="25dp"
-                    android:text="Done"
+                    android:text="@string/label_done"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 

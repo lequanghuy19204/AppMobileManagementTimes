@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chọn nhạc tập trung"
+        android:text="@string/select_music"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp"/>
@@ -23,15 +23,15 @@
         android:id="@+id/toggleMusicButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textOn="Tắt nhạc"
-        android:textOff="Bật nhạc"
+        android:textOn="@string/music_off"
+        android:textOff="@string/music_on"
         android:layout_gravity="center"
         android:layout_marginBottom="8dp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Âm lượng"
+        android:text="@string/volume"
         android:layout_marginBottom="4dp"/>
 
     <SeekBar

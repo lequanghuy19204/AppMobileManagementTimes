@@ -9,11 +9,10 @@
         android:id="@+id/edtTaskTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Task Title" />
-
+        android:hint="@string/hint_task_title" />
     <EditText
         android:id="@+id/edtTaskTime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Task Time (HH:mm - HH:mm)" />
+        android:hint="@string/hint_task_time" />
 </LinearLayout>

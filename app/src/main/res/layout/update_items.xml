@@ -38,8 +38,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Update item"
-                android:textSize="24sp"
+                android:text="@string/update_item"                android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#FF6600"
                 android:paddingStart="16dp"
@@ -51,8 +50,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/check"
                 app:tint="#FF379AE6"
-                android:contentDescription="Right Button"
-                android:padding="8dp"
+                android:contentDescription="@string/right_button"                android:padding="8dp"
                 android:layout_marginStart="50dp"
                 android:clickable="true"
                 android:focusable="true"
@@ -63,8 +61,7 @@
             android:id="@+id/editTextTaskName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter item name"
-            android:padding="12dp"
+            android:hint="@string/enter_item_name"            android:padding="12dp"
             android:background="@drawable/rounded_edittext"
             android:textSize="16sp"
             android:textColor="#333333"
@@ -88,8 +85,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cả ngày"
-                android:textSize="16sp"
+                android:text="@string/all_day"                android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
 
@@ -120,8 +116,7 @@
                 android:id="@+id/editStartTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select Start Time"
-                android:textSize="16sp"
+                android:text="@string/select_start_time"                android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
 
@@ -154,8 +149,7 @@
                 android:id="@+id/editEndTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select End Time"
-                android:textSize="16sp"
+                android:text="@string/select_end_time"                android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
 
@@ -193,8 +187,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Không nhắc nhở"
-                android:textSize="16sp"
+                android:text="@string/no_reminder"                android:textSize="16sp"
                 android:textColor="@color/black"
                 android:paddingStart="12dp" />
 
@@ -229,8 +222,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Không bao giờ"
-                android:textSize="16sp"
+                android:text="@string/never"                android:textSize="16sp"
                 android:textColor="@color/black"
                 android:paddingStart="12dp" />
         </LinearLayout>
@@ -253,8 +245,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Custom"
-                android:textSize="16sp"
+                android:text="@string/custom"                android:textSize="16sp"
                 android:layout_marginStart="8dp"
                 android:textColor="#333333" />
 
@@ -281,8 +272,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause1"
-                android:contentDescription="Label 1"
-                android:padding="8dp"
+                android:contentDescription="@string/label_1"                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label1"
                 android:clickable="true"
@@ -295,8 +285,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause2"
-                android:contentDescription="Label 2"
-                android:padding="8dp"
+                android:contentDescription="@string/label_2"                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label2"
                 android:clickable="true"
@@ -309,8 +298,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause3"
-                android:contentDescription="Label 3"
-                android:padding="8dp"
+                android:contentDescription="@string/label_3"                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label3"
                 android:clickable="true"
@@ -323,8 +311,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause4"
-                android:contentDescription="Label 4"
-                android:padding="8dp"
+                android:contentDescription="@string/label_4"                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label4"
                 android:clickable="true"
@@ -337,8 +324,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pause5"
-                android:contentDescription="Label 5"
-                android:padding="8dp"
+                android:contentDescription="@string/label_5"                android:padding="8dp"
                 android:layout_marginEnd="8dp"
                 android:tag="label5"
                 android:clickable="true"
@@ -351,8 +337,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/global"
-                android:contentDescription="Label 6"
-                android:padding="8dp"
+                android:contentDescription="@string/label_6"                android:padding="8dp"
                 android:tag="label6"
                 android:clickable="true"
                 android:focusable="true"
