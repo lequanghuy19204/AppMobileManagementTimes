@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Custome time"
+        android:text="@string/custom_time"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center"
@@ -24,7 +24,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="To do (minuates):"
+            android:text="@string/to_do_minutes"
             android:textSize="16sp"/>
 
         <EditText
@@ -47,7 +47,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Short break (minuates):"
+            android:text="@string/short_break_minutes"
             android:textSize="16sp"/>
 
         <EditText
