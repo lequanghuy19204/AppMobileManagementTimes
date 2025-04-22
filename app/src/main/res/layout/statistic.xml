@@ -17,7 +17,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Today"
+            android:text="@string/today"
             android:layout_gravity="center"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="09 Feb 2-25"
+            android:text="@string/date_example"
             android:layout_gravity="center"
             android:paddingBottom="15dp"/>
 
@@ -50,7 +50,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="3/4 tasks done"
+                    android:text="@string/tasks_done"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -79,7 +79,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="3/4 Promo done"
+                    android:text="@string/promo_done"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -107,7 +107,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Static"
+                android:text="@string/statistic"
                 android:textStyle="bold"
                 android:textSize="20dp"
                 />

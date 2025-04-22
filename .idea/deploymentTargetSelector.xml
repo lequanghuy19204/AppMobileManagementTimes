@@ -5,9 +5,12 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+<<<<<<< Updated upstream
       <SelectionState runConfigName="Today (3)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+=======
+>>>>>>> Stashed changes
     </selectionStates>
   </component>
 </project>
