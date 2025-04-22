@@ -6,14 +6,14 @@
         android:title="Log out" />
     <item
         android:id="@+id/nav_language"
-        android:icon="@drawable/ic_notification"
+        android:icon="@drawable/language"
         android:title="Language" />
     <item
         android:id="@+id/nav_dark_mode"
-        android:icon="@drawable/ic_dark_mode"
+        android:icon="@drawable/dark_mode"
         android:title="Dark Mode" />
     <item
         android:id="@+id/nav_setting"
-        android:icon="@drawable/ic_setting"
-        android:title="Setting" />
+        android:icon="@drawable/guideline"
+        android:title="Guideline" />
 </menu>

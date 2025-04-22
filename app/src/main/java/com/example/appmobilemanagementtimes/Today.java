@@ -102,6 +102,7 @@ public class Today extends AppCompatActivity {
             } else if (itemId == R.id.nav_language) {
                 // Handle language
             } else if (itemId == R.id.nav_dark_mode) {
+
                 // Handle dark mode
             } else if (itemId == R.id.nav_setting) {
                 // Handle settings
