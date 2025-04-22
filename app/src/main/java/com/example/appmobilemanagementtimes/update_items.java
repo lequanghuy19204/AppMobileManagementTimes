@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -19,11 +21,15 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class update_items extends AppCompatActivity {
@@ -35,6 +41,8 @@ public class update_items extends AppCompatActivity {
     private String selectedReminder = "none";
     private String selectedLabel = null;
     private String groupId;
+    private String userId;
+    private String status;
     private TextView editStartTime, editEndTime, editStartTimeHours, editEndTimeHours, tvRepeatMode, tvReminderTime;
     private EditText editTextTaskName;
     private ImageView rightButton;
@@ -85,11 +93,14 @@ public class update_items extends AppCompatActivity {
         String label = intent.getStringExtra("label");
         groupId = intent.getStringExtra("groupId");
         originalTaskId = intent.getStringExtra("originalTaskId");
+        userId = intent.getStringExtra("userId");
+        status = intent.getStringExtra("status");
 
         Log.d(TAG, "Received data - taskName: " + taskName + ", startTime: " + startTime +
                 ", endTime: " + endTime + ", repeatMode: " + repeatMode +
                 ", reminder: " + reminder + ", label: " + label +
-                ", groupId: " + groupId + ", originalTaskId: " + originalTaskId);
+                ", groupId: " + groupId + ", originalTaskId: " + originalTaskId +
+                ", userId: " + userId + ", status: " + status);
 
         // Populate fields with received data
         if (taskName != null) {
@@ -242,37 +253,43 @@ public class update_items extends AppCompatActivity {
             finish();
         });
 
-        rightButton.setOnClickListener(v -> {
-            String taskNameUpdated = editTextTaskName.getText().toString().trim();
+        rightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String taskName = editTextTaskName.getText().toString().trim();
 
-            if (!taskNameUpdated.isEmpty() && selectedStartTime != null && selectedEndTime != null) {
-                if (!isValidTimeRange(selectedStartTime, selectedEndTime)) {
-                    Toast.makeText(this, "Thời gian kết thúc phải sau thời gian bắt đầu", Toast.LENGTH_SHORT).show();
+                if (taskName.isEmpty()) {
+                    Toast.makeText(update_items.this, "Vui lòng nhập tên nhiệm vụ", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                String newGroupId = selectedRepeatMode.equals("never") ? null : UUID.randomUUID().toString();
+                if (selectedStartTime == null || selectedEndTime == null) {
+                    Toast.makeText(update_items.this, "Vui lòng chọn thời gian", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                Log.d(TAG, "Updating task - Name: " + taskNameUpdated + ", StartTime: " + selectedStartTime +
-                        ", EndTime: " + selectedEndTime + ", RepeatMode: " + selectedRepeatMode +
-                        ", Reminder: " + selectedReminder + ", GroupId: " + newGroupId +
-                        ", OriginalTaskId: " + originalTaskId + ", Label: " + selectedLabel);
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("taskName", taskNameUpdated);
-                resultIntent.putExtra("startTime", selectedStartTime);
-                resultIntent.putExtra("endTime", selectedEndTime);
-                resultIntent.putExtra("repeatMode", selectedRepeatMode);
-                resultIntent.putExtra("reminder", selectedReminder);
-                resultIntent.putExtra("groupId", groupId);
-                resultIntent.putExtra("newGroupId", newGroupId);
-                resultIntent.putExtra("originalTaskId", originalTaskId);
-                resultIntent.putExtra("label", selectedLabel);
-                setResult(RESULT_OK, resultIntent);
+                if (!isValidTimeRange(selectedStartTime, selectedEndTime)) {
+                    Toast.makeText(update_items.this, "Thời gian kết thúc phải sau thời gian bắt đầu", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Cập nhật task vào Firestore
+                updateTaskInFirestore(taskName, selectedStartTime, selectedEndTime, selectedRepeatMode, selectedReminder, groupId, selectedLabel);
+                
                 finish();
-            } else {
-                Toast.makeText(this, "Vui lòng nhập tên nhiệm vụ và chọn cả hai thời gian", Toast.LENGTH_SHORT).show();
             }
         });
+
+        // Nếu không có userId từ intent, lấy từ SharedPreferences
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+        }
+        
+        // Nếu không có status, đặt mặc định là "todo"
+        if (status == null) {
+            status = "todo";
+        }
     }
 
     private void showDateTimePicker(boolean isStartTime) {
@@ -492,6 +509,95 @@ public class update_items extends AppCompatActivity {
             Log.e(TAG, "Lỗi khi phân tích thời gian: " + e.getMessage());
             Toast.makeText(this, "Lỗi định dạng thời gian", Toast.LENGTH_SHORT).show();
             return false;
+        }
+    }
+
+    private void updateTaskInFirestore(String name, String startTime, String endTime, String repeatMode, String reminder, String groupId, String label) {
+        if (groupId == null || groupId.isEmpty()) {
+            Log.e(TAG, "groupId is null or empty, cannot update task");
+            Toast.makeText(this, "Lỗi: Không thể xác định nhiệm vụ để cập nhật", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        
+        Map<String, Object> taskData = new HashMap<>();
+        taskData.put("name", name);
+        taskData.put("startTime", startTime);
+        taskData.put("endTime", endTime);
+        taskData.put("repeatMode", repeatMode);
+        taskData.put("reminder", reminder);
+        taskData.put("groupId", groupId);
+        taskData.put("label", label);
+        taskData.put("userId", userId);
+        taskData.put("status", status);
+        
+        // Log thông tin cập nhật để debug
+        Log.d(TAG, "Updating task with groupId: " + groupId);
+        Log.d(TAG, "Task data: " + taskData.toString());
+        
+        // Cập nhật tất cả các tasks có cùng groupId (cho nhiệm vụ lặp lại)
+        db.collection("tasks")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                if (querySnapshot.isEmpty()) {
+                    Log.d(TAG, "No tasks found with groupId: " + groupId);
+                    // Nếu không tìm thấy, tạo mới document với groupId là ID
+                    db.collection("tasks").document(groupId)
+                        .set(taskData)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "Task created successfully");
+                            Toast.makeText(update_items.this, "Cập nhật nhiệm vụ thành công", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error creating task", e);
+                            Toast.makeText(update_items.this, "Lỗi khi cập nhật nhiệm vụ", Toast.LENGTH_SHORT).show();
+                        });
+                } else {
+                    // Cập nhật tất cả các documents với groupId này
+                    Log.d(TAG, "Found " + querySnapshot.size() + " tasks with groupId: " + groupId);
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        db.collection("tasks").document(doc.getId())
+                            .update(taskData)
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "Task updated successfully: " + doc.getId());
+                                Toast.makeText(update_items.this, "Cập nhật nhiệm vụ thành công", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Error updating task: " + doc.getId(), e);
+                                Toast.makeText(update_items.this, "Lỗi khi cập nhật nhiệm vụ", Toast.LENGTH_SHORT).show();
+                            });
+                    }
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error querying tasks with groupId: " + groupId, e);
+                Toast.makeText(update_items.this, "Lỗi khi truy vấn nhiệm vụ", Toast.LENGTH_SHORT).show();
+            });
+    }
+
+    private void updateSelectedLabelUI() {
+        // Reset tất cả các nhãn về trạng thái không được chọn
+        for (ImageView icon : labelIcons) {
+            icon.setBackground(null);
+        }
+        
+        // Đánh dấu nhãn được chọn nếu có
+        if (selectedLabel != null && !selectedLabel.isEmpty()) {
+            int index = -1;
+            switch (selectedLabel) {
+                case "label1": index = 0; break;
+                case "label2": index = 1; break;
+                case "label3": index = 2; break;
+                case "label4": index = 3; break;
+                case "label5": index = 4; break;
+                case "label6": index = 5; break;
+            }
+            
+            if (index >= 0 && index < labelIcons.length) {
+                labelIcons[index].setBackground(getResources().getDrawable(R.drawable.round_bg_selected));
+            }
         }
     }
 }

@@ -54,13 +54,30 @@ public class create_items extends AppCompatActivity {
     private ImageView[] labelIcons;
     private ActivityResultLauncher<Intent> exactAlarmPermissionLauncher;
     private String pendingTaskName, pendingStartTime, pendingReminder, pendingGroupId;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.create_items);
 
-        // Initialize views
+        // Lấy userId từ Intent hoặc SharedPreferences
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+            if (userId == null) {
+                Log.e(TAG, "Không tìm thấy userId, chuyển hướng về đăng nhập");
+                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
+        
+        // Initialize views - ĐẨY PHẦN NÀY LÊN TRƯỚC KHI XỬ LÝ SELECTEDDATE
         editStartTime = findViewById(R.id.editStartTime);
         editEndTime = findViewById(R.id.editEndTime);
         editStartTimeHours = findViewById(R.id.editStartTimeHours);
@@ -74,8 +91,33 @@ public class create_items extends AppCompatActivity {
         editTextTaskName = findViewById(R.id.editTextTaskName);
         rightButton = findViewById(R.id.rightButton);
         switchPin = findViewById(R.id.switch_pin);
-        editTextTaskName.setFocusable(true);
-        editTextTaskName.setFocusableInTouchMode(true);
+        
+        // Lấy selectedDate từ Intent nếu có - ĐẶT ĐOẠN NÀY SAU KHI ĐÃ KHỞI TẠO VIEWS
+        String selectedDate = intent.getStringExtra("selectedDate");
+        if (selectedDate != null) {
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Date date = dateFormat.parse(selectedDate);
+                
+                // Đặt ngày được chọn làm ngày mặc định
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                
+                // Thiết lập giá trị ngày được chọn cho các trường ngày/giờ
+                // Cập nhật các biến và hiển thị thời gian dựa trên calendar
+                selectedStartTime = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                    .format(calendar.getTime());
+                displayTime(selectedStartTime, true);
+                
+                // Nếu có endTime, cũng cập nhật tương tự
+                calendar.add(Calendar.HOUR_OF_DAY, 1); // Mặc định thêm 1 giờ
+                selectedEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                    .format(calendar.getTime());
+                displayTime(selectedEndTime, false);
+            } catch (ParseException e) {
+                Log.e(TAG, "Lỗi khi phân tích ngày: " + selectedDate, e);
+            }
+        }
 
         // Hiển thị bàn phím khi nhấn vào EditText
         editTextTaskName.setOnClickListener(v -> {
@@ -474,7 +516,7 @@ public class create_items extends AppCompatActivity {
             startCal.setTime(sdf.parse(startTime));
             endCal.setTime(sdf.parse(endTime));
 
-            Task2 task = new Task2(taskName, startTime, endTime, repeatMode, groupId, reminder, label);
+            Task2 task = new Task2(taskName, startTime, endTime, repeatMode, groupId, reminder, label, userId);
             addTaskToFirestore(task, "overdue");
 
             scheduleReminder(taskName, startTime, reminder, groupId);
@@ -511,7 +553,7 @@ public class create_items extends AppCompatActivity {
 
                 String newStartTime = sdf.format(startCal.getTime());
                 String newEndTime = sdf.format(endCal.getTime());
-                Task2 recurringTask = new Task2(taskName, newStartTime, newEndTime, repeatMode, groupId, reminder, label);
+                Task2 recurringTask = new Task2(taskName, newStartTime, newEndTime, repeatMode, groupId, reminder, label, userId);
                 addTaskToFirestore(recurringTask, "overdue");
 
                 scheduleReminder(taskName, newStartTime, reminder, groupId);
@@ -707,7 +749,10 @@ public class create_items extends AppCompatActivity {
     }
 
     private void addTaskToFirestore(Task2 task, String status) {
-        Map<String, Object> taskData = new HashMap<>();
+        // Đảm bảo userId được đặt cho task
+        task.setUserId(userId);
+        
+        java.util.Map<String, Object> taskData = new java.util.HashMap<>();
         taskData.put("name", task.getName());
         taskData.put("startTime", task.getStartTime());
         taskData.put("endTime", task.getEndTime());
@@ -716,7 +761,8 @@ public class create_items extends AppCompatActivity {
         taskData.put("groupId", task.getGroupId());
         taskData.put("reminder", task.getReminder());
         taskData.put("label", task.getLabel());
-
+        taskData.put("userId", task.getUserId()); // Đảm bảo userId được thêm vào dữ liệu
+        
         String documentId = task.getName() + "_" + task.getStartTime();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("tasks")
