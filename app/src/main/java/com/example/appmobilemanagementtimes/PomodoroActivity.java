@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
-import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -49,8 +48,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.view.GestureDetectorCompat;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
@@ -66,12 +63,11 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 public class PomodoroActivity extends AppCompatActivity {
 
     private static final String TAG = "PomodoroActivity";
     private static final String PREFS_NAME = "PomodoroPrefs";
+    private static final String APP_PREFS_NAME = "AppPrefs";
     private static final String WORK_DURATION_KEY = "workDuration";
     private static final String BREAK_DURATION_KEY = "breakDuration";
     private static final String SELECTED_MUSIC_KEY = "selectedMusic";
@@ -81,11 +77,11 @@ public class PomodoroActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "PomodoroChannel";
     private static final int REQUEST_POST_NOTIFICATIONS = 2;
     private static final int NOTIFICATION_ID = 1;
+    private static final String ACTION_PERMISSION_DENIED = "com.example.appmobilemanagementtimes.PERMISSION_DENIED";
 
     // Firebase
-    private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-    private FirebaseUser currentUser;
+    private String userId;
 
     // UI Components (Normal Mode)
     private ImageView startButton, pauseButton, stopButton;
@@ -136,7 +132,6 @@ public class PomodoroActivity extends AppCompatActivity {
             R.raw.light_rain, R.raw.rain_sound,
             R.raw.relaxing_piano, R.raw.the_ocean_sound
     };
-    private int notificationSoundResId = R.raw.notification_sound;
     private int clockTickingSoundResId = R.raw.clockticking;
 
     // Session history
@@ -147,11 +142,12 @@ public class PomodoroActivity extends AppCompatActivity {
     private Phase currentPhase = Phase.WORK;
     private int pomodoroCount = 0;
 
-    // Broadcast receiver for reset
-    private final BroadcastReceiver resetReceiver = new BroadcastReceiver() {
+    // Broadcast receiver for reset and permission denied
+    private final BroadcastReceiver pomodoroReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if ("com.example.appmobilemanagementtimes.RESET_POMODORO".equals(intent.getAction())) {
+            String action = intent.getAction();
+            if ("com.example.appmobilemanagementtimes.RESET_POMODORO".equals(action)) {
                 if (!sessionHistory.isEmpty()) {
                     PomodoroSession currentSession = sessionHistory.get(sessionHistory.size() - 1);
                     currentSession.endTime = System.currentTimeMillis();
@@ -161,6 +157,13 @@ public class PomodoroActivity extends AppCompatActivity {
                 }
                 resetTimer();
                 Log.d(TAG, "Received RESET_POMODORO broadcast, timer reset");
+                Toast.makeText(context, "Timer reset do không hoạt động", Toast.LENGTH_SHORT).show();
+            } else if (ACTION_PERMISSION_DENIED.equals(action)) {
+                Toast.makeText(context, "Quyền thông báo bị thiếu. Vui lòng cấp quyền trong cài đặt.", Toast.LENGTH_LONG).show();
+                Log.w(TAG, "Received PERMISSION_DENIED broadcast, notification permission missing");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ActivityCompat.requestPermissions(PomodoroActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
+                }
             }
         }
     };
@@ -196,8 +199,7 @@ public class PomodoroActivity extends AppCompatActivity {
 
             if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                 if (diffY > 0) { // Swipe down
-                    Log.d(TAG, "Swipe down detected, resetting timer and exiting fullscreen");
-                    resetTimer();
+                    Log.d(TAG, "Swipe down detected, exiting fullscreen");
                     exitFullscreenMode();
                     return true;
                 }
@@ -209,23 +211,63 @@ public class PomodoroActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.pomodoro_main);
-        Log.d(TAG, "onCreate: Layout set, initializing views");
+        try {
+            setContentView(R.layout.pomodoro_main);
+            Log.d(TAG, "onCreate: Layout set, initializing views");
+        } catch (Exception e) {
+            Log.e(TAG, "onCreate: Failed to set layout pomodoro_main.xml", e);
+            Toast.makeText(this, "Lỗi tải giao diện. Kiểm tra file layout.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
-        // Load pomodoro modes from strings.xml
-        pomodoroOptions = getResources().getStringArray(R.array.pomodoro_modes);
+        // Lấy userId từ Intent hoặc SharedPreferences
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+            if (userId == null) {
+                Log.e(TAG, "onCreate: Không tìm thấy userId, chuyển hướng về đăng nhập");
+                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
+        Log.d(TAG, "onCreate: userId=" + userId);
 
-        // Request POST_NOTIFICATIONS permission for Android 13+
+        // Khởi tạo Firestore
+        try {
+            db = FirebaseFirestore.getInstance();
+        } catch (Exception e) {
+            Log.e(TAG, "onCreate: Failed to initialize FirebaseFirestore", e);
+            Toast.makeText(this, "Lỗi kết nối Firestore", Toast.LENGTH_LONG).show();
+        }
+
+        // Load pomodoro modes từ strings.xml
+        try {
+            pomodoroOptions = getResources().getStringArray(R.array.pomodoro_modes);
+        } catch (Exception e) {
+            Log.e(TAG, "onCreate: Failed to load pomodoro_modes from resources", e);
+            pomodoroOptions = new String[]{"50/10"}; // Default fallback
+        }
+
+        // Request POST_NOTIFICATIONS permission cho Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "onCreate: Requesting POST_NOTIFICATIONS permission");
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                    Toast.makeText(this, "Quyền thông báo cần thiết để hiển thị trạng thái timer.", Toast.LENGTH_LONG).show();
+                }
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
             } else {
                 Log.d(TAG, "onCreate: POST_NOTIFICATIONS permission already granted");
             }
         }
 
-        // Request runtime permission for phone state
+        // Request runtime permission cho phone state
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "onCreate: Requesting READ_PHONE_STATE permission");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
@@ -233,45 +275,41 @@ public class PomodoroActivity extends AppCompatActivity {
             Log.d(TAG, "onCreate: READ_PHONE_STATE permission already granted");
         }
 
-        // Initialize Firebase
-        mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
-        currentUser = mAuth.getCurrentUser();
-
-        // Initialize core features
-        initializeViews();
-        setupListeners();
-        loadSoundResources();
-        loadSettings();
-        setupCallListener();
-        createNotificationChannel();
-        registerResetReceiver();
+        // Khởi tạo các tính năng chính
+        try {
+            initializeViews();
+            setupListeners();
+            loadSoundResources();
+            loadSettings();
+            setupCallListener();
+            createNotificationChannel();
+            registerPomodoroReceiver();
+        } catch (Exception e) {
+            Log.e(TAG, "onCreate: Failed to initialize components", e);
+            Toast.makeText(this, "Lỗi khởi tạo ứng dụng", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         if (!isTimerRunning) {
             setPhase(currentPhase);
         }
         updateButtonVisibility();
 
-        // Attempt to sign in with Firebase and sync data if successful
-        if (currentUser == null) {
-            if (isNetworkAvailable()) {
-                Log.d(TAG, "onCreate: Network available, signing in anonymously with Firebase");
-                mAuth.signInAnonymously().addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        currentUser = mAuth.getCurrentUser();
-                        Log.d(TAG, "onCreate: Firebase anonymous sign-in successful, user: " + currentUser.getUid());
-                        syncWithFirebase();
-                    } else {
-                        Log.e(TAG, "onCreate: Firebase anonymous sign-in failed", task.getException());
-                        Toast.makeText(this, "Failed to sign in anonymously", Toast.LENGTH_LONG).show();
-                    }
-                });
-            } else {
-                Log.w(TAG, "onCreate: No network available, skipping Firebase sign-in");
-                Toast.makeText(this, "No internet connection. Running in offline mode.", Toast.LENGTH_LONG).show();
-            }
-        } else {
+        // Xử lý notification tap
+        if (getIntent().getBooleanExtra("fromNotification", false)) {
+            Log.d(TAG, "onCreate: Detected notification tap with userId=" + userId);
+            // Khôi phục trạng thái timer nếu cần
+            stopService(new Intent(this, PomodoroService.class));
+        }
+
+        // Đồng bộ với Firebase
+        if (isNetworkAvailable()) {
+            Log.d(TAG, "onCreate: Network available, syncing with Firebase");
             syncWithFirebase();
+        } else {
+            Log.w(TAG, "onCreate: No network available, running in offline mode");
+            Toast.makeText(this, "Không có kết nối mạng. Chạy ở chế độ offline.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -284,64 +322,74 @@ public class PomodoroActivity extends AppCompatActivity {
         return false;
     }
 
-    private void registerResetReceiver() {
+    private void registerPomodoroReceiver() {
         try {
-            IntentFilter filter = new IntentFilter("com.example.appmobilemanagementtimes.RESET_POMODORO");
-            registerReceiver(resetReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-            Log.d(TAG, "registerResetReceiver: Reset receiver registered");
+            IntentFilter filter = new IntentFilter();
+            filter.addAction("com.example.appmobilemanagementtimes.RESET_POMODORO");
+            filter.addAction(ACTION_PERMISSION_DENIED);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(pomodoroReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(pomodoroReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            }
+            Log.d(TAG, "registerPomodoroReceiver: Receiver registered for RESET_POMODORO and PERMISSION_DENIED");
         } catch (Exception e) {
-            Log.e(TAG, "registerResetReceiver: Failed to register reset receiver", e);
-            Toast.makeText(this, "Error registering receiver", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "registerPomodoroReceiver: Failed to register receiver", e);
+            Toast.makeText(this, "Lỗi đăng ký receiver", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void initializeViews() {
-        // Normal Mode Views
-        startButton = findViewById(R.id.startButton);
-        pauseButton = findViewById(R.id.pauseButton);
-        stopButton = findViewById(R.id.stopButton);
-        timerText = findViewById(R.id.timerText);
-        pomodoroDropdown = findViewById(R.id.pomodoroDropdown);
-        pomodoroText = findViewById(R.id.pomodoroText);
-        progressBar = findViewById(R.id.circularProgress);
-        controlButtons = findViewById(R.id.controlButtons);
-        mainLayout = findViewById(R.id.pomodoroMainLayout);
-        normalLayout = findViewById(R.id.normalLayout);
-        musicColumn = findViewById(R.id.musicColumn);
-        musicIcon = findViewById(R.id.musicIcon);
-        musicText = findViewById(R.id.musicText);
-        fullscreenColumn = findViewById(R.id.fullscreenColumn);
-        fullscreenIcon = findViewById(R.id.fullscreenIcon);
-        fullscreenText = findViewById(R.id.fullscreenText);
-        customTimeLayout = findViewById(R.id.customTimeLayout);
-        timerContainer = findViewById(R.id.timerContainer);
+        try {
+            startButton = findViewById(R.id.startButton);
+            pauseButton = findViewById(R.id.pauseButton);
+            stopButton = findViewById(R.id.stopButton);
+            timerText = findViewById(R.id.timerText);
+            pomodoroDropdown = findViewById(R.id.pomodoroDropdown);
+            pomodoroText = findViewById(R.id.pomodoroText);
+            progressBar = findViewById(R.id.circularProgress);
+            controlButtons = findViewById(R.id.controlButtons);
+            mainLayout = findViewById(R.id.pomodoroMainLayout);
+            normalLayout = findViewById(R.id.normalLayout);
+            musicColumn = findViewById(R.id.musicColumn);
+            musicIcon = findViewById(R.id.musicIcon);
+            musicText = findViewById(R.id.musicText);
+            fullscreenColumn = findViewById(R.id.fullscreenColumn);
+            fullscreenIcon = findViewById(R.id.fullscreenIcon);
+            fullscreenText = findViewById(R.id.fullscreenText);
+            customTimeLayout = findViewById(R.id.customTimeLayout);
+            timerContainer = findViewById(R.id.timerContainer);
 
-        // Fullscreen Mode Views
-        fullscreenLayout = findViewById(R.id.fullscreenLayout);
-        fullscreenControlPanel = findViewById(R.id.fullscreenControlPanel);
-        fullscreenStartButton = findViewById(R.id.fullscreenStartButton);
-        fullscreenPauseButton = findViewById(R.id.fullscreenPauseButton);
-        fullscreenMusicButton = findViewById(R.id.fullscreenMusicButton);
-        fullscreenExitButton = findViewById(R.id.fullscreenExitButton);
-        fullscreenMinutesText = findViewById(R.id.fullscreenMinutesText);
-        fullscreenSecondsText = findViewById(R.id.fullscreenSecondsText);
+            fullscreenLayout = findViewById(R.id.fullscreenLayout);
+            fullscreenControlPanel = findViewById(R.id.fullscreenControlPanel);
+            fullscreenStartButton = findViewById(R.id.fullscreenStartButton);
+            fullscreenPauseButton = findViewById(R.id.fullscreenPauseButton);
+            fullscreenMusicButton = findViewById(R.id.fullscreenMusicButton);
+            fullscreenExitButton = findViewById(R.id.fullscreenExitButton);
+            fullscreenMinutesText = findViewById(R.id.fullscreenMinutesText);
+            fullscreenSecondsText = findViewById(R.id.fullscreenSecondsText);
+        } catch (Exception e) {
+            Log.e(TAG, "initializeViews: Failed to find views in layout", e);
+            Toast.makeText(this, "Lỗi giao diện. Kiểm tra pomodoro_main.xml", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         if (controlButtons == null || startButton == null || pauseButton == null || stopButton == null ||
                 fullscreenLayout == null || fullscreenControlPanel == null || fullscreenMinutesText == null || fullscreenSecondsText == null) {
             Log.e(TAG, "UI components missing. Check pomodoro_main.xml for IDs.");
-            Toast.makeText(this, "UI error: Missing components", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Lỗi UI: Thiếu thành phần", Toast.LENGTH_LONG).show();
+            finish();
             return;
         }
 
         progressBar.setMax(100);
         progressBar.setProgress(0);
 
-        // Set initial visibility
         pauseButton.setVisibility(View.GONE);
         stopButton.setVisibility(View.GONE);
         fullscreenPauseButton.setVisibility(View.GONE);
 
-        // Setup gesture detector for swipe down
         gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener());
         if (gestureDetector == null) {
             Log.e(TAG, "Failed to initialize GestureDetectorCompat");
@@ -349,35 +397,10 @@ public class PomodoroActivity extends AppCompatActivity {
             Log.d(TAG, "GestureDetectorCompat initialized successfully");
         }
 
-        // Setup control panel auto-hide
         hideControlPanelRunnable = () -> {
             fullscreenControlPanel.setVisibility(View.GONE);
             Log.d(TAG, "Fullscreen control panel auto-hidden");
         };
-
-        // Thiết lập bottom navigation
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
-        bottomNav.setSelectedItemId(R.id.navigation_pomo);
-        
-        bottomNav.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(PomodoroActivity.this, Today.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_upcoming) {
-                startActivity(new Intent(PomodoroActivity.this, UpcomingActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_pomo) {
-                return true;
-            } else if (itemId == R.id.navigation_statistic) {
-                startActivity(new Intent(PomodoroActivity.this, StatisticActivity.class));
-                finish();
-                return true;
-            }
-            return false;
-        });
     }
 
     private void setupListeners() {
@@ -387,12 +410,10 @@ public class PomodoroActivity extends AppCompatActivity {
         pomodoroDropdown.setOnClickListener(v -> showPomodoroOptions());
         musicColumn.setOnClickListener(v -> showMusicSelectionDialog());
 
-        // Fullscreen mode toggle
         fullscreenColumn.setOnClickListener(v -> enterFullscreenMode());
         fullscreenIcon.setOnClickListener(v -> enterFullscreenMode());
         fullscreenText.setOnClickListener(v -> enterFullscreenMode());
 
-        // Fullscreen control panel listeners
         fullscreenStartButton.setOnClickListener(v -> startTimer());
         fullscreenPauseButton.setOnClickListener(v -> pauseTimer());
         fullscreenMusicButton.setOnClickListener(v -> showMusicSelectionDialog());
@@ -401,7 +422,6 @@ public class PomodoroActivity extends AppCompatActivity {
             exitFullscreenMode();
         });
 
-        // Show control panel on tap in fullscreen mode
         fullscreenLayout.setOnTouchListener((v, event) -> {
             if (!isFullscreenMode) {
                 Log.d(TAG, "Not in fullscreen mode, ignoring touch event");
@@ -422,7 +442,6 @@ public class PomodoroActivity extends AppCompatActivity {
     private void enterFullscreenMode() {
         if (isFullscreenMode) return;
 
-        // Hide status bar and navigation bar
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController insetsController = getWindow().getInsetsController();
             if (insetsController != null) {
@@ -443,11 +462,9 @@ public class PomodoroActivity extends AppCompatActivity {
             );
         }
 
-        // Show fullscreen layout, hide normal layout
         fullscreenLayout.setVisibility(View.VISIBLE);
         normalLayout.setVisibility(View.GONE);
 
-        // Sync timer text and buttons
         updateTimerText();
         updateFullscreenButtonVisibility();
 
@@ -458,7 +475,6 @@ public class PomodoroActivity extends AppCompatActivity {
     private void exitFullscreenMode() {
         if (!isFullscreenMode) return;
 
-        // Show status bar and navigation bar
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController insetsController = getWindow().getInsetsController();
             if (insetsController != null) {
@@ -472,27 +488,19 @@ public class PomodoroActivity extends AppCompatActivity {
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
         }
 
-        // Show normal layout, hide fullscreen layout
         fullscreenLayout.setVisibility(View.GONE);
         normalLayout.setVisibility(View.VISIBLE);
         fullscreenControlPanel.setVisibility(View.GONE);
         controlPanelHandler.removeCallbacks(hideControlPanelRunnable);
 
-        // Sync UI without resetting timer
         updateTimerText();
         updateProgressBar();
         updateButtonVisibility();
         pomodoroText.setText((workDuration / 60000) + "/" + (shortBreakDuration / 60000));
         musicText.setText(selectedMusicIndex >= 0 ? musicNames[selectedMusicIndex] : "None");
 
-        // Check if timer just finished and send notification if needed
-        if (timeLeftInMillis == 0 && !isTimerRunning) {
-            playNotificationSound();
-            sendNotification(currentPhase == Phase.WORK ? "Work session completed!" : "Break time is over!");
-        }
-
         isFullscreenMode = false;
-        Log.d(TAG, "Exited fullscreen mode, UI synced");
+        Log.d(TAG, "Exited fullscreen mode, UI synced: timeLeftInMillis=" + timeLeftInMillis + ", phase=" + currentPhase);
     }
 
     private void showFullscreenControlPanel() {
@@ -504,13 +512,6 @@ public class PomodoroActivity extends AppCompatActivity {
 
     private void loadSoundResources() {
         Log.d(TAG, "loadSoundResources: Loading predefined sound resources");
-
-        if (!isResourceAvailable(notificationSoundResId)) {
-            Log.e(TAG, "loadSoundResources: Notification sound resource not found: R.raw.notification_sound");
-            notificationSoundResId = 0;
-        } else {
-            Log.d(TAG, "loadSoundResources: Notification sound loaded: R.raw.notification_sound");
-        }
 
         if (!isResourceAvailable(clockTickingSoundResId)) {
             Log.e(TAG, "loadSoundResources: Clock ticking sound resource not found: R.raw.clockticking");
@@ -645,18 +646,18 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     private void syncSettingsToFirebase() {
-        if (currentUser == null) {
-            Log.w(TAG, "syncSettingsToFirebase: No current user, skipping Firebase sync");
+        if (userId == null || userId.isEmpty()) {
+            Log.w(TAG, "syncSettingsToFirebase: No userId, skipping Firebase sync");
             return;
         }
 
-        Log.d(TAG, "syncSettingsToFirebase: Syncing settings with Firebase for user: " + currentUser.getUid());
+        Log.d(TAG, "syncSettingsToFirebase: Syncing settings with Firebase for userId: " + userId);
         Map<String, Object> settings = new HashMap<>();
         settings.put("workDuration", workDuration);
         settings.put("shortBreakDuration", shortBreakDuration);
         settings.put("selectedMusic", selectedMusicIndex >= 0 ? musicNames[selectedMusicIndex] : "None");
 
-        db.collection("users").document(currentUser.getUid()).collection("settings")
+        db.collection("users").document(userId).collection("settings")
                 .document("pomodoro").set(settings)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "syncSettingsToFirebase: Settings synced to Firebase"))
                 .addOnFailureListener(e -> Log.e(TAG, "syncSettingsToFirebase: Error syncing settings to Firebase", e));
@@ -669,7 +670,7 @@ public class PomodoroActivity extends AppCompatActivity {
                 sessionData.put("endTime", session.endTime);
                 sessionData.put("isDone", session.isDone);
                 batch.set(
-                        db.collection("users").document(currentUser.getUid()).collection("sessions")
+                        db.collection("users").document(userId).collection("sessions")
                                 .document(String.valueOf(session.startTime)),
                         sessionData
                 );
@@ -681,13 +682,13 @@ public class PomodoroActivity extends AppCompatActivity {
     }
 
     private void syncWithFirebase() {
-        if (currentUser == null) {
-            Log.w(TAG, "syncWithFirebase: No current user, skipping Firebase sync");
+        if (userId == null || userId.isEmpty()) {
+            Log.w(TAG, "syncWithFirebase: No userId, skipping Firebase sync");
             return;
         }
 
-        Log.d(TAG, "syncWithFirebase: Syncing settings with Firebase for user: " + currentUser.getUid());
-        db.collection("users").document(currentUser.getUid()).collection("settings")
+        Log.d(TAG, "syncWithFirebase: Syncing settings with Firebase for userId: " + userId);
+        db.collection("users").document(userId).collection("settings")
                 .document("pomodoro").get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         DocumentSnapshot document = task.getResult();
@@ -720,7 +721,7 @@ public class PomodoroActivity extends AppCompatActivity {
                     }
                 });
 
-        db.collection("users").document(currentUser.getUid()).collection("sessions")
+        db.collection("users").document(userId).collection("sessions")
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
                         Log.e(TAG, "syncWithFirebase: Error syncing sessions from Firebase", error);
@@ -752,7 +753,6 @@ public class PomodoroActivity extends AppCompatActivity {
     private void startTimer() {
         if (isTimerRunning) return;
 
-        // Stop any existing music before starting new sound
         stopMusic();
 
         if (currentPhase == Phase.WORK && selectedMusicIndex > 0 && selectedMusicIndex < musicResIds.length) {
@@ -767,6 +767,7 @@ public class PomodoroActivity extends AppCompatActivity {
             Log.d(TAG, "startTimer: Added new session to history, size: " + sessionHistory.size());
         }
 
+        totalDuration = currentPhase == Phase.WORK ? workDuration : shortBreakDuration;
         countDownTimer = new CountDownTimer(timeLeftInMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -780,8 +781,7 @@ public class PomodoroActivity extends AppCompatActivity {
                 isTimerRunning = false;
                 pauseMusic();
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    playNotificationSound();
-                    sendNotification(currentPhase == Phase.WORK ? "Work session completed!" : "Break time is over!");
+                    sendNotification(currentPhase == Phase.WORK ? "Phiên làm việc hoàn tất!" : "Thời gian nghỉ kết thúc!");
                     onTimerFinish();
                     updateButtonVisibility();
                     updateFullscreenButtonVisibility();
@@ -792,6 +792,7 @@ public class PomodoroActivity extends AppCompatActivity {
         isTimerRunning = true;
         updateButtonVisibility();
         updateFullscreenButtonVisibility();
+        Log.d(TAG, "startTimer: Timer started, timeLeftInMillis=" + timeLeftInMillis + ", phase=" + currentPhase);
     }
 
     private void sendNotification(String message) {
@@ -808,14 +809,16 @@ public class PomodoroActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(this, PomodoroActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("fromNotification", true);
+        intent.putExtra("userId", userId);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification) // Ensure this drawable exists
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Pomodoro Timer")
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -824,58 +827,6 @@ public class PomodoroActivity extends AppCompatActivity {
 
         notificationManager.notify(NOTIFICATION_ID, builder.build());
         Log.d(TAG, "sendNotification: Notification sent - " + message);
-    }
-
-    private void playNotificationSound() {
-        if (isFinishing() || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && isDestroyed())) {
-            Log.w(TAG, "playNotificationSound: Activity is finishing or destroyed");
-            return;
-        }
-
-        if (notificationSoundResId == 0 || !isResourceAvailable(notificationSoundResId)) {
-            Log.w(TAG, "playNotificationSound: Notification sound resource unavailable");
-            Toast.makeText(this, "Notification sound resource missing", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            MediaPlayer notificationPlayer = MediaPlayer.create(this, notificationSoundResId);
-            if (notificationPlayer == null) {
-                Log.e(TAG, "playNotificationSound: Failed to create MediaPlayer");
-                return;
-            }
-
-            notificationPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build());
-
-            notificationPlayer.setVolume(1.0f, 1.0f);
-            notificationPlayer.setLooping(false);
-
-            notificationPlayer.setOnPreparedListener(mp -> {
-                Log.d(TAG, "playNotificationSound: Notification sound prepared, starting");
-                mp.start();
-            });
-
-            notificationPlayer.setOnCompletionListener(mp -> {
-                Log.d(TAG, "playNotificationSound: Notification sound completed");
-                mp.release();
-            });
-
-            notificationPlayer.setOnErrorListener((mp, what, extra) -> {
-                Log.e(TAG, "playNotificationSound: Error: what=" + what + ", extra=" + extra);
-                mp.release();
-                return true;
-            });
-
-            notificationPlayer.prepareAsync();
-            Log.d(TAG, "playNotificationSound: Preparing notification sound");
-
-        } catch (Exception e) {
-            Log.e(TAG, "playNotificationSound: Failed to play notification sound", e);
-            Toast.makeText(this, "Error playing notification sound", Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void playSound(int resId, String soundName, boolean looping) {
@@ -989,8 +940,11 @@ public class PomodoroActivity extends AppCompatActivity {
         String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         timerText.setText(timeFormatted);
 
-        fullscreenMinutesText.setText(String.format(Locale.getDefault(), "%02d", minutes));
-        fullscreenSecondsText.setText(String.format(Locale.getDefault(), "%02d", seconds));
+        if (isFullscreenMode) {
+            fullscreenMinutesText.setText(String.format(Locale.getDefault(), "%02d", minutes));
+            fullscreenSecondsText.setText(String.format(Locale.getDefault(), "%02d", seconds));
+        }
+        Log.d(TAG, "updateTimerText: timeLeftInMillis=" + timeLeftInMillis + ", formatted=" + timeFormatted);
     }
 
     private void updateProgressBar() {
@@ -1035,7 +989,7 @@ public class PomodoroActivity extends AppCompatActivity {
                 long newBreakDuration = Long.parseLong(parts[1]) * 60_000L;
 
                 if (newWorkDuration <= 0 || newBreakDuration <= 0) {
-                    Toast.makeText(this, "Work and break times must be greater than 0", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Thời gian làm việc và nghỉ phải lớn hơn 0", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -1049,14 +1003,14 @@ public class PomodoroActivity extends AppCompatActivity {
                 resetTimer();
                 pomodoroText.setText(cycle);
             } else {
-                Toast.makeText(this, "Invalid format. Use minutes/minutes (e.g., 50/10)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Định dạng không hợp lệ. Dùng phút/phút (ví dụ: 50/10)", Toast.LENGTH_SHORT).show();
             }
         } catch (NumberFormatException e) {
-            Log.e(TAG, "Invalid pomodoro cycle format: " + cycle, e);
-            Toast.makeText(this, "Invalid number format", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Định dạng chu kỳ Pomodoro không hợp lệ: " + cycle, e);
+            Toast.makeText(this, "Định dạng số không hợp lệ", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Log.e(TAG, "Error setting pomodoro cycle: " + cycle, e);
-            Toast.makeText(this, "Error setting cycle", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Lỗi khi thiết lập chu kỳ Pomodoro: " + cycle, e);
+            Toast.makeText(this, "Lỗi thiết lập chu kỳ", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1095,18 +1049,18 @@ public class PomodoroActivity extends AppCompatActivity {
         etWorkTime.setText(String.valueOf(workDuration / 60_000));
         etBreakTime.setText(String.valueOf(shortBreakDuration / 60_000));
 
-        builder.setTitle("Custom Pomodoro Time");
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        builder.setTitle("Thời Gian Pomodoro Tùy Chỉnh");
+        builder.setPositiveButton("Lưu", (dialog, which) -> {
             try {
                 int workMinutes = Integer.parseInt(etWorkTime.getText().toString());
                 int breakMinutes = Integer.parseInt(etBreakTime.getText().toString());
 
                 if (workMinutes <= 0 || breakMinutes <= 0) {
-                    Toast.makeText(this, "Work and break times must be greater than 0", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Thời gian làm việc và nghỉ phải lớn hơn 0", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (workMinutes > 180 || breakMinutes > 60) {
-                    Toast.makeText(this, "Please enter reasonable times (Work <= 180, Break <= 60)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Vui lòng nhập thời gian hợp lý (Làm việc <= 180, Nghỉ <= 60)", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -1114,14 +1068,14 @@ public class PomodoroActivity extends AppCompatActivity {
                 setPomodoroCycle(newPreset);
 
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "Please enter valid numbers", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Vui lòng nhập số hợp lệ", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
-                Log.e(TAG, "Error saving custom time", e);
-                Toast.makeText(this, "Error saving custom time", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Lỗi lưu thời gian tùy chỉnh", e);
+                Toast.makeText(this, "Lỗi lưu thời gian tùy chỉnh", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Cancel", null);
+        builder.setNegativeButton("Hủy", null);
         builder.create().show();
     }
 
@@ -1136,7 +1090,7 @@ public class PomodoroActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_music_control, null);
         builder.setView(dialogView);
-        builder.setTitle("Background Music");
+        builder.setTitle("Nhạc Nền");
 
         RadioGroup musicRadioGroup = dialogView.findViewById(R.id.musicRadioGroup);
         ImageView muteToggleIcon = dialogView.findViewById(R.id.muteToggleIcon);
@@ -1147,7 +1101,6 @@ public class PomodoroActivity extends AppCompatActivity {
             return;
         }
 
-        // Dynamically add radio buttons for each music option
         musicRadioGroup.removeAllViews();
         for (int i = 0; i < musicNames.length; i++) {
             RadioButton radioButton = new RadioButton(this);
@@ -1171,8 +1124,8 @@ public class PomodoroActivity extends AppCompatActivity {
                 int position = (Integer) selectedRadio.getTag();
                 Log.d(TAG, "showMusicSelectionDialog: Radio button selected: " + position + " (" + musicNames[position] + ")");
                 previewSelectionIndex[0] = position;
-                stopMusic(); // Stop previous music before playing new
-                if (position == 0) { // "None"
+                stopMusic();
+                if (position == 0) {
                     isMusicPlaying = false;
                 } else {
                     playSound(musicResIds[position], musicNames[position], true);
@@ -1228,7 +1181,7 @@ public class PomodoroActivity extends AppCompatActivity {
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        builder.setPositiveButton("Select", (dialog, which) -> {
+        builder.setPositiveButton("Chọn", (dialog, which) -> {
             if (previewSelectionIndex[0] >= 0) {
                 selectedMusicIndex = previewSelectionIndex[0];
                 musicText.setText(musicNames[selectedMusicIndex]);
@@ -1244,7 +1197,7 @@ public class PomodoroActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNegativeButton("Close", (dialog, which) -> {
+        builder.setNegativeButton("Đóng", (dialog, which) -> {
             Log.d(TAG, "showMusicSelectionDialog: Music selection cancelled.");
             stopMusic();
             if (isTimerRunning && currentPhase == Phase.WORK && selectedMusicIndex > 0) {
@@ -1368,8 +1321,27 @@ public class PomodoroActivity extends AppCompatActivity {
                 Log.d(TAG, "onRequestPermissionsResult: POST_NOTIFICATIONS permission granted");
             } else {
                 Log.w(TAG, "onRequestPermissionsResult: POST_NOTIFICATIONS permission denied");
-                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Quyền thông báo bị từ chối. Một số tính năng có thể không hoạt động.", Toast.LENGTH_LONG).show();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                    Toast.makeText(this, "Vui lòng cấp quyền thông báo trong cài đặt ứng dụng.", Toast.LENGTH_LONG).show();
+                }
             }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        userId = intent.getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences prefs = getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
+        }
+        if (intent.getBooleanExtra("fromNotification", false)) {
+            Log.d(TAG, "onNewIntent: Detected notification tap with userId=" + userId);
+            stopService(new Intent(this, PomodoroService.class));
         }
     }
 
@@ -1380,8 +1352,9 @@ public class PomodoroActivity extends AppCompatActivity {
         if (isTimerRunning) {
             backgroundStartTime = System.currentTimeMillis();
             Intent serviceIntent = new Intent(this, PomodoroService.class);
+            serviceIntent.putExtra("userId", userId);
             startService(serviceIntent);
-            Log.d(TAG, "onPause: Started PomodoroService for background countdown");
+            Log.d(TAG, "onPause: Started PomodoroService for background countdown with userId: " + userId);
         }
         syncSettingsToFirebase();
         saveSettings();
@@ -1394,7 +1367,7 @@ public class PomodoroActivity extends AppCompatActivity {
         if (backgroundStartTime > 0) {
             long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
             Log.d(TAG, "onResume: Time in background: " + timeInBackground + "ms");
-            if (timeInBackground < 10000) {
+            if (timeInBackground < 12000) {
                 stopService(new Intent(this, PomodoroService.class));
                 Log.d(TAG, "onResume: Stopped PomodoroService, resuming timer");
             }
@@ -1417,10 +1390,10 @@ public class PomodoroActivity extends AppCompatActivity {
         }
         releaseMediaPlayer();
         try {
-            unregisterReceiver(resetReceiver);
-            Log.d(TAG, "onDestroy: Reset receiver unregistered");
+            unregisterReceiver(pomodoroReceiver);
+            Log.d(TAG, "onDestroy: Pomodoro receiver unregistered");
         } catch (IllegalArgumentException e) {
-            Log.w(TAG, "onDestroy: Reset receiver was not registered", e);
+            Log.w(TAG, "onDestroy: Pomodoro receiver was not registered", e);
         }
     }
 }
