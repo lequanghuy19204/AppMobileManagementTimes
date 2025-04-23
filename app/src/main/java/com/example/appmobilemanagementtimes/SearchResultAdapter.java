@@ -86,18 +86,20 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 
                 if (startTimeStr != null && !startTimeStr.isEmpty()) {
                     Date startDate = inputFormat.parse(startTimeStr);
-                    taskDateTextView.setText("Ngày: " + dateFormat.format(startDate));
+                    taskDateTextView.setText(itemView.getContext().getString(R.string.search_date_format, dateFormat.format(startDate)));
                     
                     if (endTimeStr != null && !endTimeStr.isEmpty()) {
                         Date endDate = inputFormat.parse(endTimeStr);
-                        taskTimeTextView.setText("Thời gian: " + timeFormat.format(startDate) + " - " + timeFormat.format(endDate));
+                        taskTimeTextView.setText(itemView.getContext().getString(R.string.search_time_format, 
+                            timeFormat.format(startDate), timeFormat.format(endDate)));
                     } else {
-                        taskTimeTextView.setText("Thời gian: " + timeFormat.format(startDate));
+                        taskTimeTextView.setText(itemView.getContext().getString(R.string.single_time_format, 
+                            timeFormat.format(startDate)));
                     }
                 }
             } catch (ParseException e) {
-                taskDateTextView.setText("Ngày: không xác định");
-                taskTimeTextView.setText("Thời gian: không xác định");
+                taskDateTextView.setText(itemView.getContext().getString(R.string.unknown_date));
+                taskTimeTextView.setText(itemView.getContext().getString(R.string.unknown_time));
             }
         }
     }

@@ -3,16 +3,16 @@
     <string name="app_name">모바일 시간 관리 앱</string>
 
     <string-array name="weekday_names">
-        <item>월</item> <!-- Mon -->
-        <item>화</item> <!-- Tue -->
-        <item>수</item> <!-- Wed -->
-        <item>목</item> <!-- Thu -->
-        <item>금</item> <!-- Fri -->
-        <item>토</item> <!-- Sat -->
-        <item>일</item> <!-- Sun -->
+        <item>월요일</item>   <!-- Mon -->
+        <item>화요일</item>   <!-- Tue -->
+        <item>수요일</item>   <!-- Wed -->
+        <item>목요일</item>   <!-- Thu -->
+        <item>금요일</item>   <!-- Fri -->
+        <item>토요일</item>   <!-- Sat -->
+        <item>일요일</item>   <!-- Sun -->
     </string-array>
     <string name="title_home">홈</string>
-    <string name="title_upcoming">예정</string>
+    <string name="title_upcoming">예정된 일정</string>
     <string name="title_pomo">포모도로</string>
     <string name="title_statistic">통계</string>
 
@@ -53,23 +53,23 @@
     <string name="title_today">오늘</string>
     <string name="title_future">미래의 날</string>
 
-    <string name="label_todo">할 일</string>
+    <string name="label_todo">해야 할 일</string>
     <string name="label_done">완료됨</string>
     <string name="avatar">아바타</string>
     <string name="notification">알림</string>
     <string name="previous_day">이전 날짜</string>
     <string name="next_day">다음 날짜</string>
     <string name="create_item">새 항목 만들기</string>
-        <string name="update_item">항목 업데이트</string>
-        <string name="enter_item_name">항목 이름 입력</string>
-        <string name="all_day">종일</string>
-        <string name="select_start_time">시작 시간 선택</string>
-        <string name="select_end_time">종료 시간 선택</string>
-        <string name="no_reminder">알림 없음</string>
-        <string name="never">절대</string>
-        <string name="custom">사용자 지정</string>
-        <string name="left_button">뒤로</string>
-        <string name="right_button">확인</string>
+    <string name="update_item">항목 업데이트</string>
+    <string name="enter_item_name">항목 이름 입력</string>
+    <string name="all_day">종일</string>
+    <string name="select_start_time">시작 시간 선택</string>
+    <string name="select_end_time">종료 시간 선택</string>
+    <string name="no_reminder">알림 없음</string>
+    <string name="never">절대</string>
+    <string name="custom">사용자 지정</string>
+    <string name="left_button">뒤로</string>
+    <string name="right_button">확인</string>
     <string name="repeat_every_day">매일</string>
     <string name="repeat_every_week">주당</string>
     <string name="repeat_every_2_weeks">2주마다</string>
@@ -86,12 +86,12 @@
     <string name="reminder_1h">1시간 전</string>
     <string name="reminder_1d">1일 전</string>
     <string name="reminder_none">K알림 없음</string>
-        <string name="label_1">라벨 1</string>
-        <string name="label_2">라벨 2</string>
-        <string name="label_3">라벨 3</string>
-        <string name="label_4">라벨 4</string>
-        <string name="label_5">라벨 5</string>
-        <string name="label_6">라벨 6</string>]
+    <string name="label_1">라벨 1</string>
+    <string name="label_2">라벨 2</string>
+    <string name="label_3">라벨 3</string>
+    <string name="label_4">라벨 4</string>
+    <string name="label_5">라벨 5</string>
+    <string name="label_6">라벨 6</string>
     <string name="please_login">로그인해 주세요</string>
     <string name="cancel">취소</string>
     <string name="select_repeat_frequency">반복 빈도 선택</string>
@@ -112,4 +112,20 @@
         <item>30분/5분</item>
         <item>사용자 정의</item> <!-- Custom -->
     </string-array>
+
+    <!-- Upcoming 화면용 문자열 -->
+    <string name="search_hint">작업 검색</string>
+    <string name="search_results">검색 결과</string>
+    <string name="search_date_format">날짜: %s</string>
+    <string name="search_time_format" formatted="false">시간: %s - %s</string>
+    <string name="single_time_format">시간: %s</string>
+    <string name="unknown_date">날짜: 알 수 없음</string>
+    <string name="unknown_time">시간: 알 수 없음</string>
+    <string name="day_mon">월</string>
+    <string name="day_tue">화</string>
+    <string name="day_wed">수</string>
+    <string name="day_thu">목</string>
+    <string name="day_fri">금</string>
+    <string name="day_sat">토</string>
+    <string name="day_sun">일</string>
 </resources>

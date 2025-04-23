@@ -58,16 +58,16 @@
     <string name="notification">Thông báo</string>
     <string name="previous_day">Hôm trước</string>
     <string name="next_day">Hôm sau</string>
-        <string name="update_item">Cập nhật mục</string>
-        <string name="enter_item_name">Nhập tên mục</string>
-        <string name="all_day">Cả ngày</string>
-        <string name="select_start_time">Chọn thời gian bắt đầu</string>
-        <string name="select_end_time">Chọn thời gian kết thúc</string>
-        <string name="no_reminder">Không nhắc nhở</string>
-        <string name="never">Không bao giờ</string>
-        <string name="custom">Tùy chỉnh</string>
-        <string name="left_button">Quay lại</string>
-        <string name="right_button">Xác nhận</string>
+    <string name="update_item">Cập nhật mục</string>
+    <string name="enter_item_name">Nhập tên mục</string>
+    <string name="all_day">Cả ngày</string>
+    <string name="select_start_time">Chọn thời gian bắt đầu</string>
+    <string name="select_end_time">Chọn thời gian kết thúc</string>
+    <string name="no_reminder">Không nhắc nhở</string>
+    <string name="never">Không bao giờ</string>
+    <string name="custom">Tùy chỉnh</string>
+    <string name="left_button">Quay lại</string>
+    <string name="right_button">Xác nhận</string>
     <string name="repeat_every_day">Mỗi ngày</string>
     <string name="repeat_every_week">Mỗi tuần</string>
     <string name="repeat_every_2_weeks">Mỗi 2 tuần</string>
@@ -79,7 +79,6 @@
     <string name="select_reminder_time">Chọn thời gian nhắc nhở</string>
     <string name="cancel">Hủy</string>
 
-
     <!-- Chuỗi cho reminder -->
     <string name="reminder_1m">1 phút trước</string>
     <string name="reminder_5m">5 phút trước</string>
@@ -89,14 +88,12 @@
     <string name="reminder_1d">1 ngày trước</string>
     <string name="reminder_none">Không nhắc nhở</string>
     <string name="please_login">Vui lòng đăng nhập</string>
-        <string name="label_1">Nhãn 1</string>
-        <string name="label_2">Nhãn 2</string>
-        <string name="label_3">Nhãn 3</string>
-        <string name="label_4">Nhãn 4</string>
-        <string name="label_5">Nhãn 5</string>
-        <string name="label_6">Nhãn 6</string>
-
-
+    <string name="label_1">Nhãn 1</string>
+    <string name="label_2">Nhãn 2</string>
+    <string name="label_3">Nhãn 3</string>
+    <string name="label_4">Nhãn 4</string>
+    <string name="label_5">Nhãn 5</string>
+    <string name="label_6">Nhãn 6</string>
 
     <string-array name="pomodoro_modes">
         <item>50 phút / 10 phút</item>
@@ -104,4 +101,20 @@
         <item>30 phút / 5 phút</item>
         <item>Tùy chỉnh</item> <!-- Custom -->
     </string-array>
+
+    <!-- Chuỗi cho trang Upcoming -->
+    <string name="search_hint">Tìm kiếm công việc</string>
+    <string name="search_results">Kết quả tìm kiếm</string>
+    <string name="search_date_format">Ngày: %s</string>
+    <string name="search_time_format" formatted="false">Thời gian: %s - %s</string>
+    <string name="single_time_format">Thời gian: %s</string>
+    <string name="unknown_date">Ngày: không xác định</string>
+    <string name="unknown_time">Thời gian: không xác định</string>
+    <string name="day_mon">Thứ 2</string>
+    <string name="day_tue">Thứ 3</string>
+    <string name="day_wed">Thứ 4</string>
+    <string name="day_thu">Thứ 5</string>
+    <string name="day_fri">Thứ 6</string>
+    <string name="day_sat">Thứ 7</string>
+    <string name="day_sun">CN</string>
 </resources>

@@ -58,16 +58,16 @@
     <string name="previous_day">Previous Day</string>
     <string name="next_day">Next Day</string>
     <string name="create_item">Create New Item</string>
-        <string name="update_item">Update Item</string>
-        <string name="enter_item_name">Enter item name</string>
-        <string name="all_day">All Day</string>
-        <string name="select_start_time">Select Start Time</string>
-        <string name="select_end_time">Select End Time</string>
-        <string name="no_reminder">No Reminder</string>
-        <string name="never">Never</string>
-        <string name="custom">Custom</string>
-        <string name="left_button">Back</string>
-        <string name="right_button">Confirm</string>
+    <string name="update_item">Update Item</string>
+    <string name="enter_item_name">Enter item name</string>
+    <string name="all_day">All Day</string>
+    <string name="select_start_time">Select Start Time</string>
+    <string name="select_end_time">Select End Time</string>
+    <string name="no_reminder">No Reminder</string>
+    <string name="never">Never</string>
+    <string name="custom">Custom</string>
+    <string name="left_button">Back</string>
+    <string name="right_button">Confirm</string>
     <string name="repeat_every_day">Every day</string>
     <string name="repeat_every_week">Every week</string>
     <string name="repeat_every_2_weeks">Every 2 weeks</string>
@@ -84,19 +84,16 @@
     <string name="reminder_1h">1 hour before</string>
     <string name="reminder_1d">1 day before</string>
     <string name="reminder_none">No reminder</string>
-        <string name="label_1">Label 1</string>
-        <string name="label_2">Label 2</string>
-        <string name="label_3">Label 3</string>
-        <string name="label_4">Label 4</string>
-        <string name="label_5">Label 5</string>
-        <string name="label_6">Label 6</string>
+    <string name="label_1">Label 1</string>
+    <string name="label_2">Label 2</string>
+    <string name="label_3">Label 3</string>
+    <string name="label_4">Label 4</string>
+    <string name="label_5">Label 5</string>
+    <string name="label_6">Label 6</string>
     <string name="please_login">Please login</string>
 
     <string name="select_repeat_frequency">Select repeat frequency</string>
     <string name="select_reminder_time">Select reminder time</string>
-
-
-
 
     <string-array name="pomodoro_modes">
         <item>25/5</item>
@@ -129,4 +126,20 @@
     <string name="music_icon_description">Music settings</string>
     <string name="fullscreen_icon_description">Enter fullscreen mode</string>
     <string name="pomodoro_time_format">%d/%d</string>
+
+    <!-- Strings for Upcoming page -->
+    <string name="search_hint">Search items</string>
+    <string name="search_results">Search Results</string>
+    <string name="search_date_format">Date: %s</string>
+    <string name="search_time_format" formatted="false">Time: %s - %s</string>
+    <string name="single_time_format">Time: %s</string>
+    <string name="unknown_date">Date: unknown</string>
+    <string name="unknown_time">Time: unknown</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
 </resources>

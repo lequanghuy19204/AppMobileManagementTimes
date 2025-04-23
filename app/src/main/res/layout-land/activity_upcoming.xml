@@ -79,7 +79,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Mon"
+                        android:text="@string/day_mon"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -88,7 +88,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Tue"
+                        android:text="@string/day_tue"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -97,7 +97,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Wed"
+                        android:text="@string/day_wed"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -106,7 +106,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Thu"
+                        android:text="@string/day_thu"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -115,7 +115,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Fri"
+                        android:text="@string/day_fri"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -124,7 +124,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Sat"
+                        android:text="@string/day_sat"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -133,7 +133,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Sun"
+                        android:text="@string/day_sun"
                         android:textAlignment="center"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
@@ -172,7 +172,7 @@
                     android:background="@drawable/rounded_background"
                     android:elevation="2dp"
                     android:iconifiedByDefault="false"
-                    android:queryHint="Search items"
+                    android:queryHint="@string/search_hint"
                     android:searchIcon="@drawable/ic_search"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -197,7 +197,7 @@
                             android:id="@+id/searchResultsTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Kết quả tìm kiếm"
+                            android:text="@string/search_results"
                             android:textStyle="bold"
                             android:textSize="16sp"
                             android:textColor="?android:attr/textColorPrimary"
@@ -215,7 +215,7 @@
                     android:id="@+id/tv_todo_label"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="To Do"
+                    android:text="@string/label_todo"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginTop="12dp"
@@ -233,7 +233,7 @@
                     android:id="@+id/tv_done_label"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Done"
+                    android:text="@string/label_done"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginTop="12dp"
